@@ -51,6 +51,18 @@ if (isset($_GET['rezept'])) {
     header("Location: cart.php");
 }
 
+//delete an item from the shopping list
+if (isset($_GET['delete'])) {
+	header('Content-Type: application/json');
+    $id = $_POST['id'];
+    $stmt = $pdo->prepare("DELETE FROM einkaufsliste WHERE ID = ?");
+    $stmt->execute([$id]);
+
+    echo json_encode(['success' => true]);
+
+    die();
+}
+
 ?>
 
 <!doctype html>
@@ -80,6 +92,14 @@ if (isset($_GET['rezept'])) {
 
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <!-- Include jQuery UI -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- jQuery UI Touch Punch -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
 
     <link rel="stylesheet" href="style.css">
 
@@ -116,6 +136,7 @@ if (isset($_GET['rezept'])) {
         table {
             width: 100%;
             border-collapse: collapse;
+            background: var(--darkerGreen);
         }
 
         th, td {
@@ -125,31 +146,45 @@ if (isset($_GET['rezept'])) {
 
         th {
             background-color: var(--background);
-            color: white;
+            color: #1e1e1e;
         }
 
-        tr:nth-child(even) {
+        tr td {
+            background-color: #ffffff;
+
+            word-break: break-word;
+            line-break: anywhere;
+            hyphens: auto;
+        }
+
+        tr:nth-child(even) td {
             background-color: #f2f2f2;
         }
 
-        tr:hover {
+        tr:hover td{
             background-color: #ddd;
+        }
+
+        img {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            min-height: 50px;
+        }
+
+        td {
+            min-width: 50px;
         }
 
     </style>
 </head>
 <body>
-    <div class="cartAdd">
-        <i class="fas fa-shopping-cart"></i>
-    </div>
-    <div class="nav-grid">
-        <?php
-        require_once 'shared/navbar.php';
-        ?>
-        <div class="container">
-            <h1>Einkaufsliste</h1>
+<div class="nav-grid">
+	<?php require_once 'shared/navbar.php'; ?>
+    <div class="container">
+        <h1>Einkaufsliste</h1>
 
-            <div class="cart">
+        <div class="cart" style="overflow: hidden;">
             <table>
                 <tr>
                     <th></th>
@@ -157,37 +192,152 @@ if (isset($_GET['rezept'])) {
                     <th>Menge</th>
                     <th>Einheit</th>
                 </tr>
-                <?php
-                $stmt = $pdo->prepare("SELECT * FROM einkaufsliste");
-                $stmt->execute();
-                $einkaufsliste = $stmt->fetchAll();
+				<?php
+				$stmt = $pdo->prepare("SELECT * FROM einkaufsliste");
+				$stmt->execute();
+				$einkaufsliste = $stmt->fetchAll();
 
-                foreach ($einkaufsliste as $item) {
+				foreach ($einkaufsliste as $item) {
+					$stmt = $pdo->prepare("SELECT * FROM zutaten WHERE ID = ?");
+					$stmt->execute([$item['Zutat_ID']]);
+					$zutat = $stmt->fetch();
 
-                    $stmt = $pdo->prepare("SELECT * FROM zutaten WHERE ID = ?");
-                    $stmt->execute([$item['Zutat_ID']]);
-                    $zutat = $stmt->fetch();
+					echo "<tr class='draggable' data-id='" . $item['ID'] . "'>";
 
-                    echo "<tr>";
+					if (file_exists("ingredientIcons/" . $zutat['Image'])) {
+						echo "<td><img src='ingredientIcons/" . $zutat['Image'] . "' style='width: 50px; height: 50px;'></td>";
+					} else {
+						echo "<td><img src='ingredientIcons/default.svg' style='width: 50px; height: 50px;'></td>";
+					}
 
-                    //check if image exists
-                    if (file_exists("ingredientIcons/" . $zutat['Image'])) {
-                        echo "<td><img src='ingredientIcons/" . $zutat['Image'] . "' style='width: 50px; height: 50px;'></td>";
-                    } else {
-                        echo "<td><img src='ingredientIcons/default.svg' style='width: 50px; height: 50px;'></td>";
-                    }
-
-                    echo "<td>" . $item['Item'] . "</td>";
-                    echo "<td>" . $item['Menge'] . "</td>";
-                    echo "<td>" . $item['Einheit'] . "</td>";
-                    echo "</tr>";
-                }
-                ?>
+					echo "<td>" . $item['Item'] . "</td>";
+					echo "<td>" . $item['Menge'] . "</td>";
+					echo "<td>" . $item['Einheit'] . "</td>";
+					echo "</tr>";
+				}
+				?>
             </table>
-            </div>
-
         </div>
     </div>
+</div>
+
+<style>
+    .draggable {
+        cursor: e-resize;
+    }
+</style>
+
+<script>
+    $(function() {
+        function handleDrag(event, ui) {
+            var parentWidth = $(this).parent().width();
+            var itemLeft = ui.position.left;
+            var opacity = 1 - Math.abs(itemLeft) / parentWidth;
+
+            //den childs die opacity anpassen
+            $(this).children().css("opacity", opacity);
+        }
+
+        function handleStop(event, ui) {
+            var itemId = ui.helper.data("id");
+            var parentWidth = $(this).parent().width();
+            var itemLeft = ui.position.left;
+
+            if (Math.abs(itemLeft) > $(this).width() / 1.75) {
+                ui.helper.animate({ left: (itemLeft < 0 ? "-" : "+") + parentWidth + "px" }, "fast", function() {
+                    $.ajax({
+                        url: "cart.php?delete=true",
+                        type: "POST",
+                        data: { id: itemId },
+                        success: function(response) {
+                            ui.helper.remove();
+                        }
+                    });
+                });
+            } else {
+                ui.helper.animate({ left: "0px", opacity: 1 }, "fast");
+                //opacity wieder auf 1 setzen
+                $(this).children().css("opacity", 1);
+            }
+        }
+
+        function handleTouchStart(event) {
+            var touch = event.originalEvent.touches[0];
+            $(this).data("touchX", touch.pageX);
+            $(this).data("touchY", touch.pageY);
+            touchStartX = touch.pageX;
+            startMoveElement = false;
+        }
+
+        function handleTouchMove(event) {
+            var touch = event.originalEvent.touches[0];
+
+            if (Math.abs(touchStartX - touch.pageX) > 40 || startMoveElement) {
+                $(this).css("left", "-" + (touchStartX - touch.pageX) + "px");
+                startMoveElement = true;
+            } else {
+                $(this).css("left", "0px");
+
+                var scrollY = $(window).scrollTop();
+                var touchY = $(this).data("touchY");
+                var deltaY = touch.pageY - touchY;
+                $(window).scrollTop(scrollY - deltaY);
+
+                var velocity = deltaY * 0.5;
+                var deceleration = 0.95;
+
+                function continueScrolling() {
+                    if (Math.abs(velocity) > 0.5 && !startMoveElement) {
+                        scrollY = $(window).scrollTop();
+                        $(window).scrollTop(scrollY - velocity);
+                        velocity *= deceleration;
+                        requestAnimationFrame(continueScrolling);
+                    }
+                }
+
+                continueScrolling();
+            }
+        }
+
+        function handleTouchEnd(event) {
+            var deltaX = parseInt($(this).css("left"));
+            var parentWidth = $(this).parent().width();
+            var itemId = $(this).data("id");
+
+            if (Math.abs(touchStartX - touch.pageX) > 25) {
+                if (Math.abs(deltaX) > $(this).width() / 1.75) {
+                    $(this).animate({left: (deltaX < 0 ? "-" : "+") + parentWidth + "px"}, "fast", function () {
+                        $.ajax({
+                            url: "cart.php?delete=true",
+                            type: "POST",
+                            data: {id: itemId},
+                            success: function (response) {
+                                $(this).remove();
+                            }.bind(this)
+                        });
+                    });
+                } else {
+                    $(this).animate({left: "0px", opacity: 1}, "fast");
+                }
+            }
+        }
+
+        $(".draggable").draggable({
+            axis: "x",
+            drag: handleDrag,
+            stop: handleStop
+        });
+
+        let touchStartX = 0;
+        let startMoveElement = false;
+
+        $(".draggable").on("touchstart", handleTouchStart);
+        $(".draggable").on("touchmove", handleTouchMove);
+        $(".draggable").on("touchend", handleTouchEnd);
+    });
+</script>
+
+
 </body>
 <script src="script.js"></script>
 </html>
