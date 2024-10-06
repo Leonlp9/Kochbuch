@@ -123,6 +123,24 @@ body {
     grid-area: container;
 }
 
+/*scrollbar*/
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--nonSelected);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--selected);
+}
+
 @media (min-width: 768px) {
     .container {
         width: calc(100% - 50px);
@@ -526,6 +544,35 @@ div.element.red {
 div.element.white {
     border: 2px solid var(--white);
 }
+
+
+/*Color input********************/
+
+input[type="color"] {
+    border-radius: var(--border-radius);
+    width: 100%;
+    height: 40px;
+    padding: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    border: 2px solid var(--nonSelected);
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border-radius: var(--border-radius);
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: var(--border-radius);
+}
+
+input[type="color"]:focus {
+    border: 2px solid #48bef6;
+}
+
 
 /*HR********************/
 

@@ -165,7 +165,7 @@ if (isset($_GET['delete'])) {
             background-color: #ddd;
         }
 
-        img {
+        .cart img {
             width: 50px;
             height: 50px;
             min-width: 50px;

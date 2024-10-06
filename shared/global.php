@@ -90,6 +90,12 @@ $anmerkungen = "CREATE TABLE IF NOT EXISTS anmerkungen (
     Anmerkung TEXT NOT NULL
 )";
 
+$filterprofile = "CREATE TABLE IF NOT EXISTS filterprofile (
+	ID INT AUTO_INCREMENT PRIMARY KEY,
+	Name VARCHAR(255) NOT NULL,
+	Filter TEXT NOT NULL
+)";
+
 //Ausführen der SQL-Statements
 $pdo->exec($rezepte);
 $pdo->exec($kategorien);
@@ -97,3 +103,4 @@ $pdo->exec($bewertungen);
 $pdo->exec($zutaten);
 $pdo->exec($bilder);
 $pdo->exec($anmerkungen);
+$pdo->exec($filterprofile);

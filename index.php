@@ -68,6 +68,15 @@ global $pdo;
                 max-width: 300px;
             }
         }
+
+        #settings {
+            background: none;
+            border: none;
+            color: var(--nonSelected);
+            font-size: 30px;
+            cursor: pointer;
+            text-shadow: 2px 2px 0 var(--selected);
+        }
     </style>
 </head>
 <body>
@@ -76,6 +85,14 @@ global $pdo;
         require_once 'shared/navbar.php';
         ?>
         <div class="container">
+
+<!--            Einstellungen oben rechts-->
+            <a style="position: absolute; top: 10px; right: 10px;" href="settings.php" class="mobile">
+                <button id="settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </a>
+
 
             <img src="logo.svg" alt="Logo" style="width: 100px; padding: 10px; filter: drop-shadow(3px 3px 0 var(--nonSelected));">
 

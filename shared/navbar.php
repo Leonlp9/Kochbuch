@@ -83,6 +83,10 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
             border-right: 2px solid var(--secondaryBackground);
             border-radius: 0 0 10px 10px;
         }
+
+        nav.navDesktop a.desktop {
+            display: none;
+        }
     }
 
     @media (min-width: 768px) {
@@ -123,5 +127,8 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
     </a>
     <a id="addRezept" href="addRezept.php" <?php if ($currentPage == "addRezept") echo "class='active'" ?>>
         <i class="fas fa-plus"></i> <span>Rezept hinzufügen</span>
+    </a>
+    <a href="settings.php" <?php if ($currentPage == "settings"){ echo "class='active desktop'"; } else { echo "class='desktop'"; } ?>>
+        <i class="fas fa-cog"></i> <span>Einstellungen</span>
     </a>
 </nav>
