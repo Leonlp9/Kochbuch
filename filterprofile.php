@@ -6,7 +6,7 @@ if (isset($_POST['type'])) {
     if ($_POST['type'] === 'create') {
         $name = $_POST['name'];
 
-        $sql = "INSERT INTO filterprofile (Name) VALUES (:name)";
+        $sql = "INSERT INTO filterprofile (Name, Filter) VALUES (:name, '')";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':name', $name);
         $stmt->execute();
@@ -145,7 +145,14 @@ if (isset($_POST['type'])) {
 
                 foreach ($zutaten as $zutat) {
                     echo "<div class='zutat'>";
-                    echo "<img src='ingredientIcons/" . $zutat['Image'] . "' alt='Zutat'>";
+
+					// Zeige das Bild der Zutat, falls vorhanden, oder ein Standardbild
+					if (!empty($zutat['Image']) && file_exists("ingredientIcons/" . $zutat['Image'])) {
+						echo "<img src='ingredientIcons/" . $zutat['Image'] . "' alt='" . $zutat['Name'] . "'>";
+					} else {
+						echo "<img src='ingredientIcons/default.svg' alt='Default Image'>";
+					}
+
                     echo "<h3>" . $zutat['Name'] . "</h3>";
                     echo "</div>";
                 }
