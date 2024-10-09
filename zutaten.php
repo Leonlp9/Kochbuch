@@ -123,6 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!--        alle zutaten anzeigen-->
         <h2>Alle Zutaten</h2>
+
+        <div class="search">
+            <input type="text" id="search" placeholder="Suche..." oninput="search()">
+        </div>
+
         <div class="zutaten">
 			<?php
             $stmt = $pdo->prepare("
@@ -335,5 +340,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.body.appendChild(background);
         });
     });
+
+    function search() {
+        let search = document.getElementById('search').value.toLowerCase();
+
+        let zutaten = document.getElementsByClassName('zutat');
+        for (let zutat of zutaten) {
+            let name = zutat.querySelector('span').textContent.toLowerCase();
+            if (name.includes(search)) {
+                zutat.style.display = 'flex';
+            } else {
+                zutat.style.display = 'none';
+            }
+        }
+    }
 </script>
 </html>

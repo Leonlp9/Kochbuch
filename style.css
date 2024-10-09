@@ -133,12 +133,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--nonSelected);
+    background: var(--selected);
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--selected);
+    background: var(--selected_highlight);
 }
 
 @media (min-width: 768px) {

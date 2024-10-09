@@ -77,6 +77,37 @@ global $pdo;
             cursor: pointer;
             text-shadow: 2px 2px 0 var(--selected);
         }
+
+        .filterprofile {
+            margin-bottom: 20px;
+            overflow: scroll;
+            display: flex;
+            gap: 10px;
+            border-radius: 10px;
+            scrollbar-width: none;
+        }
+
+        .filterprofile div {
+            width: 195px;
+            height: 205px;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            user-select: none;
+            flex-shrink: 0;
+            flex-direction: column;
+        }
+
+        .filterprofile img {
+            border-radius: 10px;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -118,13 +149,24 @@ global $pdo;
                 ?>
             </div>
 
-            <hr style="margin-bottom: 60px">
+            <br>
 
-            <div style="height: 400px; width: 100%; background: rgba(231,214,232,0.5); display: flex; justify-content: center; align-items: center; text-align: center; border-radius: 10px">
-                <h2 style="border-bottom: none">
-                    Opus in progressu, ideae non sunt paratae
-                </h2>
+            <h2>Filterprofile</h2>
+            <div class="filterprofile horizontalScrollBarJS">
+                <?php
+                $filterprofile = $pdo->query("SELECT * FROM filterprofile")->fetchAll();
+                foreach ($filterprofile as $filter) {
+                    ?>
+                    <div>
+                        <img src='https://api.dicebear.com/9.x/bottts-neutral/svg?seed=<?= $filter['Name'] ?>' alt='Avatar'>
+                        <h3><?= $filter['Name'] ?></h3>
+                    </div>
+                    <?php
+                }
+                ?>
             </div>
+
+            <br>
 
             <h2>Zufällige Rezepte</h2>
             <div id="randomRezepte"></div>

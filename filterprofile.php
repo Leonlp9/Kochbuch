@@ -13,6 +13,18 @@ if (isset($_POST['type'])) {
 
         echo 'success';
         die();
+    }else if ($_POST['type'] === 'update') {
+        $id = $_POST['id'];
+        $filter = $_POST['filter'];
+
+        $sql = "UPDATE filterprofile SET Filter = :filter WHERE ID = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':filter', $filter);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        echo 'success';
+        die();
     }
 }
 
@@ -104,6 +116,73 @@ if (isset($_POST['type'])) {
             grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
             gap: 20px;
         }
+
+        .zutat {
+            background: var(--nonSelected);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            word-break: break-word;
+            text-align: center;
+            font-size: 0.90rem;
+            position: relative;
+            padding: 10px 10px 50px;
+        }
+
+        .zutat img {
+            height: 75px;
+            border-radius: 10px;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .likebuttons {
+            display: flex;
+            margin-top: 10px;
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .likebuttons button {
+            width: 100%;
+            padding: 7px;
+            border: none;
+            outline: none;
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background 0.1s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            font-size: 1.2rem;
+            color: #54545c;
+        }
+
+        .likebuttons button:first-child {
+            border-radius: 10px 0 0 10px;
+            background: var(--green);
+        }
+
+        .likebuttons button:last-child {
+            border-radius: 0 10px 10px 0;
+            background: var(--red);
+        }
+
+        /*hover*/
+        .likebuttons button:hover {
+            cursor: pointer;
+            background: var(--nonSelected);
+            transform: scale(1.15);
+            border-radius: 10px;
+            z-index: 2;
+        }
+
+        .likebuttons button:first-child:hover {
+            background: var(--darkerGreen);
+        }
+
+        .likebuttons button:last-child:hover {
+            background: var(--darkerRed);
+        }
+
     </style>
 </head>
 <body>
@@ -114,9 +193,6 @@ if (isset($_POST['type'])) {
         <?php
         if (isset($_GET['id'])) { ?>
 
-<!--                zurück knopf-->
-                <a href="filterprofile.php" class="btn blue">Zurück</a>
-                <br>
             <div class="filterprofil">
                 <?php
 
@@ -129,11 +205,23 @@ if (isset($_POST['type'])) {
 				echo "<h2>" . $filterprofile['Name'] . "</h2>";
 				echo "<img src='https://api.dicebear.com/9.x/bottts-neutral/svg?seed=" . $filterprofile['Name'] . "' alt='Profilbild'>";
 
+                $filter = json_decode($filterprofile['Filter'], true);
+
                 ?>
             </div>
             <br>
 <!--            zutaten-->
             <h2>Zutaten</h2>
+
+            <div class="search">
+                <input type="text" id="search" placeholder="Suche..." oninput="search()">
+<!--                dropdown-->
+                <select id="show" onchange="search()">
+                    <option value="all">Alle</option>
+                    <option value="likes">Likes</option>
+                    <option value="dislikes">Dislikes</option>
+                </select>
+            </div>
 
             <div class="zutaten">
                 <?php
@@ -144,7 +232,7 @@ if (isset($_POST['type'])) {
                 $zutaten = $stmt->fetchAll();
 
                 foreach ($zutaten as $zutat) {
-                    echo "<div class='zutat'>";
+                    echo "<div class='zutat' id='zutat-" . $zutat['ID'] . "'>";
 
 					// Zeige das Bild der Zutat, falls vorhanden, oder ein Standardbild
 					if (!empty($zutat['Image']) && file_exists("ingredientIcons/" . $zutat['Image'])) {
@@ -154,11 +242,106 @@ if (isset($_POST['type'])) {
 					}
 
                     echo "<h3>" . $zutat['Name'] . "</h3>";
+                    echo "<p>" . $zutat['unit'] . "</p>";
+
+                    ?>
+
+                    <div class="likebuttons">
+                        <button onclick="likeZutat(<?= $zutat['ID'] ?>); saveFilter()"><i class="fas fa-thumbs-up"></i></button>
+                        <button onclick="removeLikeDislike(<?= $zutat['ID'] ?>); saveFilter()"><i class="fas fa-minus"></i></button>
+                        <button onclick="dislikeZutat(<?= $zutat['ID'] ?>); saveFilter()"><i class="fas fa-thumbs-down"></i></button>
+                    </div>
+
+                    <?php
                     echo "</div>";
                 }
 
                 ?>
 
+                <script>
+
+                    let userLikesAndDislikes = {
+                        likes: [],
+                        dislikes: []
+                    };
+
+                    let filter = <?= json_encode($filter) ?>;
+
+                    //update likes and dislikes elements
+                    filter.likes.forEach(like => {
+                        userLikesAndDislikes.likes.push(like);
+                        document.getElementById('zutat-' + like).style.backgroundColor = 'var(--green)';
+                    });
+
+                    filter.dislikes.forEach(dislike => {
+                        userLikesAndDislikes.dislikes.push(dislike);
+                        document.getElementById('zutat-' + dislike).style.backgroundColor = 'var(--red)';
+                    });
+
+                    function likeZutat(zutatID) {
+                        removeLikeDislike(zutatID);
+                        userLikesAndDislikes.likes.push(zutatID);
+
+                        document.getElementById('zutat-' + zutatID).style.backgroundColor = 'var(--green)';
+                    }
+
+                    function dislikeZutat(zutatID) {
+                        removeLikeDislike(zutatID);
+                        userLikesAndDislikes.dislikes.push(zutatID);
+
+                        document.getElementById('zutat-' + zutatID).style.backgroundColor = 'var(--red)';
+                    }
+
+                    function removeLikeDislike(zutatID) {
+                        userLikesAndDislikes.likes = userLikesAndDislikes.likes.filter(id => id !== zutatID);
+                        userLikesAndDislikes.dislikes = userLikesAndDislikes.dislikes.filter(id => id !== zutatID);
+
+                        document.getElementById('zutat-' + zutatID).style.backgroundColor = 'var(--nonSelected)';
+                    }
+
+                    function saveFilter() {
+                        $.ajax({
+                            url: 'filterprofile.php',
+                            type: 'POST',
+                            data: {
+                                type: 'update',
+                                id: <?= $_GET['id'] ?>,
+                                filter: JSON.stringify(userLikesAndDislikes)
+                            },
+                            success: function (data) {
+                                if (data === 'success') {
+                                } else {
+                                    alert(data);
+                                }
+                            }
+                        });
+                    }
+
+                    function search() {
+                        let search = document.getElementById('search').value.toLowerCase();
+                        let show = document.getElementById('show').value;
+
+                        let zutaten = document.getElementsByClassName('zutat');
+                        for (let zutat of zutaten) {
+                            let name = zutat.getElementsByTagName('h3')[0].innerText.toLowerCase();
+                            let unit = zutat.getElementsByTagName('p')[0].innerText.toLowerCase();
+
+                            if (name.includes(search) || unit.includes(search)) {
+                                if (show === 'all') {
+                                    zutat.style.display = 'flex';
+                                } else if (show === 'likes' && userLikesAndDislikes.likes.includes(parseInt(zutat.id.split('-')[1]))) {
+                                    zutat.style.display = 'flex';
+                                } else if (show === 'dislikes' && userLikesAndDislikes.dislikes.includes(parseInt(zutat.id.split('-')[1]))) {
+                                    zutat.style.display = 'flex';
+                                } else {
+                                    zutat.style.display = 'none';
+                                }
+                            } else {
+                                zutat.style.display = 'none';
+                            }
+                        }
+                    }
+                </script>
 
         <?php
         } else {

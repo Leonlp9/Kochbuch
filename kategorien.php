@@ -100,6 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
+            gap: 5px;
             font-size: 20px;
             font-weight: bold;
             text-align: center;
@@ -112,6 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: scale(1.05);
             border-radius: 20px;
         }
+
+        .kategorie .count {
+            font-size: 18px;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -121,25 +128,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		<h1>Kategorien</h1>
         <br>
 
-        <button class="btn green" id="addKategorie">Kategorie hinzufügen</button>
-
-        <br>
-        <br>
-
         <div class="kategorien">
             <?php
-            $stmt = $pdo->prepare('SELECT * FROM kategorien');
-            $stmt->execute();
-            $kategorien = $stmt->fetchAll();
-            foreach ($kategorien as $kategorie) {
+                $stmt = $pdo->prepare('
+                    SELECT k.*, COUNT(rk.Kategorie_ID) AS usage_count
+                    FROM kategorien k
+                    LEFT JOIN rezepte rk ON k.ID = rk.Kategorie_ID
+                    GROUP BY k.ID
+                ');
+                $stmt->execute();
+                $kategorien = $stmt->fetchAll();
+                foreach ($kategorien as $kategorie) {
+                    ?>
+                    <div class="kategorie" data-id="<?php echo $kategorie['ID']; ?>" style="background-color: <?php echo $kategorie['ColorHex']; ?>">
+                        <span class="name"><?php echo $kategorie['Name']; ?></span>
+                        <span class="count"><?php echo $kategorie['usage_count']; ?></span>
+                    </div>
+                    <?php
+                }
                 ?>
-                <div class="kategorie" data-id="<?php echo $kategorie['ID']; ?>" style="background-color: <?php echo $kategorie['ColorHex']; ?>">
-                    <?php echo $kategorie['Name']; ?>
-                </div>
-                <?php
-            }
-            ?>
         </div>
+
+        <button class="btn green" id="addKategorie">Kategorie hinzufügen</button>
 
 	</div>
 </div>
@@ -175,12 +185,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background.appendChild(modal);
 
             const title = document.createElement('h2');
-            title.innerText = kategorie.innerText;
+            title.innerText = kategorie.querySelector('.name').innerText;
             modal.appendChild(title);
+
+            if (kategorie.querySelector('.count').innerText !== '(0)') {
+                const button = document.createElement('button');
+                button.innerText = 'Rezepte anzeigen';
+                button.classList.add('btn', 'blue');
+                button.style.cursor = 'pointer';
+                button.style.marginBottom = '20px';
+                button.addEventListener('click', () => {
+                    window.location.href = 'search.php?kategorie=' + kategorie.dataset.id;
+                });
+                modal.appendChild(button);
+            }
 
             const name = document.createElement('input');
             name.type = 'text';
-            name.value = kategorie.innerText;
+            name.value = kategorie.querySelector('.name').innerText;
             name.style.textTransform = 'none';
             modal.appendChild(name);
 
@@ -213,6 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             });
 
+            modal.appendChild(save);
 
             const del = document.createElement('button');
             del.innerText = 'Löschen';
@@ -235,6 +258,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             });
 
+            if (kategorie.querySelector('.count').innerText !== '(0)') {
+                del.disabled = true;
+                del.style.cursor = 'not-allowed';
+
+                const tooltip = document.createElement('span');
+                tooltip.innerText = 'Kategorie kann nicht gelöscht werden, da sie in Rezepten verwendet wird';
+                tooltip.style.color = 'red';
+                modal.appendChild(tooltip);
+
+            }
+
 
                 // wenn kein child angeklickt wird dann wird das modal geschlossen
             background.addEventListener('click', (e) => {
@@ -244,7 +278,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
 
 
-            modal.appendChild(save);
             modal.appendChild(del);
 
         });

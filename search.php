@@ -379,6 +379,7 @@ if (isset($_POST['search'])) {
                 <?php } else { ?>
                     search();
                 <?php } ?>
+
             </script>
         </div>
     </div>
