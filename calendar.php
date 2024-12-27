@@ -28,14 +28,16 @@ if (isset($_GET['action']) && $_GET['action'] == "add") {
     $id = $_GET['id'];
     $stmt = $pdo->prepare("DELETE FROM kalender WHERE ID = ?");
     $stmt->execute([$id]);
-    header("Location: calendar.php");
+    header("Location: calendar.php" . (isset($_GET['showPast']) && $_GET['showPast'] == 'true' ? '?showPast=true' : ''));
 }
+
+$showPast = (isset($_GET['showPast']) && $_GET['showPast'] == 'true') ? '' : 'WHERE kalender.Datum >= CURDATE()';
 
 $kalender = $pdo->prepare("SELECT kalender.ID as Kalender_ID, kalender.Datum, kalender.Rezept_ID, kalender.Text, rezepte.ID, rezepte.Name, bilder.Image
         FROM kalender
          LEFT JOIN rezepte ON kalender.Rezept_ID = rezepte.ID
          LEFT JOIN bilder ON rezepte.ID = bilder.Rezept_ID
-         WHERE kalender.Datum >= CURDATE()
+         $showPast
          ORDER BY Datum");
 $kalender->execute();
 
@@ -236,6 +238,17 @@ $kalender->execute();
         <div class="container">
             <h1>Meine Woche</h1>
 
+            <label>
+                Vergangene Einträge anzeigen
+                <input type="checkbox" id="showPast" <?php echo (isset($_GET['showPast']) && $_GET['showPast'] == 'true') ? 'checked' : '' ?>>
+            </label>
+            <script>
+                document.getElementById('showPast').addEventListener('change', () => {
+                    window.location.href = `calendar.php?showPast=${document.getElementById('showPast').checked}`;
+                });
+            </script>
+
+
             <div id='calendar'>
                 <?php
 
@@ -257,29 +270,36 @@ $kalender->execute();
                         echo "<div class='dayContent'>";
                     }
 
+                    $showPast = (isset($_GET['showPast']) && $_GET['showPast'] == 'true') ? '' : '&showPast=true';
+
                     if ($rezept == null) {
                         echo "
+                    <div style='display: grid; grid-template-columns: auto 30px; gap: 10px;'>
                         <div class='rezept' style='min-height: 100px; grid-template-columns: 2fr 25px;'>
                             <div>
                                 <h3 style='text-transform: none' >$text</h3>
                             </div>
-                           <div onclick='window.location.href=`calendar.php?action=delete&id=$row[Kalender_ID]`' style='cursor: pointer; display: flex; justify-content: center; align-items: center; background-color: var(--nonSelected); border-radius: 10px'>
-                                <i class='fas fa-trash-alt' style='color: white'></i>
-                           </div>
                         </div>
+                       <div onclick='window.location.href=`calendar.php?action=delete&id=$row[Kalender_ID]$showPast`' style='cursor: pointer; display: flex; justify-content: center; align-items: center; background-color: var(--nonSelected); border-radius: 10px'>
+                            <i class='fas fa-trash-alt' style='color: white'></i>
+                       </div>
+                    </div>
                         ";
                     }else {
                         echo "
+                    <div style='display: grid; grid-template-columns: auto 30px; gap: 10px;'>
                         <a class='rezept' href='rezept.php?id=$row[ID]'>
                             <img src='uploads/$row[Image]' alt='$row[Name]'>
                             <div>
                                 <h3 style='text-transform: none' >$rezept</h3>
                                 <p style='text-transform: none'>$text</p>
                             </div>
-                            <div onclick='window.location.href=`calendar.php?action=delete&id=$row[Kalender_ID]`' style='cursor: pointer; display: flex; justify-content: center; align-items: center; background-color: var(--nonSelected); border-radius: 10px'>
-                                <i class='fas fa-trash-alt' style='color: white'></i>
-                            </div>
                         </a>
+                        <div onclick='window.location.href=`calendar.php?action=delete&id=$row[Kalender_ID]$showPast`' style='cursor: pointer; display: flex; justify-content: center; align-items: center; background-color: var(--nonSelected); border-radius: 10px'>
+                            <i class='fas fa-trash-alt' style='color: white'></i>
+                        </div>
+
+                    </div>
                         ";
                     }
 

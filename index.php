@@ -108,6 +108,21 @@ global $pdo;
             border-radius: 10px;
             pointer-events: none;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -127,14 +142,60 @@ global $pdo;
 
             <img src="logo.svg" alt="Logo" style="width: 100px; padding: 10px; filter: drop-shadow(3px 3px 0 var(--nonSelected));">
 
-            <div style="height: calc(100vh - 200px); overflow: auto; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; text-align: center; background: rgba(231,214,232,0.5); border-radius: 10px;">
-                <h1>Kochbuch</h1>
-                <h2 style="border-bottom: none">
-                    Opus in progressu, ideae non sunt paratae
-                </h2>
+            <div id="banner" style="height: calc(100vh - 200px); overflow: auto; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-end; align-items: flex-start; text-align: center; background: rgba(231,214,232,0.5); border-radius: 10px; background-size: cover; background-position: center; background-repeat: no-repeat; transition: background-image 1s;">
             </div>
+            <script>
+                let entries = [];
 
-            <h2>Kategorien</h2>
+                let selected = 0;
+
+                function update() {
+                    const banner = document.getElementById("banner");
+                    banner.style.backgroundImage = `url('uploads/${entries[selected].image}')`;
+                    banner.innerHTML = `<h3 class="fade-in" style="background: rgba(255,255,255,0.5); padding: 10px; border-radius: 10px; margin: 10px; font-size: 30px; font-weight: bold; text-shadow: 2px 2px 0 var(--selected);">
+                        ${entries[selected].rezept}
+                    </h3>
+                    `;
+
+                    banner.onclick = function () {
+                        window.location.href = `rezept.php?id=${entries[selected].id}`;
+                    };
+                }
+
+                //alle 5s beim banner ein random rezept anzeigen
+                function randomBanner() {
+                    if (entries.length < 5) {
+                        $.ajax({
+                            url: "search.php",
+                            type: "POST",
+                            data: {
+                                banner: true
+                            },
+                            success: function (data) {
+                                let rezept = JSON.parse(data);
+
+                                entries.push(rezept);
+
+                                selected = entries.length - 1;
+
+                                update();
+                            }
+                        });
+                    }else{
+                        if (selected === entries.length - 1) {
+                            selected = 0;
+                        } else {
+                            selected++;
+                        }
+                        update();
+                    }
+
+                }
+                randomBanner();
+                setInterval(randomBanner, 5000);
+            </script>
+
+            <h2 style="margin-top: 40px">Kategorien</h2>
 
             <div class="kategorien horizontalScrollBarJS">
                 <?php
@@ -170,7 +231,7 @@ global $pdo;
 
             <h2>Zufällige Rezepte</h2>
             <div id="randomRezepte"></div>
-            <button class="btn green" onclick="randomRezepte()">Shake it!</button>
+            <button class="btn green" onclick="randomRezepte()" style="margin-bottom: 60px">Shake it!</button>
             <script>
                 function randomRezepte() {
                     $.ajax({
@@ -187,14 +248,6 @@ global $pdo;
                 }
                 randomRezepte();
             </script>
-
-            <hr style="margin-bottom: 60px">
-
-            <div style="height: 400px; width: 100%; background: rgba(231,214,232,0.5); display: flex; justify-content: center; align-items: center; text-align: center; border-radius: 10px">
-                <h2 style="border-bottom: none">
-                    Opus in progressu, ideae non sunt paratae
-                </h2>
-            </div>
 
             <h2>Neueste Rezepte</h2>
             <div id="neuesteRezepte"></div>
@@ -216,14 +269,6 @@ global $pdo;
             </script>
 
             <hr style="margin-bottom: 60px">
-
-            <div style="height: 400px; width: 100%; background: rgba(231,214,232,0.5); display: flex; justify-content: center; align-items: center; text-align: center; border-radius: 10px">
-                <h2 style="border-bottom: none">
-                    Opus in progressu, ideae non sunt paratae
-                </h2>
-            </div>
-
-            <br>
 
         </div>
     </div>

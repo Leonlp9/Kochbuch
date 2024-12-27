@@ -166,6 +166,16 @@ if (isset($_POST['search'])) {
     die();
 }
 
+if (isset($_POST['banner'])) {
+    $rezepte = $pdo->query("SELECT * FROM rezepte ORDER BY RAND() LIMIT 1")->fetch();
+    $rezept = $rezepte['Name'];
+    $id = $rezepte['ID'];
+    $image = $pdo->query("SELECT Image FROM bilder WHERE Rezept_ID = $id")->fetch();
+    $image = $image['Image'];
+    echo json_encode(array("rezept" => $rezept, "image" => $image, "id" => $id));
+    die();
+}
+
 ?>
 
 <!doctype html>
