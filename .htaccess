@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Umschreiben von "localhost/api/" auf "localhost/api.php"
+RewriteRule ^api/?$ api.php [L]
+
+# Umschreiben von "localhost/error/" auf "localhost/error.php"
+RewriteRule ^error/?$ error.php [L]
+
+# Umschreiben von "localhost/search/" auf "localhost/search.php"
+RewriteRule ^search/?$ search.php [L]
+
+# Umschreiben von "localhost/rezept/" auf "localhost/rezept.php"
+RewriteRule ^rezept/?$ rezept.php [L]

@@ -3,44 +3,6 @@
 include "shared/global.php";
 global $pdo;
 
-$kalender = "CREATE TABLE IF NOT EXISTS kalender (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Datum DATE NOT NULL,
-    Rezept_ID INT,
-    Text TEXT
-)";
-$pdo->exec($kalender);
-
-
-//const date = input.value;
-//const rezeptID = <$id>;
-//window.location.href = `calendar.php?date=${date}&rezept=${rezeptID}&action=add`;
-if (isset($_GET['action']) && $_GET['action'] == "add") {
-    $date = $_GET['date'];
-    $rezept = (isset($_GET['rezept'])) ? $_GET['rezept'] : null;
-    $action = $_GET['action'];
-    $info = (isset($_GET['info'])) ? $_GET['info'] : null;
-    $stmt = $pdo->prepare("INSERT INTO kalender (Datum, Rezept_ID, Text) VALUES (?, ?, ?)");
-    $stmt->execute([$date, $rezept, $info]);
-    header("Location: calendar.php");
-
-}else if (isset($_GET['action']) && $_GET['action'] == "delete") {
-    $id = $_GET['id'];
-    $stmt = $pdo->prepare("DELETE FROM kalender WHERE ID = ?");
-    $stmt->execute([$id]);
-    header("Location: calendar.php" . (isset($_GET['showPast']) && $_GET['showPast'] == 'true' ? '?showPast=true' : ''));
-}
-
-$showPast = (isset($_GET['showPast']) && $_GET['showPast'] == 'true') ? '' : 'WHERE kalender.Datum >= CURDATE()';
-
-$kalender = $pdo->prepare("SELECT kalender.ID as Kalender_ID, kalender.Datum, kalender.Rezept_ID, kalender.Text, rezepte.ID, rezepte.Name, bilder.Image
-        FROM kalender
-         LEFT JOIN rezepte ON kalender.Rezept_ID = rezepte.ID
-         LEFT JOIN bilder ON rezepte.ID = bilder.Rezept_ID
-         $showPast
-         ORDER BY Datum");
-$kalender->execute();
-
 ?>
 
 <!doctype html>
@@ -73,164 +35,9 @@ $kalender->execute();
 
     <link rel="stylesheet" href="style.css">
 
-    <style>
-        .day {
-            margin-bottom: 20px;
-            border-radius: 10px;
-        }
-
-        .dayContent {
-            display: grid;
-            gap: 10px;
-        }
-
-        .rezept {
-            display: grid;
-            grid-template-columns: 1fr 2fr 25px;
-            gap: 10px;
-            padding: 5px;
-            border-radius: 8px;
-            background-color: var(--secondaryBackground);
-            -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
-        }
-
-        .rezept:hover {
-            background-color: var(--nonSelected);
-        }
-
-        .rezept img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .calendarAdd {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            background-color: var(--nonSelected);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        @media (max-width: 768px) {
-            .calendarAdd {
-                bottom: 60px;
-                right: 10px;
-            }
-        }
-
-
-        input[type="date"] {
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid var(--nonSelected);
-            outline: none;
-            width: 100%;
-        }
-
-        input[type="text"].planenExtraInput {
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid var(--nonSelected);
-            margin-bottom: 10px;
-            outline: none;
-            background: var(--background);
-            color: var(--color);
-            text-transform: none;
-        }
-    </style>
-
 </head>
 <body>
 
-<!--    New custom calendar element with text and without recipe-->
-    <div class="calendarAdd">
-        <i class="fas fa-plus" style="color: white"></i>
-    </div>
-    <script>
-        document.querySelector('.calendarAdd').addEventListener('click', () => {
-            const back = document.createElement('div');
-            back.style.position = 'fixed';
-            back.style.top = '0';
-            back.style.left = '0';
-            back.style.width = '100%';
-            back.style.height = '100%';
-            back.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            back.style.zIndex = '1000';
-            back.style.display = 'flex';
-            back.style.justifyContent = 'center';
-            back.style.alignItems = 'center';
-
-            const form = document.createElement('form');
-            form.style.backgroundColor = 'var(--secondaryBackground)';
-            form.style.padding = '20px';
-            form.style.borderRadius = '10px';
-            form.style.display = 'grid';
-            form.style.gap = '10px';
-            form.style.width = '300px';
-            form.style.maxWidth = '100%';
-
-            const h2 = document.createElement('h2');
-            h2.innerText = 'Planen';
-            form.appendChild(h2);
-
-            const date = document.createElement('input');
-            date.type = 'date';
-            date.value = new Date().toISOString().split('T')[0];
-            date.min = new Date().toISOString().split('T')[0];
-            date.required = true;
-            form.appendChild(date);
-
-            const text = document.createElement('input');
-            text.classList.add('planenExtraInput');
-            text.type = 'text';
-            text.placeholder = 'Text';
-            text.required = true;
-            form.appendChild(text);
-
-            const button = document.createElement('button');
-            button.innerText = 'Planen';
-            button.style.padding = '10px 20px';
-            button.style.backgroundColor = '#bbef9c';
-            button.style.color = 'var(--color)';
-            button.style.border = 'none';
-            button.style.borderRadius = '10px';
-            button.style.cursor = 'pointer';
-            button.style.marginTop = '20px';
-            form.appendChild(button);
-
-            back.appendChild(form);
-            document.body.appendChild(back);
-
-
-            back.addEventListener('click', () => {
-                back.remove();
-            });
-
-            form.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const date = form.querySelector('input[type="date"]').value;
-                const text = form.querySelector('input[type="text"]').value;
-                if (date === '' || text === '') {
-                    alert('Bitte füllen Sie alle Felder aus');
-                    return;
-                }
-                window.location.href = `calendar.php?date=${date}&action=add&info=${text}`;
-            });
-        });
-    </script>
     <div class="nav-grid">
         <?php
         require_once 'shared/navbar.php';
@@ -250,82 +57,32 @@ $kalender->execute();
 
 
             <div id='calendar'>
-                <?php
-
-                $lastDate = "";
-
-                while ($row = $kalender->fetch()) {
-                    $date = $row['Datum'];
-
-                    //convert to german date format
-                    $date = date("d.m.Y", strtotime($date));
-
-                    $rezept = $row['Name'];
-                    $text = $row['Text'];
-
-                    if ($lastDate != $date) {
-                        echo "<div class='day'>";
-                        echo "<h2>$date</h2>";
-                        $lastDate = $date;
-                        echo "<div class='dayContent'>";
-                    }
-
-                    $showPast = (isset($_GET['showPast']) && $_GET['showPast'] == 'true') ? '' : '&showPast=true';
-
-                    if ($rezept == null) {
-                        echo "
-                    <div style='display: grid; grid-template-columns: auto 30px; gap: 10px;'>
-                        <div class='rezept' style='min-height: 100px; grid-template-columns: 2fr 25px;'>
-                            <div>
-                                <h3 style='text-transform: none' >$text</h3>
-                            </div>
-                        </div>
-                       <div onclick='window.location.href=`calendar.php?action=delete&id=$row[Kalender_ID]$showPast`' style='cursor: pointer; display: flex; justify-content: center; align-items: center; background-color: var(--nonSelected); border-radius: 10px'>
-                            <i class='fas fa-trash-alt' style='color: white'></i>
-                       </div>
-                    </div>
-                        ";
-                    }else {
-                        echo "
-                    <div style='display: grid; grid-template-columns: auto 30px; gap: 10px;'>
-                        <a class='rezept' href='rezept.php?id=$row[ID]'>
-                            <img src='uploads/$row[Image]' alt='$row[Name]'>
-                            <div>
-                                <h3 style='text-transform: none' >$rezept</h3>
-                                <p style='text-transform: none'>$text</p>
-                            </div>
-                        </a>
-                        <div onclick='window.location.href=`calendar.php?action=delete&id=$row[Kalender_ID]$showPast`' style='cursor: pointer; display: flex; justify-content: center; align-items: center; background-color: var(--nonSelected); border-radius: 10px'>
-                            <i class='fas fa-trash-alt' style='color: white'></i>
-                        </div>
-
-                    </div>
-                        ";
-                    }
-
-                    if ($lastDate != $date) {
-                        echo "</div>";
-                        echo "</div>";
-                    }
-                }
-
-                if ($lastDate == "") {
-                    echo "<h2>Keine Einträge</h2>";
-                }
-
-                ?>
             </div>
 
             <script>
-                let kalender = <?php echo $kalender ?>;
-                let calendarEl = document.getElementById('calendar');
 
-                calendarEl.innerHTML = kalender.map(e => {
-                    return `<div class="day">
-                        <h2>${e.Datum}</h2>
-                        <p>${e.Text}</p>
-                    </div>`
-                }).join('');
+                let showPast = <?php echo isset($_GET['showPast']) && $_GET['showPast'] == 'true' ? 'true' : 'false' ?>;
+                let data = JSON.parse($.ajax({
+                    url: `http://localhost/Kochbuch/api?task=getKalender&showPast=${showPast}`,
+                    async: false
+                }).responseText);
+
+                console.log(data);
+
+                let html = '';
+                for (let i = 0; i < data.length; i++) {
+                    let recipe = data[i];
+
+                    html += `<div class="day">
+                        <div class="recipe">
+                            <h3>${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }</h3>
+                        </div>`;
+
+                    html += `</div>
+                    </div>`;
+                }
+
+                document.getElementById('calendar').innerHTML = html;
 
             </script>
 

@@ -87,6 +87,10 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
         nav.navDesktop a.desktop {
             display: none;
         }
+
+        .desktop {
+            display: none;
+        }
     }
 
     @media (min-width: 768px) {
@@ -113,10 +117,10 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
         <img src="logo.svg" alt="Logo" style="width: 40%; padding: 10px; filter: drop-shadow(3px 3px 0 var(--nonSelected));">
     </div>
 
-    <a href="index.php" <?php if ($currentPage == "index") echo "class='active'" ?>>
+    <a href="./" <?php if ($currentPage == "index") echo "class='active'" ?>>
         <i class="fas fa-home"></i> <span>Kochbuch</span>
     </a>
-    <a href="search.php" <?php if ($currentPage == "search") echo "class='active'" ?>>
+    <a href="search" <?php if ($currentPage == "search") echo "class='active'" ?>>
         <i class="fas fa-search"></i> <span>Suche</span>
     </a>
     <a href="cart.php" <?php if ($currentPage == "cart") echo "class='active'" ?>>
