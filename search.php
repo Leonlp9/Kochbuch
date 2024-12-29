@@ -211,7 +211,8 @@ global $pdo;
                             for (let i = 0; i < data.length; i++) {
                                 let result = data[i];
                                 html += `
-                                <div class="rezept">
+                                <a class="rezept" href="rezept?id=${result.rezepte_ID}">
+                                    <img src="${result.Image}" alt="${result.Name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">
                                     <h2>${result.Name}</h2>
                                     <div class="rating">`;
                                 for (let j = 0; j < 5; j++) {
@@ -223,8 +224,7 @@ global $pdo;
                                 }
                                 html += `</div>
                                     <p>${result.Zeit} Minuten</p>
-                                    <a href="rezept?id=${result.rezepte_ID}">Mehr</a>
-                                </div>
+                                </a>
                                 `;
                             }
                             $("#results").html(html);

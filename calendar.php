@@ -70,16 +70,33 @@ global $pdo;
                 console.log(data);
 
                 let html = '';
+                let lastDate = null;
                 for (let i = 0; i < data.length; i++) {
                     let recipe = data[i];
 
-                    html += `<div class="day">
+                    if (recipe['Datum'] !== lastDate) {
+                        if (lastDate !== null) {
+                            html += `</div>`;
+                        }
+                        lastDate = recipe['Datum'];
+                        html += `<div class="day">
+                            <h2>${ recipe['Datum'] }</h2>`;
+                        html += `
+                        </div>`;
+                    }
+
+                    html += `<a class="entry" href="rezept.php?id=${ recipe['Rezept_ID'] }">
                         <div class="recipe">
                             <h3>${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }</h3>
-                        </div>`;
+                        `;
+
+
+                    if (recipe['Image'] !== null) {
+                        html += `<img src="${ recipe['Image'] }" alt="${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">`;
+                    }
 
                     html += `</div>
-                    </div>`;
+                    </a>`;
                 }
 
                 document.getElementById('calendar').innerHTML = html;

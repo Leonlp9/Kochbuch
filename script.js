@@ -132,3 +132,196 @@ async function generateResponse(prompt) {
         return `Error: ${error.message}`;
     }
 }
+class FormBuilder {
+    constructor(title, onSubmit, onCancel) {
+        this.background = document.createElement('div');
+        this.container = document.createElement('div');
+
+        this.fields = [];
+        this.title = title;
+        this.onSubmit = onSubmit;
+        this.onCancel = onCancel;
+
+        this.background.className = 'form-background';
+        this.container.className = 'form-container';
+
+        this.background.appendChild(this.container);
+        document.body.appendChild(this.background);
+    }
+
+    addInputField(id, placeholder, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'input', placeholder, startValue, onChange });
+    }
+
+    addColorField(id, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'color', startValue, onChange });
+    }
+
+    addCheckbox(id, label, checked, onChange = () => {}) {
+        this.fields.push({ id, type: 'checkbox', label, checked, onChange });
+    }
+
+    addNumberField(id, min, max, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'number', min, max, startValue, onChange });
+    }
+
+    addRangeField(id, min, max, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'range', min, max, startValue, onChange });
+    }
+
+    addFileField(id, accept, onChange = () => {}) {
+        this.fields.push({ id, type: 'file', accept, onChange });
+    }
+
+    renderForm(showButtons = true) {
+        // Clear previous content
+        this.container.innerHTML = '';
+        const form = document.createElement('form');
+
+        // Add title
+        const title = document.createElement('h2');
+        title.textContent = this.title;
+        form.appendChild(title);
+
+        // Generate fields
+        this.fields.forEach((field) => {
+            let element;
+            switch (field.type) {
+                case 'input':
+                    element = document.createElement('input');
+                    element.type = 'text';
+                    element.id = field.id;
+                    element.placeholder = field.placeholder;
+                    element.value = field.startValue || '';
+                    break;
+                case 'color':
+                    element = document.createElement('input');
+                    element.type = 'color';
+                    element.id = field.id;
+                    element.value = field.startValue || '#000000';
+                    break;
+                case 'checkbox':
+                    element = document.createElement('label');
+                    element.htmlFor = field.id;
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = field.id;
+                    checkbox.checked = field.checked || false;
+                    checkbox.addEventListener('change', (e) => field.onChange(e.target.checked));
+                    element.appendChild(checkbox);
+                    element.appendChild(document.createTextNode(field.label));
+                    break;
+                case 'number':
+                    element = document.createElement('input');
+                    element.type = 'number';
+                    element.id = field.id;
+                    element.min = field.min;
+                    element.max = field.max;
+                    element.value = field.startValue || field.min;
+                    break;
+                case 'range':
+                    element = document.createElement('input');
+                    element.type = 'range';
+                    element.id = field.id;
+                    element.min = field.min;
+                    element.max = field.max;
+                    element.value = field.startValue || field.min;
+                    break;
+                case 'file':
+                    element = document.createElement('input');
+                    element.type = 'file';
+                    element.id = field.id;
+                    element.accept = field.accept;
+                    element.addEventListener('change', (e) => field.onChange(e.target.files[0]));
+                    break;
+            }
+
+            if (field.type !== 'checkbox') {
+                element.addEventListener('input', (e) => field.onChange(e.target.value));
+            }
+            form.appendChild(element);
+            form.appendChild(document.createElement('br'));
+        });
+
+        // Add buttons
+        if (showButtons) {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+
+            const saveButton = document.createElement('button');
+            saveButton.type = 'button';
+            saveButton.textContent = 'Speichern';
+            saveButton.addEventListener('click', () => {
+                const formData = {};
+                this.fields.forEach((field) => {
+                    const input = form.querySelector(`#${field.id}`);
+                    if (field.type === 'checkbox') {
+                        formData[field.id] = input.checked;
+                    } else {
+                        formData[field.id] = input.value;
+                    }
+                });
+                this.onSubmit(formData);
+
+                this.container.style.animation = 'form-container-out-animation 0.25s forwards';
+                this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
+
+                setTimeout(() => {
+                    document.body.removeChild(this.background);
+                }, 500);
+
+                delete this;
+            });
+
+            const cancelButton = document.createElement('button');
+            cancelButton.type = 'button';
+            cancelButton.textContent = 'Abbrechen';
+            cancelButton.addEventListener('click', () => {
+                this.onCancel();
+
+                this.container.style.animation = 'form-container-out-animation 0.25s forwards';
+                this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
+
+                setTimeout(() => {
+                    document.body.removeChild(this.background);
+                }, 500);
+
+                delete this;
+            });
+            buttonContainer.appendChild(saveButton);
+            buttonContainer.appendChild(cancelButton);
+            form.appendChild(buttonContainer);
+        }
+
+        this.background.addEventListener('click', (e) => {
+            if (e.target === this.background) {
+                this.container.style.animation = 'form-container-out-animation 0.25s forwards';
+                this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
+
+                setTimeout(() => {
+                    document.body.removeChild(this.background);
+                }, 500);
+
+                delete this;
+            }
+        });
+
+        this.container.appendChild(form);
+    }
+}
+
+/*
+
+let builder = new FormBuilder("GHG", (data) => {
+    console.log('Formular gesendet:', data);
+}, () => {
+    console.log('Abbrechen gedrückt');
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    builder.addInputField('name', 'Name eingeben', '', (value) => console.log('Name geändert:', value));
+    builder.addNumberField('age', 0, 100, 18, (value) => console.log('Alter geändert:', value));
+    builder.renderForm();
+});
+
+*/

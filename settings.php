@@ -2,61 +2,6 @@
 require_once 'shared/global.php';
 global $pdo;
 
-if (isset($_POST['export_db'])) {
-
-    if (file_exists("dbInfo.ini") && is_readable("dbInfo.ini")) {
-		// Get username and password from dbInfo.ini
-		$dbInfo = parse_ini_file("dbInfo.ini");
-
-		// Check if username and password keys exist in the parsed array
-		if (isset($dbInfo['username']) && isset($dbInfo['password'])) {
-			$host = 'localhost';
-			$user = $dbInfo['username'];
-			$password = $dbInfo['password'];
-			$dbname = 'kochbuch';
-
-			// Dynamischer Pfad für mysqldump
-			if (stripos(PHP_OS, 'WIN') !== false) {
-				// Windows (lokaler PC mit XAMPP)
-				$mysqldumpPath = 'C:/xampp/mysql/bin/mysqldump';
-			} else {
-				// Linux/Unix Server
-				$mysqldumpPath = '/usr/bin/mysqldump';  // typischer Pfad auf einem Server
-			}
-
-			// Ordner "backups" erstellen, falls er nicht existiert
-			$backupDir = __DIR__ . '/backups';
-			if (!is_dir($backupDir)) {
-				mkdir($backupDir, 0777, true);  // Erstellen des Ordners mit entsprechenden Rechten
-			}
-
-			// Dateiname für das Backup
-			$backupFile = $backupDir . '/' . $dbname . '_backup_' . date('Y-m-d_H-i-s') . '.sql';
-
-			// Shell-Befehl zum Exportieren der Datenbank
-			$command = "$mysqldumpPath --user=$user --password=$password --host=$host $dbname > $backupFile";
-
-			// Shell-Befehl ausführen
-			system($command);
-
-			// Prüfen, ob die Backup-Datei existiert und an den Benutzer senden
-			if (file_exists($backupFile)) {
-				header('Content-Description: File Transfer');
-				header('Content-Type: application/octet-stream');
-				header('Content-Disposition: attachment; filename="' . basename($backupFile) . '"');
-				header('Content-Length: ' . filesize($backupFile));
-				readfile($backupFile);
-
-				// Datei löschen, nachdem sie heruntergeladen wurde
-				unlink($backupFile);
-				exit;
-			} else {
-				echo "Backup fehlgeschlagen.";
-			}
-		}
-	}
-}
-
 ?>
 
 <!doctype html>
@@ -122,9 +67,31 @@ if (isset($_POST['export_db'])) {
 		</a>
 
         <h2>Sicherheitskopie erstellen</h2>
-        <form method="post">
-            <button type="submit" name="export_db" class="btn green">Datenbank exportieren</button>
-        </form>
+        <div onclick="downloadBackUp()">
+            <button class="btn blue">Sicherheitskopie erstellen</button>
+        </div>
+
+        <script>
+            function downloadBackUp() {
+                $.ajax({
+                    url: 'api.php',
+                    type: 'GET',
+                    data: {
+                        task: 'export_db'
+                    },
+                    success: function (data) {
+                        var blob = new Blob([data], {type: 'application/octet-stream'});
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'Backup_' + new Date().toISOString().slice(0, 10) + '.sql';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    }
+                });
+            }
+        </script>
 	</div>
 </div>
 </body>

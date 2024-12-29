@@ -11,7 +11,149 @@ if (!isset($_GET['id'])) {
 $id = $_GET['id'];
 
 // http://localhost/Kochbuch/api?task=getRezept&id=$id
-$rezept = json_decode(file_get_contents("http://localhost/Kochbuch/api?task=getRezept&id=$id"), true)[0];
+$rezept = json_decode(file_get_contents("http://localhost/Kochbuch/api?task=getRezept&id=$id&zutaten"), true)[0];
+
+// Array
+//(
+//    [ID] => 154
+//    [Name] => Rotweinsauce zu Hirsch
+//    [Kategorie_ID] => 2
+//    [Zubereitung] =>
+//Zucker karamellisieren, nicht zu braun. Anschließend mit Wein ablöschen und ca. 70 Minuten reduzieren.
+//In einem zweiten Topf Wildfond reduzieren.
+//Inhalt zusammenschütten, mit Salz und Pfeffer abschmecken.
+//Mit Butter binden, wenn nicht fest genug, dann mit Soßenbinder unter ständigem rühren andicken.
+//
+//    [Portionen] => 10
+//    [Zeit] => 90
+//    [Zutaten_JSON] => Array
+//        (
+//            [0] => Array
+//                (
+//                    [ID] => 137
+//                    [Menge] => 750
+//                    [unit] => ml
+//                    [Name] => Rotwein
+//                    [Image] => rotwein.svg
+//                    [additionalInfo] => 1 Flasche
+//                    [table] =>
+//                )
+//
+//            [1] => Array
+//                (
+//                    [ID] => 253
+//                    [Menge] => 1
+//                    [unit] => EL
+//                    [Name] => Butter
+//                    [Image] => butter.svg
+//                    [additionalInfo] => eiskalte Butter
+//                    [table] =>
+//                )
+//
+//            [2] => Array
+//                (
+//                    [ID] => 319
+//                    [Menge] => 4
+//                    [unit] => EL
+//                    [Name] => Zucker
+//                    [Image] => zucker.svg
+//                    [additionalInfo] =>
+//                    [table] =>
+//                )
+//
+//            [3] => Array
+//                (
+//                    [ID] => 455
+//                    [Menge] => 800
+//                    [unit] => ml
+//                    [Name] => Wildfond
+//                    [Image] => wildfond.svg
+//                    [additionalInfo] =>
+//                    [table] =>
+//                )
+//
+//            [4] => Array
+//                (
+//                    [ID] => 1
+//                    [Menge] => 5
+//                    [unit] => g
+//                    [Name] => Salz
+//                    [Image] => salz.svg
+//                    [additionalInfo] => nach Geschmack
+//                    [table] =>
+//                )
+//
+//            [5] => Array
+//                (
+//                    [ID] => 2
+//                    [Menge] => 5
+//                    [unit] => g
+//                    [Name] => Pfeffer
+//                    [Image] => pfeffer.svg
+//                    [additionalInfo] => nach Geschmack
+//                    [table] =>
+//                )
+//
+//            [6] => Array
+//                (
+//                    [ID] => 456
+//                    [Menge] => 10
+//                    [unit] => g
+//                    [Name] => Soßenbinder
+//                    [Image] => soßenbinder.svg
+//                    [additionalInfo] => braun, nach Bedarf
+//                    [table] =>
+//                )
+//
+//        )
+//
+//    [OptionalInfos] => []
+//    [ZutatenTables] => Array
+//        (
+//            [0] =>
+//        )
+//
+//    [Kategorie] => Aufstriche, Dips und Saucen
+//    [KategorieColor] => #FFB6C1
+//    [Anmerkungen] => Array
+//        (
+//        )
+//
+//    [Bewertungen] => Array
+//        (
+//        )
+//
+//    [Kalender] => Array
+//        (
+//            [0] => Array
+//                (
+//                    [ID] => 48
+//                    [Datum] => 2024-12-24
+//                    [Rezept_ID] => 154
+//                    [Text] =>
+//                )
+//
+//        )
+//
+//    [Bilder] => Array
+//        (
+//            [0] => Array
+//                (
+//                    [ID] => 162
+//                    [Rezept_ID] => 154
+//                    [Image] => uploads/676c728ac90021.46982337.webp
+//                )
+//
+//            [1] => Array
+//                (
+//                    [ID] => 163
+//                    [Rezept_ID] => 154
+//                    [Image] => uploads/676c72a349a6a8.72778033.webp
+//                )
+//
+//        )
+//
+//)
 
 ?>
 
@@ -52,12 +194,79 @@ $rezept = json_decode(file_get_contents("http://localhost/Kochbuch/api?task=getR
     require_once 'shared/navbar.php';
     ?>
         <div class="container">
-            <?php
 
-            echo "<pre>";
-            print_r($rezept);
-            echo "</pre>";
-            ?>
+            <h1><?= $rezept['Name'] ?></h1>
+            <div class="images">
+                <?php
+                foreach ($rezept['Bilder'] as $bild) {
+                    $bild = $bild["Image"];
+                    echo "<img src='$bild' alt=''>";
+                }
+                ?>
+            </div>
+
+            <h2>Zutaten</h2>
+            <ul>
+                <?php
+                foreach ($rezept['Zutaten_JSON'] as $zutat) {
+                    echo "<li>
+                            <img src='{$zutat['Image']}' alt='' width='20px' height='20px'>
+                            {$zutat['Menge']} {$zutat['unit']} {$zutat['Name']} {$zutat['additionalInfo']}
+                        </li>";
+                }
+                ?>
+            </ul>
+
+            <h2>Zubereitung</h2>
+            <p><?= $rezept['Zubereitung'] ?></p>
+
+            <h2>Portionen</h2>
+            <p><?= $rezept['Portionen'] ?></p>
+
+            <h2>Zeit</h2>
+            <p><?= $rezept['Zeit'] ?></p>
+
+            <h2>Kategorie</h2>
+            <p><?= $rezept['Kategorie'] ?></p>
+
+            <h2>Anmerkungen</h2>
+            <ul>
+                <?php
+                foreach ($rezept['Anmerkungen'] as $anmerkung) {
+
+                    if (empty($anmerkung['Text'])) {
+                        continue;
+                    }
+
+                    echo "<li>{$anmerkung['Text']}</li>";
+                }
+                ?>
+            </ul>
+
+            <h2>Kalender</h2>
+            <ul>
+                <?php
+                foreach ($rezept['Kalender'] as $kalender) {
+                    echo "<li>{$kalender['Datum']}</li>";
+                }
+                ?>
+            </ul>
+
+            <h2>Bewertungen</h2>
+            <ul>
+                <?php
+                foreach ($rezept['Bewertungen'] as $bewertung) {
+                    echo "<li>
+                            <i class='fas fa-star'></i>
+                            {$bewertung['Bewertung']}
+                            {$bewertung['Text']}
+                            - 
+                            {$bewertung['Name']}
+                        </li>";
+                }
+                ?>
+            </ul>
+
         </div>
     </div>
 </body>

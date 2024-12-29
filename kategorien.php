@@ -2,44 +2,6 @@
 require_once 'shared/global.php';
 global $pdo;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    header('Content-Type: application/json');
-
-    if ($_POST['type'] === 'add') {
-		$name = $_POST['name'];
-		$color = $_POST['color'];
-        $stmt = $pdo->prepare('INSERT INTO kategorien (Name, ColorHex) VALUES (:name, :color)');
-        $stmt->execute([
-            'name' => $name,
-            'color' => $color
-        ]);
-    }
-
-    if ($_POST['type'] === 'edit') {
-		$id = $_POST['id'];
-		$name = $_POST['name'];
-		$color = $_POST['color'];
-        $stmt = $pdo->prepare('UPDATE kategorien SET Name = :name, ColorHex = :color WHERE ID = :id');
-        $stmt->execute([
-            'name' => $name,
-            'color' => $color,
-            'id' => $id
-        ]);
-    }
-
-    if ($_POST['type'] === 'delete') {
-        $id = $_POST['id'];
-        $stmt = $pdo->prepare('DELETE FROM kategorien WHERE ID = :id');
-        $stmt->execute([
-            'id' => $id
-        ]);
-	}
-
-    echo json_encode('success');
-    exit();
-}
-
 ?>
 
 <!doctype html>
@@ -77,47 +39,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	<!-- jQuery UI Touch Punch -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
-	<link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css">
 
     <style>
-        .kategorien {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            border-radius: 10px;
-            scrollbar-width: none;
-            justify-content: center;
-        }
 
         .kategorie {
-            width: clamp(150px, 20vw, 200px);
-            height: clamp(150px, 20vw, 200px);
             padding: 10px;
-            border-radius: 10px;
+            margin: 5px;
+            border-radius: 5px;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 5px;
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            user-select: none;
-            flex-shrink: 0;
-            transition: transform 0.2s, border-radius 0.2s;
-        }
-
-        .kategorie:hover {
-            transform: scale(1.05);
-            border-radius: 20px;
+            display: inline-block;
         }
 
         .kategorie .count {
-            font-size: 18px;
-            font-weight: normal;
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+
+        .subKategorien {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: var(--color);
+            min-width: 100px;
+            min-height: 50px;
+        }
+
+        .subKategorie {
+            padding: 5px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
         }
     </style>
 </head>
@@ -128,232 +83,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		<h1>Kategorien</h1>
         <br>
 
-        <div class="kategorien">
-            <?php
-                $stmt = $pdo->prepare('
-                    SELECT k.*, COUNT(rk.Kategorie_ID) AS usage_count
-                    FROM kategorien k
-                    LEFT JOIN rezepte rk ON k.ID = rk.Kategorie_ID
-                    GROUP BY k.ID
-                ');
-                $stmt->execute();
-                $kategorien = $stmt->fetchAll();
-                foreach ($kategorien as $kategorie) {
-                    ?>
-                    <div class="kategorie" data-id="<?php echo $kategorie['ID']; ?>" style="background-color: <?php echo $kategorie['ColorHex']; ?>">
-                        <span class="name"><?php echo $kategorie['Name']; ?></span>
-                        <span class="count"><?php echo $kategorie['usage_count']; ?></span>
-                    </div>
-                    <?php
-                }
-                ?>
-        </div>
+        <div class="kategorien"></div>
 
         <button class="btn green" id="addKategorie">Kategorie hinzufügen</button>
 
+        <script>
+            // Kategorien laden
+            $.get('api.php?task=getKategorien&includeCount=true', function (data) {
+
+                var kategorienDiv = $('.kategorien');
+                kategorienDiv.html('');
+
+                data.forEach(function (kategorie) {
+                    var kategorieDiv = $('<div class="kategorie" data-id="' + kategorie.ID + '" style="background-color: ' + kategorie.ColorHex + '"></div>');
+                    kategorieDiv.html(kategorie.Name);
+
+                    var count = $('<span class="count">' + kategorie.usage_count + '</span>');
+                    kategorieDiv.append(count);
+
+                    var subKategorienDiv = $('<div class="subKategorien"></div>');
+                    kategorieDiv.append(subKategorienDiv);
+
+                    new Sortable(subKategorienDiv[0], {
+                        group: 'shared',
+                        animation: 200,
+                        onEnd: function (evt) {
+
+                            if (evt.newIndex === evt.oldIndex) {
+                                return;
+                            }
+
+                            // das element das verschoben wurde
+                            var item = evt.item.dataset.id;
+
+                            // in das element das verschoben wurde
+                            var target = evt.to.parentElement.dataset.id;
+
+                            console.log(item);
+                            console.log(target);
+
+                        }
+                    });
+
+                    kategorienDiv.append(kategorieDiv);
+                });
+            });
+
+            new Sortable($('.kategorien')[0], {
+                group: 'shared',
+                animation: 200,
+                sort: false, // Verhindert das Sortieren der Hauptkategorien
+                onEnd: function (evt) {
+
+                    if (evt.newIndex === evt.oldIndex) {
+                        return;
+                    }
+
+                    // das element das verschoben wurde
+                    var item = evt.item.dataset.id;
+
+                    // in das element das verschoben wurde
+                    var target = evt.to.parentElement.dataset.id;
+
+                    console.log(item);
+                    console.log(target);
+
+                }
+            });
+
+            $('#addKategorie').click(function () {
+                let kategorieBuilder = new FormBuilder("Neue Kategorie erstellen", (data) => {
+                    console.log('Formular gesendet:', data);
+                }, () => {
+                    console.log('Abbrechen gedrückt');
+                });
+
+                kategorieBuilder.addInputField("Name", "Name der Kategorie", "");
+                kategorieBuilder.addColorField("Farbe", "#ba5656");
+                kategorieBuilder.renderForm();
+            });
+
+        </script>
 	</div>
 </div>
 </body>
-<script>
-    let kategorien = document.querySelectorAll('.kategorie');
-    kategorien.forEach(kategorie => {
-        kategorie.addEventListener('click', () => {
-
-            const background = document.createElement('div');
-            background.style.position = 'fixed';
-            background.style.top = '0';
-            background.style.left = '0';
-            background.style.width = '100%';
-            background.style.height = '100%';
-            background.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            background.style.zIndex = '1000';
-            background.style.display = 'flex';
-            background.style.justifyContent = 'center';
-            background.style.alignItems = 'center';
-            document.body.appendChild(background);
-
-            const modal = document.createElement('div');
-            modal.style.backgroundColor = 'white';
-            modal.style.padding = '20px';
-            modal.style.borderRadius = '10px';
-            modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-            modal.style.zIndex = '1001';
-            modal.style.display = 'flex';
-            modal.style.flexDirection = 'column';
-            modal.style.gap = '10px';
-            modal.style.transition = 'transform 0.3s';
-            background.appendChild(modal);
-
-            const title = document.createElement('h2');
-            title.innerText = kategorie.querySelector('.name').innerText;
-            modal.appendChild(title);
-
-            if (kategorie.querySelector('.count').innerText !== '(0)') {
-                const button = document.createElement('button');
-                button.innerText = 'Rezepte anzeigen';
-                button.classList.add('btn', 'blue');
-                button.style.cursor = 'pointer';
-                button.style.marginBottom = '20px';
-                button.addEventListener('click', () => {
-                    window.location.href = 'search.php?kategorie=' + kategorie.dataset.id;
-                });
-                modal.appendChild(button);
-            }
-
-            const name = document.createElement('input');
-            name.type = 'text';
-            name.value = kategorie.querySelector('.name').innerText;
-            name.style.textTransform = 'none';
-            modal.appendChild(name);
-
-            const color = document.createElement('input');
-            color.type = 'color';
-            color.value = "#" + kategorie.style.backgroundColor.slice(4, -1).split(',').map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
-            modal.appendChild(color);
-
-            const save = document.createElement('button');
-            save.innerText = 'Speichern';
-            save.classList.add('btn', 'green');
-            save.style.cursor = 'pointer';
-            save.addEventListener('click', () => {
-                $.ajax({
-                    url: 'kategorien.php',
-                    type: 'POST',
-                    data: {
-                        type: 'edit',
-                        id: kategorie.dataset.id,
-                        name: name.value,
-                        color: color.value
-                    },
-                    success: function (data) {
-                        if (data === 'success') {
-                            kategorie.innerText = name.value;
-                            kategorie.style.backgroundColor = color.value;
-                            background.remove();
-                        }
-                    }
-                });
-            });
-
-            modal.appendChild(save);
-
-            const del = document.createElement('button');
-            del.innerText = 'Löschen';
-            del.classList.add('btn', 'red');
-            del.style.cursor = 'pointer';
-            del.addEventListener('click', () => {
-                $.ajax({
-                    url: 'kategorien.php',
-                    type: 'POST',
-                    data: {
-                        type: 'delete',
-                        id: kategorie.dataset.id
-                    },
-                    success: function (data) {
-                        if (data === 'success') {
-                            kategorie.remove();
-                            background.remove();
-                        }
-                    }
-                });
-            });
-
-            if (kategorie.querySelector('.count').innerText !== '(0)') {
-                del.disabled = true;
-                del.style.cursor = 'not-allowed';
-
-                const tooltip = document.createElement('span');
-                tooltip.innerText = 'Kategorie kann nicht gelöscht werden, da sie in Rezepten verwendet wird';
-                tooltip.style.color = 'red';
-                modal.appendChild(tooltip);
-
-            }
-
-
-                // wenn kein child angeklickt wird dann wird das modal geschlossen
-            background.addEventListener('click', (e) => {
-                if (e.target === background) {
-                    background.remove();
-                }
-            });
-
-
-            modal.appendChild(del);
-
-        });
-    });
-
-    document.getElementById('addKategorie').addEventListener('click', () => {
-        const background = document.createElement('div');
-        background.style.position = 'fixed';
-        background.style.top = '0';
-        background.style.left = '0';
-        background.style.width = '100%';
-        background.style.height = '100%';
-        background.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        background.style.zIndex = '1000';
-        background.style.display = 'flex';
-        background.style.justifyContent = 'center';
-        background.style.alignItems = 'center';
-        document.body.appendChild(background);
-
-        const modal = document.createElement('div');
-        modal.style.backgroundColor = 'white';
-        modal.style.padding = '20px';
-        modal.style.borderRadius = '10px';
-        modal.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.5)';
-        modal.style.zIndex = '1001';
-        modal.style.display = 'flex';
-        modal.style.flexDirection = 'column';
-        modal.style.gap = '10px';
-        modal.style.transition = 'transform 0.3s';
-        background.appendChild(modal);
-
-        const title = document.createElement('h2');
-        title.innerText = 'Kategorie hinzufügen';
-        modal.appendChild(title);
-
-        const name = document.createElement('input');
-        name.type = 'text';
-        name.placeholder = 'Name';
-        name.style.textTransform = 'none';
-        modal.appendChild(name);
-
-        const color = document.createElement('input');
-        color.type = 'color';
-        color.value = '#000000';
-        modal.appendChild(color);
-
-        const save = document.createElement('button');
-        save.innerText = 'Speichern';
-        save.classList.add('btn', 'green');
-        save.style.cursor = 'pointer';
-        save.addEventListener('click', () => {
-            $.ajax({
-                url: 'kategorien.php',
-                type: 'POST',
-                data: {
-                    type: 'add',
-                    name: name.value,
-                    color: color.value
-                },
-                success: function (data) {
-                    if (data === 'success') {
-                        window.location.reload();
-                    }
-                }
-            });
-        });
-
-        background.addEventListener('click', (e) => {
-            if (e.target === background) {
-                background.remove();
-            }
-        });
-
-        modal.appendChild(save);
-    });
-
-</script>
 <script src="script.js"></script>
 </html>

@@ -21,20 +21,6 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
 
     }
 
-    nav.navDesktop a {
-        padding: 10px;
-        color: var(--darkerColor);
-        transition: margin-right 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-left 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-right 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    nav.navDesktop a.active {
-        background-color: var(--nonSelected);
-        border-left: 2px solid var(--secondaryBackground);
-        border-right: 2px solid var(--secondaryBackground);
-        border-radius: 0 10px 10px 0;
-        color: var(--color);
-    }
-
     .nav-grid {
         display: grid;
         grid-template-columns: 200px calc(100% - 200px);
@@ -114,7 +100,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
 <nav class="navDesktop no-print">
 
     <div class="desktop">
-        <img src="logo.svg" alt="Logo" style="width: 40%; padding: 10px; filter: drop-shadow(3px 3px 0 var(--nonSelected));">
+        <img src="icons/logo.svg" alt="Logo" style="width: 40%; padding: 10px; filter: drop-shadow(3px 3px 0 var(--nonSelected));">
     </div>
 
     <a href="./" <?php if ($currentPage == "index") echo "class='active'" ?>>
