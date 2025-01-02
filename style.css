@@ -52,6 +52,13 @@ body {
     color: var(--color);
 }
 
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+}
+
 .form-background {
     position: fixed;
     top: 0;
@@ -185,4 +192,9 @@ body {
     .no-print {
         display: none !important;
     }
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
 }

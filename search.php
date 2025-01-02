@@ -72,16 +72,14 @@ global $pdo;
             gap: 5px;
         }
 
-        .fadeInOpacity {
-            animation: fadeInOpacity 0.3s cubic-bezier(0.42, 0, 0.58, 1);
-        }
-
         @keyframes fadeInOpacity {
             from {
                 opacity: 0;
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -113,6 +111,52 @@ global $pdo;
             color: var(--color);
             border: none;
             outline: none;
+        }
+
+
+        #results {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+
+        .rezept {
+            display: grid;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: var(--secondaryBackground);
+            text-decoration: none;
+            color: var(--color);
+            animation: fadeInOpacity 0.3s cubic-bezier(0.42, 0, 0.58, 1);
+        }
+
+        .rezept img {
+            width: 100%;
+            aspect-ratio: 16/12;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .rezept h2 {
+            margin: 0;
+            font-size: 1.2em;
+            word-break: break-word;
+        }
+
+        .rating {
+            display: flex;
+            gap: 5px;
+        }
+
+        .rating i {
+            color: var(--color);
+        }
+
+        .rezept:hover {
+            background-color: var(--nonSelected);
+            transform: translateY(-5px);
+            transition: background-color 0.3s, transform 0.3s;
         }
     </style>
 </head>
@@ -212,7 +256,7 @@ global $pdo;
                                 let result = data[i];
                                 html += `
                                 <a class="rezept" href="rezept?id=${result.rezepte_ID}">
-                                    <img src="${result.Image}" alt="${result.Name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">
+                                    <img src="${result.Image}" alt="${result.Name}">
                                     <h2>${result.Name}</h2>
                                     <div class="rating">`;
                                 for (let j = 0; j < 5; j++) {

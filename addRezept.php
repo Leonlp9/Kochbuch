@@ -96,10 +96,6 @@ $portionen = $edit ? $rezept['Portionen'] : 4;
                 </div>
 
 
-
-
-
-
                 <button type="submit" class="btn green"><?php echo $edit ? 'Speichern' : 'Hinzufügen' ?></button>
             </form>
         </div>
