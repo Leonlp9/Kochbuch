@@ -72,8 +72,7 @@ global $pdo;
         </div>
 
         <h2>GitHub Version</h2>
-        <div id="githubVersion">
-        </div>
+        <div id="githubVersion"></div>
 
         <script>
             function downloadBackUp() {
@@ -115,6 +114,9 @@ global $pdo;
 
             loadGitHubVersion();
 
+            function getLocalVersion() {
+                return fetch('version.txt').then(response => response.text());
+            }
 
 
         </script>

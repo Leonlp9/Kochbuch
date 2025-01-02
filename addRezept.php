@@ -6,7 +6,7 @@ $edit = isset($_GET['rezept']);
 $rezeptID = $edit ? $_GET['rezept'] : null;
 
 //api.php?task=getRezept&id=$rezeptID
-$rezept = $edit ? json_decode(file_get_contents("http://localhost/Kochbuch/api.php?task=getRezept&id=$rezeptID"), true)[0] : null;
+$rezept = $edit ? json_decode(file_get_contents(BASE_URL. "api.php?task=getRezept&id=$rezeptID", true), true)[0] : null;
 
 $name = $edit ? $rezept['Name'] : '';
 $dauer = $edit ? $rezept['Zeit'] : 5;

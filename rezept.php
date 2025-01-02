@@ -11,7 +11,7 @@ if (!isset($_GET['id'])) {
 $id = $_GET['id'];
 
 // http://localhost/Kochbuch/api?task=getRezept&id=$id
-$rezept = json_decode(file_get_contents("http://localhost/Kochbuch/api?task=getRezept&id=$id&zutaten"), true)[0];
+$rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zutaten"), true)[0];
 
 // Array
 //(

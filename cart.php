@@ -64,7 +64,7 @@ global $pdo;
         <script>
             // http://localhost/Kochbuch/api?task=getEinkaufsliste
 
-            $.get("http://localhost/Kochbuch/api?task=getEinkaufsliste", function (data) {
+            $.get("api?task=getEinkaufsliste", function (data) {
                 console.log(data);
                 data.forEach((item) => {
                     $(".cart table").append(`

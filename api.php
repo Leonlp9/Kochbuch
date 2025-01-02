@@ -766,9 +766,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 die();
             }
         case "export_db":
-            if (file_exists("dbInfo.ini") && is_readable("dbInfo.ini")) {
-                // Get username and password from dbInfo.ini
-                $dbInfo = parse_ini_file("dbInfo.ini");
+            if (file_exists("config.ini") && is_readable("config.ini")) {
+                // Get username and password from config.ini
+                $dbInfo = parse_ini_file("config.ini");
 
                 // Check if username and password keys exist in the parsed array
                 if (isset($dbInfo['username']) && isset($dbInfo['password'])) {

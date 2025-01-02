@@ -63,7 +63,7 @@ global $pdo;
 
                 let showPast = <?php echo isset($_GET['showPast']) && $_GET['showPast'] == 'true' ? 'true' : 'false' ?>;
                 let data = JSON.parse($.ajax({
-                    url: `http://localhost/Kochbuch/api?task=getKalender&showPast=${showPast}`,
+                    url: `api?task=getKalender&showPast=${showPast}`,
                     async: false
                 }).responseText);
 
