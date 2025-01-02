@@ -41,6 +41,8 @@ $portionen = $edit ? $rezept['Portionen'] : 4;
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -51,7 +53,7 @@ $portionen = $edit ? $rezept['Portionen'] : 4;
         <div class="container">
 
             <h1>Rezept <?php echo $edit ? 'bearbeiten' : 'hinzufügen' ?></h1>
-            <form action="addRezept.php<?php echo $edit ? '?edit=true&rezept=' . $rezeptID : '' ?>
+            <form action="api.php<?php echo $edit ? '?edit=true&rezept=' . $rezeptID : '' ?>
 " method="post" enctype="multipart/form-data">
                 <label for="name">Name</label>
                 <input type="text" name="name" id="name" required placeholder="Rezeptname" style="text-transform: none" value="<?php echo $edit ? $name : '' ?>">
@@ -95,6 +97,11 @@ $portionen = $edit ? $rezept['Portionen'] : 4;
 
 
 
+
+
+
+                <button type="submit" class="btn green"><?php echo $edit ? 'Speichern' : 'Hinzufügen' ?></button>
+            </form>
         </div>
     </div>
 </body>

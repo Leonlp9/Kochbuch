@@ -71,6 +71,10 @@ global $pdo;
             <button class="btn blue">Sicherheitskopie erstellen</button>
         </div>
 
+        <h2>GitHub Version</h2>
+        <div id="githubVersion">
+        </div>
+
         <script>
             function downloadBackUp() {
                 $.ajax({
@@ -91,6 +95,28 @@ global $pdo;
                     }
                 });
             }
+
+            async function getLastGitHubCommit() {
+                try {
+                    const response = await fetch('https://api.github.com/repos/Leonlp9/Kochbuch/commits');
+                    const data = await response.json();
+                    return data[0].commit; // Dies gibt den Commit-Titel zurück
+                } catch (error) {
+                    console.error('Fehler beim Abrufen des letzten Commit-Titels:', error);
+                    return null; // Im Fehlerfall null zurückgeben oder entsprechend anpassen
+                }
+            }
+
+            function loadGitHubVersion() {
+                getLastGitHubCommit().then(data => {
+                    $('#githubVersion').html(`<p>Letzter Commit: ${data.message}</p>`);
+                });
+            }
+
+            loadGitHubVersion();
+
+
+
         </script>
 	</div>
 </div>
