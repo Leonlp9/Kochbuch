@@ -35,6 +35,33 @@ global $pdo;
 
     <link rel="stylesheet" href="style.css">
 
+    <style>
+        .entry {
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .entry:hover {
+            background-color: var(--nonSelected);
+            border-radius: 10px;
+        }
+
+        .recipe {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .recipe img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+    </style>
+
 </head>
 <body>
 
@@ -80,12 +107,12 @@ global $pdo;
                         }
                         lastDate = recipe['Datum'];
                         html += `<div class="day">
-                            <h2>${ recipe['Datum'] }</h2>`;
+                            <h2 class="divider">${ recipe['Datum'] }</h2>`;
                         html += `
                         </div>`;
                     }
 
-                    html += `<a class="entry" href="rezept.php?id=${ recipe['Rezept_ID'] }">
+                    html += `<a class="entry" ${ recipe['Rezept_ID'] === null ? '' : `href="rezept.php?id=${ recipe['Rezept_ID'] }"` }>
                         <div class="recipe">
                             <h3>${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }</h3>
                         `;

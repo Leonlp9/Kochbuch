@@ -36,28 +36,6 @@ global $pdo;
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            color: var(--color);
-            font-weight: normal;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 2px solid var(--nonSelected);
-        }
-
-        .divider::before {
-            margin-right: 10px;
-        }
-
-        .divider::after {
-            margin-left: 10px;
-        }
 
         .radio {
             display: flex;
@@ -117,36 +95,37 @@ global $pdo;
         #results {
             display: grid;
             gap: 10px;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         }
 
         .rezept {
-            display: grid;
-            gap: 10px;
-            padding: 10px;
             border-radius: 10px;
-            background-color: var(--secondaryBackground);
             text-decoration: none;
             color: var(--color);
-            animation: fadeInOpacity 0.3s cubic-bezier(0.42, 0, 0.58, 1);
+            animation: fadeInOpacity 0.3s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+            opacity: 0;
         }
 
-        .rezept img {
+        .rezept .image {
             width: 100%;
-            aspect-ratio: 16/12;
-            object-fit: cover;
+            aspect-ratio: 4/3;
             border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
         }
 
         .rezept h2 {
             margin: 0;
             font-size: 1.2em;
             word-break: break-word;
+            text-align: center;
         }
 
         .rating {
             display: flex;
-            gap: 5px;
         }
 
         .rating i {
@@ -154,9 +133,29 @@ global $pdo;
         }
 
         .rezept:hover {
-            background-color: var(--nonSelected);
+            background-color: var(--secondaryBackground);
             transform: translateY(-5px);
             transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .overlay{
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: flex-end;
+            padding: 5px;
+        }
+
+        .overlay div{
+            background-color: rgba(255, 255, 255, 0.8);
+            color: var(--color);
+            padding: 5px;
+            border-radius: 10px;
+            display: flex;
+            gap: 5px;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
         }
     </style>
 </head>
@@ -226,6 +225,9 @@ global $pdo;
                 </select>
             </div>
 
+            <label class="divider">Suchergebnisse</label>
+            <span><span id="resultsCount">0</span> Rezepte gefunden</span>
+
             <div id="results"></div>
 
             <script>
@@ -249,25 +251,28 @@ global $pdo;
                         },
                         success: function (data) {
 
-                            console.log(data);
+                            $("#resultsCount").text(data.length);
 
                             let html = "";
                             for (let i = 0; i < data.length; i++) {
                                 let result = data[i];
                                 html += `
-                                <a class="rezept" href="rezept?id=${result.rezepte_ID}">
-                                    <img src="${result.Image}" alt="${result.Name}">
+                                <a class="rezept" href="rezept?id=${result.rezepte_ID}" style="animation-delay: ${i * 0.01}s">
+                                    <div class="image" style="background-image: url('${result.Image}')">
+                                        <div class="overlay">
+                                            <div>${result.Zeit}</div>
+                                            <div class="rating">`;
+                                                for (let j = 0; j < 5; j++) {
+                                                    if (j < result.Rating) {
+                                                        html += `<i class="fas fa-star"></i>`;
+                                                    } else {
+                                                        html += `<i class="far fa-star"></i>`;
+                                                    }
+                                                }
+                                                html += `</div>
+                                        </div>
+                                    </div>
                                     <h2>${result.Name}</h2>
-                                    <div class="rating">`;
-                                for (let j = 0; j < 5; j++) {
-                                    if (j < result.Rating) {
-                                        html += `<i class="fas fa-star"></i>`;
-                                    } else {
-                                        html += `<i class="far fa-star"></i>`;
-                                    }
-                                }
-                                html += `</div>
-                                    <p>${result.Zeit} Minuten</p>
                                 </a>
                                 `;
                             }

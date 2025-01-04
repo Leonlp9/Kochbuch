@@ -114,3 +114,6 @@ kochbuch/<br>
 
 ## Lizenz
 Dieses Projekt ist unter der MIT-Lizenz lizenziert.
+
+;extension=gd
+extension=gd2

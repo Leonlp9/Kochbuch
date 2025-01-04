@@ -1,90 +1,93 @@
-document.querySelectorAll('.number-input').forEach((element) => {
-    element.querySelector('.down').addEventListener('click', function() {
-        element.querySelector('input[type=number]').stepDown()
-        element.querySelector('input[type=number]').dispatchEvent(new Event('change'));
-    });
-    element.querySelector('.up').addEventListener('click', function() {
-        element.querySelector('input[type=number]').stepUp()
-        element.querySelector('input[type=number]').dispatchEvent(new Event('change'));
-    });
-    element.querySelector('input[type=number]').addEventListener('change', function() {
-        if (this.value > parseInt(this.max)) {
-            this.value = this.max;
-            this.dispatchEvent(new Event('change'));
-        }
-        if (this.value < parseInt(this.min)) {
-            this.value = this.min;
-            this.dispatchEvent(new Event('change'));
-        }
-    });
-});
 
-document.querySelectorAll('.horizontalScrollBarJS').forEach((element) => {
-    let scrollAmount = 0;
-    let isScrolling = false;
-    let isDragging = false;
-    let startX;
-    let scrollLeft;
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.number-input').forEach((element) => {
+        element.querySelector('.down').addEventListener('click', function () {
+            element.querySelector('input[type=number]').stepDown()
+            element.querySelector('input[type=number]').dispatchEvent(new Event('change'));
+        });
+        element.querySelector('.up').addEventListener('click', function () {
+            element.querySelector('input[type=number]').stepUp()
+            element.querySelector('input[type=number]').dispatchEvent(new Event('change'));
+        });
+        element.querySelector('input[type=number]').addEventListener('change', function () {
+            if (this.value > parseInt(this.max)) {
+                this.value = this.max;
+                this.dispatchEvent(new Event('change'));
+            }
+            if (this.value < parseInt(this.min)) {
+                this.value = this.min;
+                this.dispatchEvent(new Event('change'));
+            }
+        });
+    });
 
-    element.addEventListener('wheel', function(event) {
-        if (event.deltaY !== 0) {
+    document.querySelectorAll('.horizontalScrollBarJS').forEach((element) => {
+        let scrollAmount = 0;
+        let isScrolling = false;
+        let isDragging = false;
+        let startX;
+        let scrollLeft;
+
+        element.addEventListener('wheel', function (event) {
+            if (event.deltaY !== 0) {
+                event.preventDefault();
+                scrollAmount += event.deltaY;
+                if (!isScrolling) {
+                    isScrolling = true;
+                    requestAnimationFrame(smoothScroll);
+                }
+            }
+        });
+
+        element.addEventListener('mousedown', (event) => {
+            isDragging = true;
+            startX = event.pageX - element.offsetLeft;
+            scrollLeft = element.scrollLeft;
+            element.classList.add('active');
+        });
+
+        element.addEventListener('mouseleave', () => {
+            isDragging = false;
+            element.classList.remove('active');
+        });
+
+        element.addEventListener('mouseup', () => {
+            isDragging = false;
+            element.classList.remove('active');
+        });
+
+        element.addEventListener('mousemove', (event) => {
+            if (!isDragging) return;
             event.preventDefault();
-            scrollAmount += event.deltaY;
-            if (!isScrolling) {
-                isScrolling = true;
+            const x = event.pageX - element.offsetLeft;
+            const walk = (x - startX) * 1.5; // The multiplier can be adjusted for sensitivity
+            element.scrollLeft = scrollLeft - walk;
+        });
+
+        function smoothScroll() {
+            if (scrollAmount !== 0) {
+                const scrollStep = scrollAmount / 10;
+                element.scrollBy({
+                    left: scrollStep,
+                    behavior: 'auto'
+                });
+                scrollAmount -= scrollStep;
+                if (Math.abs(scrollAmount) < 1) {
+                    scrollAmount = 0;
+                }
                 requestAnimationFrame(smoothScroll);
+            } else {
+                isScrolling = false;
             }
         }
     });
-
-    element.addEventListener('mousedown', (event) => {
-        isDragging = true;
-        startX = event.pageX - element.offsetLeft;
-        scrollLeft = element.scrollLeft;
-        element.classList.add('active');
-    });
-
-    element.addEventListener('mouseleave', () => {
-        isDragging = false;
-        element.classList.remove('active');
-    });
-
-    element.addEventListener('mouseup', () => {
-        isDragging = false;
-        element.classList.remove('active');
-    });
-
-    element.addEventListener('mousemove', (event) => {
-        if (!isDragging) return;
-        event.preventDefault();
-        const x = event.pageX - element.offsetLeft;
-        const walk = (x - startX) * 1.5; // The multiplier can be adjusted for sensitivity
-        element.scrollLeft = scrollLeft - walk;
-    });
-
-    function smoothScroll() {
-        if (scrollAmount !== 0) {
-            const scrollStep = scrollAmount / 10;
-            element.scrollBy({
-                left: scrollStep,
-                behavior: 'auto'
-            });
-            scrollAmount -= scrollStep;
-            if (Math.abs(scrollAmount) < 1) {
-                scrollAmount = 0;
-            }
-            requestAnimationFrame(smoothScroll);
-        } else {
-            isScrolling = false;
-        }
-    }
 });
 
 document.documentElement.setAttribute('theme', "pink-rounder");
 
 async function generateResponse(prompt) {
     try {
-        const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+        const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyC5W1JUijGZeSbVAWFj5gmHOyYQ29vlf78";
 
         const jsonInput = JSON.stringify({
             contents: [
@@ -133,6 +136,8 @@ async function generateResponse(prompt) {
     }
 }
 class FormBuilder {
+    form;
+
     constructor(title, onSubmit, onCancel) {
         this.background = document.createElement('div');
         this.container = document.createElement('div');
@@ -171,6 +176,35 @@ class FormBuilder {
 
     addFileField(id, accept, onChange = () => {}) {
         this.fields.push({ id, type: 'file', accept, onChange });
+    }
+
+    addSelectField(id, options, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'select', options, startValue, onChange });
+    }
+
+    addHeader(Name) {
+        this.fields.push({ type: 'header', Name });
+    }
+
+    addHTML(html) {
+        this.fields.push({ type: 'html', html });
+    }
+
+    addButton(text, onKlick = () => {}) {
+        this.fields.push({ type: 'button', text, onKlick });
+    }
+
+    closeForm() {
+        this.onCancel();
+
+        this.container.style.animation = 'form-container-out-animation 0.25s forwards';
+        this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
+
+        setTimeout(() => {
+            document.body.removeChild(this.background);
+        }, 500);
+
+        delete this;
     }
 
     renderForm(showButtons = true) {
@@ -234,6 +268,32 @@ class FormBuilder {
                     element.accept = field.accept;
                     element.addEventListener('change', (e) => field.onChange(e.target.files[0]));
                     break;
+                case 'header':
+                    element = document.createElement('h3');
+                    element.textContent = field.Name;
+                    break;
+                case 'html':
+                    element = document.createElement('div');
+                    element.innerHTML = field.html;
+                    break;
+                case 'select':
+                    element = document.createElement('select');
+                    element.id = field.id;
+                    field.options.forEach((option) => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option.value;
+                        optionElement.textContent = option.text;
+                        element.appendChild(optionElement);
+                    });
+                    element.value = field.startValue || field.options[0].value;
+                    element.addEventListener('change', (e) => field.onChange(e.target.value));
+                    break;
+                case 'button':
+                    element = document.createElement('button');
+                    element.type = 'button';
+                    element.textContent = field.text;
+                    element.addEventListener('click', field.onKlick);
+                    break;
             }
 
             if (field.type !== 'checkbox') {
@@ -254,6 +314,8 @@ class FormBuilder {
             saveButton.addEventListener('click', () => {
                 const formData = {};
                 this.fields.forEach((field) => {
+                    if (field.type === 'header' || field.type === 'html') return;
+
                     const input = form.querySelector(`#${field.id}`);
                     if (field.type === 'checkbox') {
                         formData[field.id] = input.checked;
@@ -277,16 +339,7 @@ class FormBuilder {
             cancelButton.type = 'button';
             cancelButton.textContent = 'Abbrechen';
             cancelButton.addEventListener('click', () => {
-                this.onCancel();
-
-                this.container.style.animation = 'form-container-out-animation 0.25s forwards';
-                this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
-
-                setTimeout(() => {
-                    document.body.removeChild(this.background);
-                }, 500);
-
-                delete this;
+                this.closeForm();
             });
             buttonContainer.appendChild(saveButton);
             buttonContainer.appendChild(cancelButton);
@@ -307,6 +360,7 @@ class FormBuilder {
         });
 
         this.container.appendChild(form);
+        this.form = form;
     }
 }
 
@@ -326,4 +380,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 */
 
+class SystemMessage {
+    constructor(text) {
+        this.text = text;
+        this.duration = 5000;
+    }
 
+    setDuration(duration) {
+        this.duration = duration;
+    }
+
+    show() {
+
+        //wenn system-messages noch nicht existieren, erstellen
+        let systemMessages = document.querySelector('.system-messages');
+        if (!systemMessages) {
+            systemMessages = document.createElement('div');
+            systemMessages.className = 'system-messages';
+            document.body.appendChild(systemMessages);
+        }
+
+        const message = document.createElement('div');
+        message.className = 'system-message';
+
+        const text = document.createElement('p');
+        text.textContent = this.text;
+        message.appendChild(text);
+
+        const timebar = document.createElement('div');
+        timebar.className = 'timebar';
+        message.appendChild(timebar);
+        timebar.style.animation = `timebar-animation ${this.duration}ms linear forwards`;
+
+        systemMessages.appendChild(message);
+
+        setTimeout(() => {
+            message.style.animation = 'system-message-out-animation 0.25s forwards';
+            setTimeout(() => {
+                systemMessages.removeChild(message);
+            }, 500);
+        }, this.duration);
+    }
+
+}
+
+
+
+class KiChat {
+    constructor() {
+        this.container = document.createElement('div');
+        this.container.className = 'ki-chat';
+
+        this.messages = [];
+
+        this.input = document.createElement('input');
+        this.input.type = 'text';
+        this.input.placeholder = 'Schreibe eine Nachricht...';
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.sendMessage();
+            }
+        });
+
+        this.container.appendChild(this.input);
+
+        document.body.appendChild(this.container);
+    }
+
+    addMessage(text, role) {
+        const message = document.createElement('div');
+        message.className = `message ${role}`;
+        message.textContent = text;
+
+        this.messages.push({ text, role });
+
+        this.container.insertBefore(message, this.input);
+    }
+
+    sendMessage() {
+        const text = this.input.value;
+        this.addMessage(text, 'user');
+        this.input.value = '';
+
+        generateResponse(text).then((response) => {
+            this.addMessage(response, 'ki');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    //let kiChat = new KiChat();
+});
