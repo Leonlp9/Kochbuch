@@ -251,13 +251,12 @@ switch ($task) {
                 $bewertung['Image'] = 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=' . $bewertung['Name'];
             }
 
-
             // Kalender hinzufügen
-            $sql = $pdo->prepare('SELECT * FROM kalender WHERE Rezept_ID = :id');
+            $sql = $pdo->prepare('SELECT * FROM kalender WHERE Rezept_ID = :id AND Datum >= CURDATE()');
             $sql->bindValue(':id', $id);
             $sql->execute();
             $kalender = $sql->fetchAll(PDO::FETCH_ASSOC);
-            $rezepte[0]['Kalender'] = $kalender;
+            $rezepte[0]['Kalender'] = $kalender;;
 
             // Images hinzufügen
             $sql = $pdo->prepare('SELECT * FROM bilder WHERE Rezept_ID = :id');
@@ -557,10 +556,24 @@ switch ($task) {
             die();
         }
     case "deleteKalender":
-        if (isset($_POST['id'])) {
-            $id = $_POST['id'];
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
             $stmt = $pdo->prepare("DELETE FROM kalender WHERE ID = ?");
             $stmt->execute([$id]);
+
+            echo json_encode(['success' => true]);
+            die();
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+            die();
+        }
+    case "updateKalender":
+        if (isset($_GET['id']) && isset($_GET['text'])) {
+            $id = $_GET['id'];
+            $text = $_GET['text'];
+
+            $stmt = $pdo->prepare("UPDATE kalender SET Text = ? WHERE ID = ?");
+            $stmt->execute([$text, $id]);
 
             echo json_encode(['success' => true]);
             die();

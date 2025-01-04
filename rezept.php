@@ -462,6 +462,41 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                             </script>
                         ';
                     }
+
+                    if (count($rezept['Anmerkungen']) == 0) {
+                        echo '
+                            <script >
+                                let anmerkungGroup = document.createElement("li");
+                                document.getElementById("anmerkungen").appendChild(anmerkungGroup);
+                                
+                                let anmerkung = document.createElement("div");
+                                anmerkung.innerHTML = "";
+                                anmerkungGroup.appendChild(anmerkung);
+                             
+                                let anmerkungIcon = document.createElement("i");
+                                anmerkungIcon.classList.add("fas");
+                                anmerkungIcon.classList.add("fa-edit");
+                                anmerkungGroup.appendChild(anmerkungIcon);
+                              
+                                anmerkungGroup.addEventListener("click", () => {
+                                    let anmerkungsForm = new FormBuilder("Anmerkung bearbeiten", (formData) => {
+                                    
+                                        console.log(formData);
+                                    
+                                        fetch("api.php?task=anmerkung&rezept=' . $rezept['ID'] . '&text=" + formData["Anmerkung"], {
+                                            method: "GET"
+                                        }).then(() => {
+                                            window.location.reload();
+                                        });
+                                    }, () => {});
+                                    
+                                    anmerkungsForm.addQuillField("Anmerkung", "Anmerkung", "");
+                                    anmerkungsForm.renderForm();
+                                });
+                            </script>
+                        ';
+                    }
+
                     ?>
                 </ul>
 
@@ -472,7 +507,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                 <ul class="no-print" id="kalender">
                     <?php
                     foreach ($rezept['Kalender'] as $kalender) {
-                        echo "<li>{$kalender['Datum']}</li>";
+                        echo "<li>" . date("d.m.Y", strtotime($kalender['Datum'])) . "</li>";
                     }
                     ?>
                 </ul>

@@ -32,17 +32,18 @@ global $pdo;
 
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="script.js"></script>
 
     <link rel="stylesheet" href="style.css">
 
     <style>
         .entry {
             text-decoration: none;
-            color: var(--text);
+            color: var(--color);
         }
 
         .entry:hover {
-            background-color: var(--nonSelected);
+            background-color: var(--secondaryBackground);
             border-radius: 10px;
         }
 
@@ -94,47 +95,93 @@ global $pdo;
                     async: false
                 }).responseText);
 
-                console.log(data);
-
-                let html = '';
                 let lastDate = null;
+                const calendar = document.getElementById('calendar');
+                calendar.innerHTML = '';
+
                 for (let i = 0; i < data.length; i++) {
                     let recipe = data[i];
 
                     if (recipe['Datum'] !== lastDate) {
                         if (lastDate !== null) {
-                            html += `</div>`;
+                            calendar.appendChild(dayDiv);
                         }
                         lastDate = recipe['Datum'];
-                        html += `<div class="day">
-                            <h2 class="divider">${ recipe['Datum'] }</h2>`;
-                        html += `
-                        </div>`;
+                        var dayDiv = document.createElement('div');
+                        dayDiv.classList.add('day');
+
+                        let h2 = document.createElement('h2');
+                        h2.classList.add('divider');
+                        h2.textContent = new Date(recipe['Datum']).toLocaleDateString('de-DE');
+                        dayDiv.appendChild(h2);
                     }
 
-                    html += `<a class="entry" ${ recipe['Rezept_ID'] === null ? '' : `href="rezept.php?id=${ recipe['Rezept_ID'] }"` }>
-                        <div class="recipe">
-                            <h3>${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }</h3>
-                        `;
+                    let entry = document.createElement('div');
+                    entry.classList.add('entry');
+
+                    entry.addEventListener('click', () => {
+                        let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
+                            fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
+                                method: 'GET'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        }, () => {});
+
+                        if (recipe['Rezept_ID'] !== null) {
+                            form.addButton("Rezept öffnen", () => {
+                                window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
+                            });
+                        }
+
+                        form.addInputField('Text', 'Text', recipe['Text']);
+
+                        form.addButton("Löschen", () => {
+                            fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
+                                method: 'GET'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        });
+
+                        form.renderForm();
+                    });
+
+                    let recipeDiv = document.createElement('div');
+                    recipeDiv.classList.add('recipe');
+
+                    let h3 = document.createElement('h3');
+                    h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                    recipeDiv.appendChild(h3);
 
                     if (recipe['Text'] !== null && recipe['Image'] !== null) {
-                        html += `<p>${ recipe['Text'] }</p>`;
+                        let p = document.createElement('p');
+                        p.textContent = recipe['Text'];
+                        recipeDiv.appendChild(p);
                     }
 
                     if (recipe['Image'] !== null) {
-                        html += `<img src="${ recipe['Image'] }" alt="${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">`;
+                        let img = document.createElement('img');
+                        img.src = recipe['Image'];
+                        img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '10px';
+                        recipeDiv.appendChild(img);
                     }
 
-                    html += `</div>
-                    </a>`;
+                    entry.appendChild(recipeDiv);
+                    dayDiv.appendChild(entry);
                 }
 
-                document.getElementById('calendar').innerHTML = html;
+                if (lastDate !== null) {
+                    calendar.appendChild(dayDiv);
+                }
 
             </script>
 
         </div>
     </div>
 </body>
-<script src="script.js"></script>
 </html>
