@@ -57,16 +57,51 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
     <style>
 
-        .table {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #000;
-            border-radius: 5px;
+        #tabellen {
+            display: grid;
+            gap: 10px;
         }
 
-        .table input {
-            margin-top: 10px;
+        .table {
+            padding: 10px;
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+        }
+
+        .tableHeader {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            height: 40px;
+            gap: 10px;
+        }
+
+        #addTable {
+            padding: 10px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            background: var(--nonSelected);
+            color: var(--color);
+        }
+
+        .tableHeader input {
             width: 100%;
+            padding: 5px;
+            border: none;
+            border-radius: var(--border-radius);
+            outline: none;
+            background: var(--background);
+            color: var(--color);
+        }
+
+        .tableHeader button {
+            background: var(--nonSelected);
+            color: var(--color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
         }
 
         .zutaten {
@@ -77,38 +112,58 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
         }
 
         .zutat {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-            border: 1px solid #000;
+            display: grid;
+            grid-template-columns: 18px 1fr;
+            padding: 10px;
             border-radius: 5px;
+            cursor: pointer;
+            align-items: center;
+            justify-items: center;
+            background: var(--nonSelected);
+        }
+
+        .grabber {
+            cursor: grab;
+            user-select: none;
+            height: 100%;
+            background-color: var(--secondaryBackground);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 5px;
         }
 
         .zutat.new {
-            background-color: #c3f39f;
+            background-color: var(--green);
             min-height: 100px;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 1.5em;
             cursor: pointer;
         }
 
-        .zutat img {
+        .zutatInfo {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .zutatInfo img {
             width: 25px;
             height: 25px;
         }
 
-        .zutat p {
+        .zutatInfo p {
             text-align: center;
             word-break: break-word;
         }
 
         .delete {
-            background-color: red;
-            color: white;
+            background-color: var(--red);
+            color: var(--color);
             border: none;
             border-radius: 5px;
             padding: 5px;
@@ -117,7 +172,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
         }
 
         .delete:hover {
-            background-color: darkred;
+            background-color: var(--darkerRed);
         }
 
         .btn {
@@ -129,12 +184,12 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
         }
 
         .green {
-            background-color: green;
-            color: white;
+            background-color: var(--green);
+            color: var(--color);
         }
 
         .green:hover {
-            background-color: darkgreen;
+            background-color: var(--darkerGreen);
         }
 
         .zutatSuche {
@@ -163,7 +218,6 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 10px;
-            margin-top: 20px;
         }
 
         #alreadyUploaded div, .preview img {
@@ -176,39 +230,203 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
             margin: 10px;
             position: relative;
         }
+
+        .container form {
+            display: grid;
+            gap: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .buttons button {
+            flex: 1;
+        }
+
+        .numbers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .number-input {
+            display: grid;
+            grid-template-columns: 40px 1fr 40px;
+            width: 100%;
+            overflow: hidden;
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            color: var(--color);
+        }
+
+        .number-input input {
+            width: 100%;
+            min-width: 50px;
+            height: 40px;
+            padding: 5px;
+            font-size: 16px;
+            text-align: center;
+            border: none;
+            outline: none;
+            font-family: var(--font-family);
+            font-weight: bold;
+            background: var(--secondaryBackground);
+            color: var(--color);
+        }
+
+        .number-input button {
+            width: 40px;
+            background: var(--nonSelected);
+            color: var(--color);
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+        }
+
+        .number-input button:hover {
+            filter: brightness(1.05);
+        }
+
+        .number-input button:active {
+            filter: brightness(0.9);
+        }
+
+        .number-input input::-webkit-outer-spin-button,
+        .number-input input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .container form > label {
+            width: 100%;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .container form > label > input {
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+            color: var(--color);
+        }
+
+        .container form > label > select {
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+            color: var(--color);
+        }
+
+
+        @media (max-width: 768px) {
+            .container form > label {
+                grid-template-columns: 1fr;
+            }
+
+            .numbers {
+                grid-template-columns: 1fr;
+            }
+
+            .zutaten {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+
+        .upload {
+            display: block !important;
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            cursor: pointer;
+            color: var(--color);
+        }
+
+        .upload:hover {
+            background: var(--nonSelected);
+        }
+
+        .upload > span {
+            display: block;
+            text-align: center;
+        }
+
+        #alreadyUploadedGroup {
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 10px;
+        }
+
+        .ql-container {
+            height: auto;
+        }
+
+        .ql-toolbar.ql-snow {
+            border: none;
+            background: var(--nonSelected);
+            display: flex;
+        }
+
+        .ql-container.ql-snow {
+            border: none;
+        }
+
+        .ql-snow .ql-stroke {
+            stroke: var(--color);
+        }
     </style>
 </head>
 <body>
-    <div class="nav-grid">
+    <div class="nav-grid-content">
         <?php
         require_once 'shared/navbar.php';
         ?>
         <div class="container">
 
             <h1>Rezept <?php echo $edit ? 'bearbeiten' : 'hinzufügen' ?></h1>
+            <br>
             <form action="api.php?task=addRezept<?php echo $edit ? '&edit=true&rezept=' . $rezeptID : '' ?>
 " method="post" enctype="multipart/form-data">
-                <label for="name">Name</label>
-                <input type="text" name="name" id="name" required placeholder="Rezeptname" style="text-transform: none" value="<?php echo $edit ? $name : '' ?>">
+                <label for="name">Name
+                    <input type="text" name="name" id="name" required placeholder="Rezeptname" style="text-transform: none" value="<?php echo $edit ? $name : '' ?>">
+                </label>
 
-                <br>
-
-                <label for="kategorie">Kategorie</label>
-
-                <select name="kategorie" id="kategorie" required>
-                    <option value="" disabled selected>Kategorie</option>
-                    <?php
-                    $sql = "SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID
-                        FROM kategorien k
-                        LEFT JOIN rezepte r ON k.ID = r.Kategorie_ID
-                        GROUP BY k.ID, k.Name
-                        ORDER BY k.Name";
-                    $stmt = $pdo->query($sql);
-                    while ($row = $stmt->fetch()) {
-                        echo "<option value='" . $row['ID'] . "' " . ($edit && $rezept['Kategorie_ID'] == $row['ID'] ? 'selected' : '') . ">&nbsp" . $row['Name'] . " (" . $row['Anzahl'] . ")</option>";
-                    }
-                    ?>
-                </select>
+                <label for="kategorie">Kategorie
+                    <select name="kategorie" id="kategorie" required>
+                        <option value="" disabled selected>Kategorie</option>
+                        <?php
+                        $sql = "SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID
+                            FROM kategorien k
+                            LEFT JOIN rezepte r ON k.ID = r.Kategorie_ID
+                            GROUP BY k.ID, k.Name
+                            ORDER BY k.Name";
+                        $stmt = $pdo->query($sql);
+                        while ($row = $stmt->fetch()) {
+                            echo "<option value='" . $row['ID'] . "' " . ($edit && $rezept['Kategorie_ID'] == $row['ID'] ? 'selected' : '') . ">&nbsp" . $row['Name'] . " (" . $row['Anzahl'] . ")</option>";
+                        }
+                        ?>
+                    </select>
+                </label>
 
         <!--        Dropdown mit allen zutaaten und einem custom input feld für zutaten die noch nicht in der datenbank sind. Wenn angeklickt, dann wird in eine liste da drunter eingefügt-->
 
@@ -228,7 +446,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                     </div>
                 </div>
 
-                <input type="text" name="extraCustomInfos" id="extraCustomInfosInput">
+                <input type="text" name="extraCustomInfos" id="extraCustomInfosInput" hidden>
 
                 <h2>Zutaten</h2>
                 <input type="hidden" name="zutaten" id="zutatenInput" required>
@@ -257,16 +475,23 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                             tableDiv.classList.add('table');
                             tableDiv.dataset.table = table;
                             tableDiv.innerHTML = `
-                                <input type='text' class='tableName' value='${table}'>
-                                <button type='button' class='deleteTable'>Löschen</button>
+                                <div class='tableHeader'>
+                                    <input type='text' class='tableName' value='${table}' placeholder='Tabellenname'>
+                                    <button type='button' class='deleteTable'>Löschen</button>
+                                </div>
+
                                 <div class='zutaten'>
                                     ${zutatenJSON
                                                     .filter(zutat => zutat.table === table)
                                                     .map(zutat => `
                                             <div class='zutat' data-id='${zutat.ID}'>
-                                                <img src='${zutat.Image}' alt='${zutat.Name}'>
-                                                <p>${zutat.Name} ${zutat.additionalInfo}</p>
-                                                <p>${zutat.Menge} ${zutat.unit}</p>
+                                                <div class="grabber">☰</div>
+                                                <div class='zutatInfo'>
+                                                    <img src='${zutat.Image}' alt='${zutat.Name}'>
+                                                    <p>${zutat.Name} ${zutat.additionalInfo}</p>
+                                                    <p>${zutat.Menge} ${zutat.unit}</p>
+                                                </div>
+
                                             </div>
                                         `)
                                                     .join('')}
@@ -325,6 +550,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                 animation: 250,
                                 group: 'shared',
                                 filter: '.new',
+                                handle: '.grabber',
                                 onEnd: e => {
                                     // Neue Tabelle ermitteln
                                     let newParentTable = e.to.closest('.table').dataset.table;
@@ -427,6 +653,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                             data.forEach(zutat => {
                                                 let result = document.createElement('div');
                                                 result.classList.add('zutat');
+                                                result.classList.add('zutatInfo');
                                                 result.innerHTML = `
                                                     <img src='${zutat.Image}' alt='${zutat.Name}'>
                                                     <p>${zutat.Name}</p>
@@ -504,6 +731,8 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                     search(this.value);
                                 });
 
+                                form.form.querySelector('input[name=name]').focus();
+
                             });
                         });
 
@@ -528,10 +757,12 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                         });
                     }
                 </script>
-                <br><br>
-                <label for="anleitung">Anleitung</label>
+                <h2>Zubereitung</h2>
                 <input type="hidden" name="anleitung" id="anleitung" required>
-                <div id="editor"></div>
+
+                <div style="background: var(--secondaryBackground); border: 2px solid var(--nonSelected); border-radius: var(--border-radius)">
+                    <div id="editor"></div>
+                </div>
 
                 <!-- QuillJS -->
                 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -559,7 +790,9 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                 </script>
 
                 <label class="upload">
-                    <i class="fas fa-upload"></i> Bilder hochladen
+                    <span>
+                        <i class="fas fa-upload"></i> Bilder hochladen
+                    </span>
                     <input type="file" name="bilder[]" multiple accept="image/png, image/jpeg, image/jpg, image/webp">
                     <div class="preview"></div>
                     <script>
@@ -580,7 +813,10 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                     </script>
                 </label>
 
-                <div id="alreadyUploaded"></div>
+                <div id="alreadyUploadedGroup">
+                    <div class="divider">Bereits hochgeladene Bilder</div>
+                    <div id="alreadyUploaded"></div>
+                </div>
                 <script>
                     function updateImages() {
                         fetch('api.php?task=getImages&rezept_id=<?php echo $rezeptID ?>')
@@ -600,7 +836,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                     deleteButton.style.position = 'absolute';
                                     deleteButton.style.bottom = '5px';
                                     deleteButton.style.right = '5px';
-                                    deleteButton.style.backgroundColor = 'red';
+                                    deleteButton.style.backgroundColor = 'var(--red)';
                                     deleteButton.style.color = 'white';
                                     deleteButton.style.border = 'none';
                                     deleteButton.style.borderRadius = '5px';
@@ -621,14 +857,16 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                     updateImages();
                 </script>
 
+                <div class="buttons">
+                    <button type="submit" class="btn green"><?php echo $edit ? 'Speichern' : 'Hinzufügen' ?></button>
 
-                <button type="submit" class="btn green"><?php echo $edit ? 'Speichern' : 'Hinzufügen' ?></button>
+                    <?php
+                    if ($edit) {
+                        echo "<a href='api.php?task=deleteRezept&id=$rezeptID' class='btn delete'>Löschen</a>";
+                    }
+                    ?>
+                </div>
 
-                <?php
-                if ($edit) {
-                    echo "<a href='api.php?task=deleteRezept&id=$rezeptID' class='btn delete'>Löschen</a>";
-                }
-                ?>
 
                 <script>
 

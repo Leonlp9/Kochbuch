@@ -50,7 +50,7 @@ if (isset($_GET['error'])) {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="nav-grid">
+<div class="nav-grid-content">
     <?php
 
     //wenn kein datenbankfehler, dann navbar anzeigen

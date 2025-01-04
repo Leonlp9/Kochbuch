@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-<div class="nav-grid">
+<div class="nav-grid-content">
 	<?php require_once 'shared/navbar.php'; ?>
 	<div class="container">
 		<h1>Zutaten</h1>

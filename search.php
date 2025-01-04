@@ -98,6 +98,12 @@ global $pdo;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         }
 
+        @media (max-width: 768px) {
+            #results {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
         .rezept {
             border-radius: 10px;
             text-decoration: none;
@@ -148,7 +154,7 @@ global $pdo;
 
         .overlay div{
             background-color: rgba(255, 255, 255, 0.8);
-            color: var(--color);
+            color: #27292c;
             padding: 5px;
             border-radius: 10px;
             display: flex;
@@ -157,10 +163,14 @@ global $pdo;
             align-items: center;
             font-size: 11px;
         }
+
+        .overlay div i {
+            color: #27292c;
+        }
     </style>
 </head>
 <body>
-    <div class="nav-grid">
+    <div class="nav-grid-content">
         <?php
         require_once 'shared/navbar.php';
         ?>
@@ -226,7 +236,7 @@ global $pdo;
             </div>
 
             <label class="divider">Suchergebnisse</label>
-            <span><span id="resultsCount">0</span> Rezepte gefunden</span>
+            <span style="font-size: 13px;"><span style="font-size: 13px" id="resultsCount">0</span> Rezepte gefunden</span>
 
             <div id="results"></div>
 

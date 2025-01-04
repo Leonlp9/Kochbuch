@@ -43,13 +43,41 @@ global $pdo;
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="nav-grid">
+<div class="nav-grid-content">
 	<?php require_once 'shared/navbar.php'; ?>
 	<div class="container">
 		<h1>Einstellungen</h1>
 
 		<br>
-<!--		buttons die umleiten für -->
+
+        <h2>Theme</h2>
+        <select name="theme" id="theme" onchange="changeTheme()">
+            <option value="light">Hell</option>
+            <option value="dark">Dunkel</option>
+            <option value="helloween">Helloween</option>
+            <option value="christmas">Weihnachten</option>
+            <option value="spring">Frühling</option>
+            <option value="dracula">Dracula</option>
+            <option value="midnight">Mitternacht</option>
+        </select>
+        <script>
+
+            function setTheme(newTheme) {
+                document.documentElement.setAttribute('theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            }
+
+            function changeTheme() {
+                setTheme(document.getElementById('theme').value);
+            }
+
+            const theme = localStorage.getItem('theme');
+            if (theme) {
+                setTheme(theme);
+                document.getElementById('theme').value = theme;
+            }
+        </script>
+
         <!--        Zutaten-Filterprofil-->
         <h2>Filterprofile</h2>
         <a href="filterprofile.php">
@@ -117,7 +145,6 @@ global $pdo;
             function getLocalVersion() {
                 return fetch('version.txt').then(response => response.text());
             }
-
 
         </script>
 	</div>

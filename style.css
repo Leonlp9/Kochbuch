@@ -36,7 +36,102 @@ html[theme="dark"] {
     --darkerBlue: #1898d4;
     --white: #fdfdfd;
     --darkerWhite: #dddddd;
-    --border-radius: 2px;
+    --border-radius: 5px;
+    --font-family: "Varela Round", sans-serif;
+}
+html[theme="helloween"] {
+    --background: #1c1c1c;
+    --secondaryBackground: #2c2c2c;
+    --color: #f2f3fd;
+    --darkerColor: #d3d3d3;
+    --selected: #ff6f00;
+    --selected_highlight: #ff8c00;
+    --nonSelected: #45413a;
+    --red: #ff6f00;
+    --darkerRed: #ff8c00;
+    --green: #b8a233;
+    --darkerGreen: #8f7a00;
+    --blue: #48bef6;
+    --darkerBlue: #1898d4;
+    --white: #fdfdfd;
+    --darkerWhite: #dddddd;
+    --border-radius: 5px;
+    --font-family: "Varela Round", sans-serif;
+}
+html[theme="christmas"] {
+    --background: #fffbf0;
+    --secondaryBackground: #fff3e0;
+    --color: #4b2e83;
+    --darkerColor: #3a2366;
+    --selected: #ff4d4d;
+    --selected_highlight: #ff1a1a;
+    --nonSelected: #ffe6e6;
+    --red: #ff4d4d;
+    --darkerRed: #ff1a1a;
+    --green: #4caf50;
+    --darkerGreen: #388e3c;
+    --blue: #2196f3;
+    --darkerBlue: #1976d2;
+    --white: #ffffff;
+    --darkerWhite: #f0f0f0;
+    --border-radius: 5px;
+    --font-family: "Varela Round", sans-serif;
+}
+html[theme="spring"] {
+    --background: #e0f7fa;
+    --secondaryBackground: #b2ebf2;
+    --color: #00796b;
+    --darkerColor: #004d40;
+    --selected: #80deea;
+    --selected_highlight: #4dd0e1;
+    --nonSelected: #b2dfdb;
+    --red: #ff8a80;
+    --darkerRed: #ff5252;
+    --green: #a5d6a7;
+    --darkerGreen: #66bb6a;
+    --blue: #81d4fa;
+    --darkerBlue: #4fc3f7;
+    --white: #ffffff;
+    --darkerWhite: #e0f2f1;
+    --border-radius: 5px;
+    --font-family: "Varela Round", sans-serif;
+}
+html[theme="dracula"] {
+    --background: #282a36;
+    --secondaryBackground: #44475a;
+    --color: #f8f8f2;
+    --darkerColor: #bd93f9;
+    --selected: #ff79c6;
+    --selected_highlight: #ff6ac1;
+    --nonSelected: #6272a4;
+    --red: #ff5555;
+    --darkerRed: #ff79c6;
+    --green: #50fa7b;
+    --darkerGreen: #50fa7b;
+    --blue: #8be9fd;
+    --darkerBlue: #8be9fd;
+    --white: #f8f8f2;
+    --darkerWhite: #f8f8f2;
+    --border-radius: 5px;
+    --font-family: "Varela Round", sans-serif;
+}
+html[theme="midnight"] {
+    --background: #0b0b0b;
+    --secondaryBackground: #1a1a1a;
+    --color: #f2f3fd;
+    --darkerColor: #d3d3d3;
+    --selected: #48bef6;
+    --selected_highlight: #1898d4;
+    --nonSelected: #26282b;
+    --red: #ec5454;
+    --darkerRed: #c43f3f;
+    --green: #78b833;
+    --darkerGreen: #4f7f00;
+    --blue: #48bef6;
+    --darkerBlue: #1898d4;
+    --white: #fdfdfd;
+    --darkerWhite: #dddddd;
+    --border-radius: 5px;
     --font-family: "Varela Round", sans-serif;
 }
 
@@ -161,6 +256,9 @@ body {
     margin-bottom: 10px;
     border: none;
     border-radius: var(--border-radius);
+    outline: none;
+    background: var(--background);
+    color: var(--color);
 }
 
 .form-container form input[type="color"] {

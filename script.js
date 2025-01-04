@@ -83,8 +83,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-document.documentElement.setAttribute('theme', "pink-rounder");
-
 async function generateResponse(prompt) {
     try {
         const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyC5W1JUijGZeSbVAWFj5gmHOyYQ29vlf78";
@@ -317,7 +315,10 @@ class FormBuilder {
                     if (field.type === 'header' || field.type === 'html') return;
 
                     const input = form.querySelector(`#${field.id}`);
-                    if (field.type === 'checkbox') {
+
+
+                    if (field.type === 'button') {
+                    }else if (field.type === 'checkbox') {
                         formData[field.id] = input.checked;
                     } else {
                         formData[field.id] = input.value;
@@ -363,23 +364,6 @@ class FormBuilder {
         this.form = form;
     }
 }
-
-/*
-
-let builder = new FormBuilder("GHG", (data) => {
-    console.log('Formular gesendet:', data);
-}, () => {
-    console.log('Abbrechen gedrückt');
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    builder.addInputField('name', 'Name eingeben', '', (value) => console.log('Name geändert:', value));
-    builder.addNumberField('age', 0, 100, 18, (value) => console.log('Alter geändert:', value));
-    builder.renderForm();
-});
-
-*/
-
 class SystemMessage {
     constructor(text) {
         this.text = text;
@@ -423,9 +407,6 @@ class SystemMessage {
     }
 
 }
-
-
-
 class KiChat {
     constructor() {
         this.container = document.createElement('div');
@@ -470,4 +451,6 @@ class KiChat {
 
 document.addEventListener('DOMContentLoaded', () => {
     //let kiChat = new KiChat();
+
+    document.documentElement.setAttribute('theme', localStorage.getItem('theme') || 'light');
 });

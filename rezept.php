@@ -189,7 +189,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
 
 </head>
 <body>
-<div class="nav-grid">
+<div class="nav-grid-content">
     <?php
     require_once 'shared/navbar.php';
     ?>

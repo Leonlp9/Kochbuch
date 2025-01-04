@@ -26,7 +26,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
 
     }
 
-    .nav-grid {
+    .nav-grid-content {
         display: grid;
         grid-template-columns: 50px calc(100% - 50px);
         grid-template-areas: "nav container";
@@ -42,7 +42,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
         transition: height 0.5s cubic-bezier(0.77, 0, 0.175, 1);
     }
 
-    .nav-grid span {
+    .nav-grid-content nav span {
         font-size: 20px;
         width: 100%;
     }
@@ -63,7 +63,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
     }
 
     @media (max-width: 768px) {
-        .nav-grid {
+        .nav-grid-content {
             grid-template-columns: 100%;
             grid-template-areas: "container" "nav";
         }

@@ -65,7 +65,7 @@ global $pdo;
 </head>
 <body>
 
-    <div class="nav-grid">
+    <div class="nav-grid-content">
         <?php
         require_once 'shared/navbar.php';
         ?>
