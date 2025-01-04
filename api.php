@@ -22,6 +22,10 @@ switch ($task) {
             $sql->execute();
             $bilder = $sql->fetchAll(PDO::FETCH_ASSOC); // Use PDO::FETCH_ASSOC to get only associative keys
 
+            foreach ($bilder as &$bild) {
+                $bild['Image'] = 'uploads/' . $bild['Image'];
+            }
+
             echo json_encode($bilder);
             die();
         } else {
@@ -33,12 +37,22 @@ switch ($task) {
             $rezept_id = $_GET['rezept_id'];
             $image = $_GET['image'];
 
-            unlink('uploads/' . $image);
-
-            $sql = $pdo->prepare('DELETE FROM bilder WHERE Rezept_ID = :rezept_id AND Image = :image');
+            //get image from db by id
+            $sql = $pdo->prepare('SELECT * FROM bilder WHERE Rezept_ID = :rezept_id AND ID = :image');
             $sql->bindValue(':rezept_id', $rezept_id);
             $sql->bindValue(':image', $image);
             $sql->execute();
+            $bild = $sql->fetch(PDO::FETCH_ASSOC);
+
+            //delete image from uploads
+            unlink("uploads/" . $bild['Image']);
+
+            $sql = $pdo->prepare('DELETE FROM bilder WHERE Rezept_ID = :rezept_id AND ID = :image');
+            $sql->bindValue(':rezept_id', $rezept_id);
+            $sql->bindValue(':image', $image);
+            $sql->execute();
+
+            echo json_encode(['success' => true]);
             die();
         } else {
             echo json_encode(['error' => 'No rezept_id or image provided']);
@@ -75,6 +89,7 @@ switch ($task) {
             $stmt->execute([$id]);
 
             echo json_encode(['success' => true]);
+            header("Location: ./");
             die();
         } else {
             echo json_encode(['error' => 'No id provided']);
@@ -725,98 +740,191 @@ switch ($task) {
                 die();
             }
 
-            $name = $_POST['name'];
-            $kategorie = $_POST['kategorie'];
-            $dauer = $_POST['dauer'];
-            $portionen = $_POST['portionen'];
-            $anleitung = $_POST['anleitung'];
-            $zutaten = json_decode($_POST['zutaten']);
-            $files = $_FILES['bilder'];
-            $optionalInfos = json_decode($_POST['extraCustomInfos']);
+            if (isset($_GET['edit'])) {
+                $name = $_POST['name'];
+                $kategorie = $_POST['kategorie'];
+                $dauer = $_POST['dauer'];
+                $portionen = $_POST['portionen'];
+                $anleitung = $_POST['anleitung'];
+                $zutaten = json_decode($_POST['zutaten']);
+                $files = $_FILES['bilder'];
+                $optionalInfos = json_decode($_POST['extraCustomInfos']);
+                $rezeptID = $_GET['rezept'];
 
-            $sql = "INSERT INTO rezepte (Name, Kategorie_ID, Zeit, Portionen, Zubereitung, Zutaten_JSON, OptionalInfos) VALUES (:name, :kategorie, :dauer, :portionen, :anleitung, :zutaten, :optionalInfos)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                'name' => $name,
-                'kategorie' => $kategorie,
-                'dauer' => $dauer,
-                'portionen' => $portionen,
-                'anleitung' => $anleitung,
-                'zutaten' => json_encode($zutaten),
-                'optionalInfos' => json_encode($optionalInfos)
-            ]);
+                $sql = "UPDATE rezepte SET Name = :name, Kategorie_ID = :kategorie, Zeit = :dauer, Portionen = :portionen, Zubereitung = :anleitung, Zutaten_JSON = :zutaten, OptionalInfos = :optionalInfos WHERE ID = :id";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    'name' => $name,
+                    'kategorie' => $kategorie,
+                    'dauer' => $dauer,
+                    'portionen' => $portionen,
+                    'anleitung' => $anleitung,
+                    'zutaten' => json_encode($zutaten),
+                    'optionalInfos' => json_encode($optionalInfos),
+                    'id' => $rezeptID
+                ]);
 
-            $rezeptID = $pdo->lastInsertId();
+                //Bilder als webp convertieren und speichern
+                foreach ($files['name'] as $key => $file) {
+                    $fileName = $files['name'][$key];
+                    $fileTmpName = $files['tmp_name'][$key];
+                    $fileSize = $files['size'][$key];
+                    $fileError = $files['error'][$key];
+                    $fileType = $files['type'][$key];
 
+                    $fileExt = explode('.', $fileName);
+                    $fileActualExt = strtolower(end($fileExt));
 
-            //Bilder als webp convertieren und speichern
-            foreach ($files['name'] as $key => $file) {
-                $fileName = $files['name'][$key];
-                $fileTmpName = $files['tmp_name'][$key];
-                $fileSize = $files['size'][$key];
-                $fileError = $files['error'][$key];
-                $fileType = $files['type'][$key];
+                    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
 
-                $fileExt = explode('.', $fileName);
-                $fileActualExt = strtolower(end($fileExt));
+                    if (in_array($fileActualExt, $allowed)) {
+                        if ($fileError === 0) {
+                            $img = imagecreatefromstring(file_get_contents($fileTmpName));
+                            imagepalettetotruecolor($img);
+                            imagealphablending($img, true);
+                            imagesavealpha($img, true);
 
-                $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+                            // Überprüfe die aktuellen Dimensionen des Bildes
+                            $width = imagesx($img);
+                            $height = imagesy($img);
+                            $maxWidth = 1080;
+                            $maxHeight = 566;
 
-                if (in_array($fileActualExt, $allowed)) {
-                    if ($fileError === 0) {
-                        $img = imagecreatefromstring(file_get_contents($fileTmpName));
-                        imagepalettetotruecolor($img);
-                        imagealphablending($img, true);
-                        imagesavealpha($img, true);
+                            // Berechne das Seitenverhältnis
+                            $aspectRatio = $width / $height;
 
-                        // Überprüfe die aktuellen Dimensionen des Bildes
-                        $width = imagesx($img);
-                        $height = imagesy($img);
-                        $maxWidth = 1080;
-                        $maxHeight = 566;
+                            // Berechne die neuen Dimensionen, falls das Bild zu groß ist
+                            if ($width > $maxWidth || $height > $maxHeight) {
+                                if ($aspectRatio > ($maxWidth / $maxHeight)) {
+                                    $newWidth = $maxWidth;
+                                    $newHeight = $maxWidth / $aspectRatio;
+                                } else {
+                                    $newHeight = $maxHeight;
+                                    $newWidth = $maxHeight * $aspectRatio;
+                                }
 
-                        // Berechne das Seitenverhältnis
-                        $aspectRatio = $width / $height;
-
-                        // Berechne die neuen Dimensionen, falls das Bild zu groß ist
-                        if ($width > $maxWidth || $height > $maxHeight) {
-                            if ($aspectRatio > ($maxWidth / $maxHeight)) {
-                                $newWidth = $maxWidth;
-                                $newHeight = $maxWidth / $aspectRatio;
-                            } else {
-                                $newHeight = $maxHeight;
-                                $newWidth = $maxHeight * $aspectRatio;
+                                // Erstelle ein neues, skaliertes Bild
+                                $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                                imagealphablending($newImg, false);
+                                imagesavealpha($newImg, true);
+                                imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($img);
+                                $img = $newImg;
                             }
 
-                            // Erstelle ein neues, skaliertes Bild
-                            $newImg = imagecreatetruecolor($newWidth, $newHeight);
-                            imagealphablending($newImg, false);
-                            imagesavealpha($newImg, true);
-                            imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                            // Speichern des Bildes im WebP-Format
+                            $fileNameNew = uniqid('', true) . ".webp";
+                            $fileDestination = 'uploads/' . $fileNameNew;
+                            imagewebp($img, $fileDestination, 45);
                             imagedestroy($img);
-                            $img = $newImg;
+
+                            // SQL zum Einfügen in die Datenbank
+                            $sql = "INSERT INTO bilder (Rezept_ID, Image) VALUES (:rezeptID, :image)";
+                            $stmt = $pdo->prepare($sql);
+                            $stmt->execute([
+                                'rezeptID' => $rezeptID,
+                                'image' => $fileNameNew
+                            ]);
                         }
-
-                        // Speichern des Bildes im WebP-Format
-                        $fileNameNew = uniqid('', true) . ".webp";
-                        $fileDestination = 'uploads/' . $fileNameNew;
-                        imagewebp($img, $fileDestination, 45);
-                        imagedestroy($img);
-
-                        // SQL zum Einfügen in die Datenbank
-                        $sql = "INSERT INTO bilder (Rezept_ID, Image) VALUES (:rezeptID, :image)";
-                        $stmt = $pdo->prepare($sql);
-                        $stmt->execute([
-                            'rezeptID' => $rezeptID,
-                            'image' => $fileNameNew
-                        ]);
                     }
                 }
 
-            }
+                header('Location: rezept.php?id=' . $rezeptID);
 
-            header('Location: index.php');
-            die();
+            }else {
+                $name = $_POST['name'];
+                $kategorie = $_POST['kategorie'];
+                $dauer = $_POST['dauer'];
+                $portionen = $_POST['portionen'];
+                $anleitung = $_POST['anleitung'];
+                $zutaten = json_decode($_POST['zutaten']);
+                $files = $_FILES['bilder'];
+                $optionalInfos = json_decode($_POST['extraCustomInfos']);
+
+                $sql = "INSERT INTO rezepte (Name, Kategorie_ID, Zeit, Portionen, Zubereitung, Zutaten_JSON, OptionalInfos) VALUES (:name, :kategorie, :dauer, :portionen, :anleitung, :zutaten, :optionalInfos)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    'name' => $name,
+                    'kategorie' => $kategorie,
+                    'dauer' => $dauer,
+                    'portionen' => $portionen,
+                    'anleitung' => $anleitung,
+                    'zutaten' => json_encode($zutaten),
+                    'optionalInfos' => json_encode($optionalInfos)
+                ]);
+
+                $rezeptID = $pdo->lastInsertId();
+
+
+                //Bilder als webp convertieren und speichern
+                foreach ($files['name'] as $key => $file) {
+                    $fileName = $files['name'][$key];
+                    $fileTmpName = $files['tmp_name'][$key];
+                    $fileSize = $files['size'][$key];
+                    $fileError = $files['error'][$key];
+                    $fileType = $files['type'][$key];
+
+                    $fileExt = explode('.', $fileName);
+                    $fileActualExt = strtolower(end($fileExt));
+
+                    $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+
+                    if (in_array($fileActualExt, $allowed)) {
+                        if ($fileError === 0) {
+                            $img = imagecreatefromstring(file_get_contents($fileTmpName));
+                            imagepalettetotruecolor($img);
+                            imagealphablending($img, true);
+                            imagesavealpha($img, true);
+
+                            // Überprüfe die aktuellen Dimensionen des Bildes
+                            $width = imagesx($img);
+                            $height = imagesy($img);
+                            $maxWidth = 1080;
+                            $maxHeight = 566;
+
+                            // Berechne das Seitenverhältnis
+                            $aspectRatio = $width / $height;
+
+                            // Berechne die neuen Dimensionen, falls das Bild zu groß ist
+                            if ($width > $maxWidth || $height > $maxHeight) {
+                                if ($aspectRatio > ($maxWidth / $maxHeight)) {
+                                    $newWidth = $maxWidth;
+                                    $newHeight = $maxWidth / $aspectRatio;
+                                } else {
+                                    $newHeight = $maxHeight;
+                                    $newWidth = $maxHeight * $aspectRatio;
+                                }
+
+                                // Erstelle ein neues, skaliertes Bild
+                                $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                                imagealphablending($newImg, false);
+                                imagesavealpha($newImg, true);
+                                imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($img);
+                                $img = $newImg;
+                            }
+
+                            // Speichern des Bildes im WebP-Format
+                            $fileNameNew = uniqid('', true) . ".webp";
+                            $fileDestination = 'uploads/' . $fileNameNew;
+                            imagewebp($img, $fileDestination, 45);
+                            imagedestroy($img);
+
+                            // SQL zum Einfügen in die Datenbank
+                            $sql = "INSERT INTO bilder (Rezept_ID, Image) VALUES (:rezeptID, :image)";
+                            $stmt = $pdo->prepare($sql);
+                            $stmt->execute([
+                                'rezeptID' => $rezeptID,
+                                'image' => $fileNameNew
+                            ]);
+                        }
+                    }
+
+                }
+
+                header('Location: index.php');
+                die();
+            }
     }
 
     default:

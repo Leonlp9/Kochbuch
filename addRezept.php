@@ -8,6 +8,11 @@ $rezeptID = $edit ? $_GET['rezept'] : null;
 //api.php?task=getRezept&id=$rezeptID
 $rezept = $edit ? json_decode(file_get_contents(BASE_URL. "api.php?task=getRezept&id=$rezeptID&zutaten", true), true)[0] : null;
 
+if ($edit && !$rezept) {
+    header("Location: index.php");
+    die();
+}
+
 $name = $edit ? $rezept['Name'] : '';
 $dauer = $edit ? $rezept['Zeit'] : 5;
 $portionen = $edit ? $rezept['Portionen'] : 4;
@@ -108,6 +113,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
             border-radius: 5px;
             padding: 5px;
             cursor: pointer;
+            text-decoration: none;
         }
 
         .delete:hover {
@@ -151,6 +157,24 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
         .searchResults div {
             cursor: pointer;
+        }
+
+        #alreadyUploaded, .preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #alreadyUploaded div, .preview img {
+            width: 100px;
+            height: 100px;
+            background-size: cover;
+            background-position: center;
+            object-fit: cover;
+            border-radius: 10px;
+            margin: 10px;
+            position: relative;
         }
     </style>
 </head>
@@ -536,7 +560,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
                 <label class="upload">
                     <i class="fas fa-upload"></i> Bilder hochladen
-                    <input type="file" name="bilder[]" multiple accept="image/png, image/jpeg, image/jpg, image/webp" required>
+                    <input type="file" name="bilder[]" multiple accept="image/png, image/jpeg, image/jpg, image/webp">
                     <div class="preview"></div>
                     <script>
                         document.querySelector('input[type=file]').onchange = function() {
@@ -548,7 +572,6 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                 reader.onload = function(e) {
                                     var img = document.createElement('img');
                                     img.src = e.target.result;
-                                    img.style.width = '100%';
                                     preview.appendChild(img);
                                 };
                                 reader.readAsDataURL(file);
@@ -557,7 +580,55 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                     </script>
                 </label>
 
+                <div id="alreadyUploaded"></div>
+                <script>
+                    function updateImages() {
+                        fetch('api.php?task=getImages&rezept_id=<?php echo $rezeptID ?>')
+                            .then(response => response.json())
+                            .then(data => {
+                                var alreadyUploaded = document.getElementById('alreadyUploaded');
+                                alreadyUploaded.innerHTML = '';
+                                for (var image of data) {
+                                    var img = document.createElement('div');
+                                    img.style.backgroundImage = `url('${image.Image}')`;
+                                    img.style.position = 'relative';
+                                    alreadyUploaded.appendChild(img);
+
+                                    var deleteButton = document.createElement('button');
+                                    deleteButton.innerHTML = 'Löschen';
+                                    deleteButton.type = 'button';
+                                    deleteButton.style.position = 'absolute';
+                                    deleteButton.style.bottom = '5px';
+                                    deleteButton.style.right = '5px';
+                                    deleteButton.style.backgroundColor = 'red';
+                                    deleteButton.style.color = 'white';
+                                    deleteButton.style.border = 'none';
+                                    deleteButton.style.borderRadius = '5px';
+                                    deleteButton.style.padding = '5px';
+                                    deleteButton.style.cursor = 'pointer';
+                                    deleteButton.onclick = function() {
+                                        fetch(`api.php?task=deleteImage&rezept_id=<?php echo $rezeptID ?>&image=${image.ID}`)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                updateImages();
+                                            });
+                                    };
+                                    img.appendChild(deleteButton);
+
+                                }
+                            });
+                    }
+                    updateImages();
+                </script>
+
+
                 <button type="submit" class="btn green"><?php echo $edit ? 'Speichern' : 'Hinzufügen' ?></button>
+
+                <?php
+                if ($edit) {
+                    echo "<a href='api.php?task=deleteRezept&id=$rezeptID' class='btn delete'>Löschen</a>";
+                }
+                ?>
 
                 <script>
 
@@ -576,7 +647,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                         zutaten.value = JSON.stringify(getRawZutatenJson());
 
                         let extraCustomInfosElement = document.querySelector('#extraCustomInfosInput');
-                        extraCustomInfosElement.value = JSON.stringify(extraCustomInfos);
+                        extraCustomInfosElement.value = JSON.stringify([{"title":"Kalorien","content":"210"}]);
 
                         // remove confirmation when leaving the page
                         window.onbeforeunload = function(e) {
