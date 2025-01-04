@@ -51,6 +51,8 @@ global $pdo;
             border-radius: 5px;
             cursor: pointer;
             display: inline-block;
+            color: var(--background);
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
         .kategorie .count {
@@ -62,7 +64,7 @@ global $pdo;
             margin-top: 10px;
             padding: 10px;
             border-radius: 5px;
-            background-color: var(--color);
+            background-color: var(--secondaryBackground);
             min-width: 100px;
             min-height: 50px;
         }

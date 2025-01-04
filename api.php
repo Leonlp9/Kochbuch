@@ -246,6 +246,12 @@ switch ($task) {
             $bewertungen = $sql->fetchAll(PDO::FETCH_ASSOC);
             $rezepte[0]['Bewertungen'] = $bewertungen;
 
+            // Den Bewertungen die Bilder hinzufügen der Bewerter hinzufügen
+            foreach ($rezepte[0]['Bewertungen'] as &$bewertung) {
+                $bewertung['Image'] = 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=' . $bewertung['Name'];
+            }
+
+
             // Kalender hinzufügen
             $sql = $pdo->prepare('SELECT * FROM kalender WHERE Rezept_ID = :id');
             $sql->bindValue(':id', $id);
@@ -271,11 +277,11 @@ switch ($task) {
             die();
         }
     case "addEvaluation":
-        if (isset($_POST['rezept']) && isset($_POST['bewertung']) && isset($_POST['name']) && isset($_POST['text'])) {
-            $rezept = $_POST['rezept'];
-            $bewertung = $_POST['bewertung'];
-            $name = $_POST['name'];
-            $text = $_POST['text'];
+        if (isset($_GET['rezept']) && isset($_GET['rating']) && isset($_GET['name']) && isset($_GET['text'])) {
+            $rezept = $_GET['rezept'];
+            $bewertung = $_GET['rating'];
+            $name = $_GET['name'];
+            $text = $_GET['text'];
 
             $sql = $pdo->prepare('INSERT INTO bewertungen (Rezept_ID, Bewertung, Name, Text) VALUES (:rezept, :bewertung, :name, :text)');
             $sql->bindValue(':rezept', $rezept);
@@ -283,34 +289,34 @@ switch ($task) {
             $sql->bindValue(':name', $name);
             $sql->bindValue(':text', $text);
             $sql->execute();
+            echo json_encode(['success' => true]);
             die();
         } else {
             echo json_encode(['error' => 'Not all parameters provided']);
             die();
         }
     case "editEvaluation":
-        if (isset($_POST['edit']) && isset($_POST['rezept']) && isset($_POST['bewertung']) && isset($_POST['name']) && isset($_POST['text'])) {
-            $edit = $_POST['edit'];
-            $rezept = $_POST['rezept'];
-            $bewertung = $_POST['bewertung'];
-            $name = $_POST['name'];
-            $text = $_POST['text'];
+        if (isset($_GET['rezept']) && isset($_GET['rating']) && isset($_GET['name']) && isset($_GET['text'])) {
+            $rezept = $_GET['rezept'];
+            $bewertung = $_GET['rating'];
+            $name = $_GET['name'];
+            $text = $_GET['text'];
 
-            $sql = $pdo->prepare('UPDATE bewertungen SET Bewertung = :bewertung, Name = :name, Text = :text WHERE ID = :edit AND Rezept_ID = :rezept');
-            $sql->bindValue(':edit', $edit);
+            $sql = $pdo->prepare('UPDATE bewertungen SET Bewertung = :bewertung, Name = :name, Text = :text WHERE ID = :rezept');
             $sql->bindValue(':rezept', $rezept);
             $sql->bindValue(':bewertung', $bewertung);
             $sql->bindValue(':name', $name);
             $sql->bindValue(':text', $text);
             $sql->execute();
+            echo json_encode(['success' => true]);
             die();
         } else {
             echo json_encode(['error' => 'Not all parameters provided']);
             die();
         }
     case "deleteEvaluation":
-        if (isset($_POST['id'])) {
-            $id = $_POST['id'];
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
             $sql = $pdo->prepare('DELETE FROM bewertungen WHERE ID = :id');
             $sql->bindValue(':id', $id);
             $sql->execute();
@@ -459,9 +465,9 @@ switch ($task) {
         }
         die();
     case "anmerkung":
-        if (isset($_POST['rezept']) && isset($_POST['text'])) {
-            $rezept = $_POST['rezept'];
-            $text = $_POST['text'];
+        if (isset($_GET['rezept']) && isset($_GET['text'])) {
+            $rezept = $_GET['rezept'];
+            $text = $_GET['text'];
 
             //check if anmerkung already exists for this rezept else insert
             $sql = $pdo->prepare('SELECT * FROM anmerkungen WHERE Rezept_ID = :rezept');
@@ -480,61 +486,6 @@ switch ($task) {
                 $sql->bindValue(':text', $text);
                 $sql->execute();
             }
-
-            echo json_encode(['success' => true]);
-            die();
-        } else {
-            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
-            die();
-        }
-    case "addBewertung":
-        if (isset($_POST['rezept']) && isset($_POST['bewertung']) && isset($_POST['name']) && isset($_POST['text'])) {
-            $rezept = $_POST['rezept'];
-            $bewertung = $_POST['bewertung'];
-            $name = $_POST['name'];
-            $text = $_POST['text'];
-
-            $sql = $pdo->prepare('INSERT INTO bewertungen (Rezept_ID, Bewertung, Name, Text) VALUES (:rezept, :bewertung, :name, :text)');
-            $sql->bindValue(':rezept', $rezept);
-            $sql->bindValue(':bewertung', $bewertung);
-            $sql->bindValue(':name', $name);
-            $sql->bindValue(':text', $text);
-            $sql->execute();
-
-            echo json_encode(['success' => true]);
-            die();
-        } else {
-            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
-            die();
-        }
-    case "editBewertung":
-        if (isset($_POST['id']) && isset($_POST['rezept']) && isset($_POST['bewertung']) && isset($_POST['name']) && isset($_POST['text'])) {
-            $id = $_POST['id'];
-            $rezept = $_POST['rezept'];
-            $bewertung = $_POST['bewertung'];
-            $name = $_POST['name'];
-            $text = $_POST['text'];
-
-            $sql = $pdo->prepare('UPDATE bewertungen SET Bewertung = :bewertung, Name = :name, Text = :text WHERE ID = :id AND Rezept_ID = :rezept');
-            $sql->bindValue(':id', $id);
-            $sql->bindValue(':rezept', $rezept);
-            $sql->bindValue(':bewertung', $bewertung);
-            $sql->bindValue(':name', $name);
-            $sql->bindValue(':text', $text);
-            $sql->execute();
-
-            echo json_encode(['success' => true]);
-            die();
-        } else {
-            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
-            die();
-        }
-    case "deleteBewertung":
-        if (isset($_POST['id'])) {
-            $id = $_POST['id'];
-            $sql = $pdo->prepare('DELETE FROM bewertungen WHERE ID = :id');
-            $sql->bindValue(':id', $id);
-            $sql->execute();
 
             echo json_encode(['success' => true]);
             die();
@@ -591,10 +542,10 @@ switch ($task) {
         echo json_encode($kalender);
         die();
     case "addKalender":
-        if (isset($_POST['date']) && isset($_POST['rezept']) && isset($_POST['info'])) {
-            $date = $_POST['date'];
-            $rezept = $_POST['rezept'];
-            $info = $_POST['info'];
+        if (isset($_GET['date']) && isset($_GET['rezept']) && isset($_GET['info'])) {
+            $date = $_GET['date'];
+            $rezept = $_GET['rezept'];
+            $info = $_GET['info'];
 
             $stmt = $pdo->prepare("INSERT INTO kalender (Datum, Rezept_ID, Text) VALUES (?, ?, ?)");
             $stmt->execute([$date, $rezept, $info]);

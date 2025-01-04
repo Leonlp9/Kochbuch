@@ -117,6 +117,9 @@ global $pdo;
                             <h3>${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }</h3>
                         `;
 
+                    if (recipe['Text'] !== null && recipe['Image'] !== null) {
+                        html += `<p>${ recipe['Text'] }</p>`;
+                    }
 
                     if (recipe['Image'] !== null) {
                         html += `<img src="${ recipe['Image'] }" alt="${ recipe['Name'] === null ? recipe['Text'] : recipe['Name'] }" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px;">`;

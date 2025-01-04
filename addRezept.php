@@ -161,37 +161,6 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
             word-break: break-word;
         }
 
-        .delete {
-            background-color: var(--red);
-            color: var(--color);
-            border: none;
-            border-radius: 5px;
-            padding: 5px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .delete:hover {
-            background-color: var(--darkerRed);
-        }
-
-        .btn {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.2em;
-        }
-
-        .green {
-            background-color: var(--green);
-            color: var(--color);
-        }
-
-        .green:hover {
-            background-color: var(--darkerGreen);
-        }
-
         .zutatSuche {
             width: 100%;
             padding: 5px;
@@ -394,6 +363,22 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
         .ql-snow .ql-stroke {
             stroke: var(--color);
         }
+
+        #extraCustomInfos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        #extraCustomInfos > div {
+            background: var(--secondaryBackground);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #extraCustomInfos > div:hover {
+            background: var(--nonSelected);
+        }
     </style>
 </head>
 <body>
@@ -447,6 +432,80 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                 </div>
 
                 <input type="text" name="extraCustomInfos" id="extraCustomInfosInput" hidden>
+
+                <h2>Zusätzliche Informationen</h2>
+                <div id="extraCustomInfos"></div>
+                <script>
+                    let extraCustomInfos = JSON.parse(<?php echo $edit ? json_encode($rezept['OptionalInfos']) : json_encode('[]') ?>);
+
+                    function updateExtraCustomInfos() {
+                        document.getElementById('extraCustomInfos').innerHTML = '';
+                        extraCustomInfos.forEach((info, index) => {
+                            let div = document.createElement('div');
+                            div.classList.add('extraCustomInfo');
+                            div.innerHTML = info.title + ': ' + info.content;
+                            div.dataset.index = index;
+
+                            document.getElementById('extraCustomInfos').appendChild(div);
+
+                            div.addEventListener('click', function () {
+                                let index = this.dataset.index;
+                                let info = extraCustomInfos[index];
+                                const form = new FormBuilder(
+                                    'Information bearbeiten',
+                                    (formData) => {
+                                        extraCustomInfos[index] = {
+                                            title: formData.title,
+                                            content: formData.content
+                                        };
+                                        updateExtraCustomInfos();
+                                    },
+                                    () => {}
+                                );
+
+                                form.addInputField('title', 'Titel', info.title);
+                                form.addInputField('content', 'Inhalt', info.content);
+                                form.addButton('Löschen', () => {
+                                    // aus extraCustomInfos das element mit dem index entfernen
+                                    extraCustomInfos.splice(index, 1);
+                                    console.log(extraCustomInfos);
+                                    updateExtraCustomInfos();
+                                    form.closeForm();
+                                });
+
+                                form.renderForm();
+                            });
+                        });
+
+                        let addExtraCustomInfoButton = document.createElement('div');
+                        addExtraCustomInfoButton.id = 'addExtraCustomInfo';
+                        addExtraCustomInfoButton.type = 'button';
+                        addExtraCustomInfoButton.innerText = 'Information hinzufügen';
+                        addExtraCustomInfoButton.style.background = 'var(--green)';
+                        document.getElementById('extraCustomInfos').appendChild(addExtraCustomInfoButton);
+                        addExtraCustomInfoButton.addEventListener('click', () => {
+                            const form = new FormBuilder(
+                                'Information hinzufügen',
+                                (formData) => {
+                                    extraCustomInfos.push({
+                                        title: formData.title,
+                                        content: formData.content
+                                    });
+                                    updateExtraCustomInfos();
+                                },
+                                () => {}
+                            );
+
+                            form.addInputField('title', 'Titel');
+                            form.addInputField('content', 'Inhalt');
+                            form.renderForm();
+                        });
+
+                    }
+
+                    updateExtraCustomInfos();
+                </script>
+
 
                 <h2>Zutaten</h2>
                 <input type="hidden" name="zutaten" id="zutatenInput" required>
@@ -530,7 +589,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                     );
 
                                     // Felder für die Zutat
-                                    form.addHeader(aktuelleZutat.Name);
+                                    form.addHeader(aktuelleZutat.Name + ' (' + aktuelleZutat.unit + ')');
                                     form.addNumberField('menge', 0, Infinity, aktuelleZutat.Menge);
                                     form.addInputField('info', 'Zusätzliche Info', aktuelleZutat.additionalInfo);
                                     form.addButton('Löschen', () => {
@@ -885,7 +944,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                         zutaten.value = JSON.stringify(getRawZutatenJson());
 
                         let extraCustomInfosElement = document.querySelector('#extraCustomInfosInput');
-                        extraCustomInfosElement.value = JSON.stringify([{"title":"Kalorien","content":"210"}]);
+                        extraCustomInfosElement.value = JSON.stringify(extraCustomInfos);
 
                         // remove confirmation when leaving the page
                         window.onbeforeunload = function(e) {

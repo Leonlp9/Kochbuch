@@ -154,6 +154,11 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
         nav.navDesktop {
             display: none;
         }
+
+        .nav-grid-content {
+            grid-template-columns: 1fr;
+            grid-template-areas: "container";
+        }
     }
 </style>
 
@@ -176,7 +181,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
     <a href="calendar.php" <?php if ($currentPage == "calendar") echo "class='active'" ?>>
         <i class="fas fa-calendar-alt"></i> <span>Kalender</span>
     </a>
-    <a id="addRezept" href="addRezept.php" <?php if ($currentPage == "addRezept") echo "class='active'" ?>>
+    <a id="addRezept" href="new" <?php if ($currentPage == "addRezept") echo "class='active'" ?>>
         <i class="fas fa-plus"></i> <span>Rezept hinzufügen</span>
     </a>
     <div style="margin-top: auto;">

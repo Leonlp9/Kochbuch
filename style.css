@@ -51,8 +51,8 @@ html[theme="helloween"] {
     --darkerRed: #ff8c00;
     --green: #b8a233;
     --darkerGreen: #8f7a00;
-    --blue: #48bef6;
-    --darkerBlue: #1898d4;
+    --blue: #87430c;
+    --darkerBlue: #5f2f00;
     --white: #fdfdfd;
     --darkerWhite: #dddddd;
     --border-radius: 5px;
@@ -286,12 +286,25 @@ body {
     border: 2px solid #48bef6;
 }
 
+.form-container form input[type="date"] {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: var(--border-radius);
+    outline: none;
+    background: var(--background);
+    color: var(--color);
+    width: 100%;
+}
+
+
 .form-container form select {
     padding: 10px;
     margin-bottom: 10px;
     border: none;
     border-radius: var(--border-radius);
     outline: none;
+    background: var(--background);
 }
 
 .form-container form button {
@@ -467,4 +480,64 @@ h1 {
 
 .divider::after {
     margin-left: 10px;
+}
+
+
+.delete {
+    background-color: var(--red);
+    color: var(--color);
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.delete:hover {
+    background-color: var(--darkerRed);
+}
+
+.btn {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+.green {
+    background-color: var(--green);
+    color: var(--color);
+}
+
+.green:hover {
+    background-color: var(--darkerGreen);
+}
+
+.blue {
+    background-color: var(--blue);
+    color: var(--color);
+}
+
+.blue:hover {
+    background-color: var(--darkerBlue);
+}
+
+.red {
+    background-color: var(--red);
+    color: var(--color);
+}
+
+.red:hover {
+    background-color: var(--darkerRed);
+}
+
+select {
+    padding: 10px;
+    border: none;
+    border-radius: var(--border-radius);
+    outline: none;
+    background: var(--secondaryBackground);
+    color: var(--color);
+    font-size: 1em;
 }

@@ -41,6 +41,37 @@ global $pdo;
 
 
 	<link rel="stylesheet" href="style.css">
+
+    <style>
+        .settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .settings div {
+            display: grid;
+        }
+
+        .settings div a {
+            display: grid;
+            text-decoration: none;
+        }
+
+
+        @media (max-width: 768px) {
+            .settings {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #githubVersion {
+            background: var(--secondaryBackground);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+    </style>
 </head>
 <body>
 <div class="nav-grid-content">
@@ -50,103 +81,119 @@ global $pdo;
 
 		<br>
 
-        <h2>Theme</h2>
-        <select name="theme" id="theme" onchange="changeTheme()">
-            <option value="light">Hell</option>
-            <option value="dark">Dunkel</option>
-            <option value="helloween">Helloween</option>
-            <option value="christmas">Weihnachten</option>
-            <option value="spring">Frühling</option>
-            <option value="dracula">Dracula</option>
-            <option value="midnight">Mitternacht</option>
-        </select>
-        <script>
+        <div class="settings">
+            <div>
+                <h2>Theme</h2>
+                <select name="theme" id="theme" onchange="changeTheme()">
+                    <option value="light">Hell</option>
+                    <option value="dark">Dunkel</option>
+                    <option value="helloween">Helloween</option>
+                    <option value="christmas">Weihnachten</option>
+                    <option value="spring">Frühling</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="midnight">Mitternacht</option>
+                </select>
+                <script>
 
-            function setTheme(newTheme) {
-                document.documentElement.setAttribute('theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-            }
-
-            function changeTheme() {
-                setTheme(document.getElementById('theme').value);
-            }
-
-            const theme = localStorage.getItem('theme');
-            if (theme) {
-                setTheme(theme);
-                document.getElementById('theme').value = theme;
-            }
-        </script>
-
-        <!--        Zutaten-Filterprofil-->
-        <h2>Filterprofile</h2>
-        <a href="filterprofile.php">
-            <button class="btn blue">Filterprofile bearbeiten</button>
-        </a>
-<!--		Kategorien bearbeiten-->
-		<h2>Kategorien</h2>
-		<a href="kategorien.php">
-			<button class="btn blue">Kategorien bearbeiten</button>
-		</a>
-<!--		Zutaten bearbeiten-->
-		<h2>Zutaten</h2>
-		<a href="zutaten.php">
-			<button class="btn blue">Zutaten bearbeiten</button>
-		</a>
-
-        <h2>Sicherheitskopie erstellen</h2>
-        <div onclick="downloadBackUp()">
-            <button class="btn blue">Sicherheitskopie erstellen</button>
-        </div>
-
-        <h2>GitHub Version</h2>
-        <div id="githubVersion"></div>
-
-        <script>
-            function downloadBackUp() {
-                $.ajax({
-                    url: 'api.php',
-                    type: 'GET',
-                    data: {
-                        task: 'export_db'
-                    },
-                    success: function (data) {
-                        var blob = new Blob([data], {type: 'application/octet-stream'});
-                        var url = URL.createObjectURL(blob);
-                        var a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'Backup_' + new Date().toISOString().slice(0, 10) + '.sql';
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
+                    function setTheme(newTheme) {
+                        document.documentElement.setAttribute('theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
                     }
-                });
-            }
 
-            async function getLastGitHubCommit() {
-                try {
-                    const response = await fetch('https://api.github.com/repos/Leonlp9/Kochbuch/commits');
-                    const data = await response.json();
-                    return data[0].commit; // Dies gibt den Commit-Titel zurück
-                } catch (error) {
-                    console.error('Fehler beim Abrufen des letzten Commit-Titels:', error);
-                    return null; // Im Fehlerfall null zurückgeben oder entsprechend anpassen
+                    function changeTheme() {
+                        setTheme(document.getElementById('theme').value);
+                    }
+
+                    const theme = localStorage.getItem('theme');
+                    if (theme) {
+                        setTheme(theme);
+                        document.getElementById('theme').value = theme;
+                    }
+                </script>
+            </div>
+
+            <!--        Zutaten-Filterprofil-->
+            <div>
+                <h2>Filterprofile</h2>
+                <a href="filterprofile.php">
+                    <button class="btn blue">Filterprofile bearbeiten</button>
+                </a>
+            </div>
+
+    <!--		Kategorien bearbeiten-->
+            <div>
+                <h2>Kategorien</h2>
+                <a href="kategorien.php">
+                    <button class="btn blue">Kategorien bearbeiten</button>
+                </a>
+            </div>
+
+    <!--		Zutaten bearbeiten-->
+            <div>
+                <h2>Zutaten</h2>
+                <a href="zutaten.php">
+                    <button class="btn blue">Zutaten bearbeiten</button>
+                </a>
+            </div>
+
+            <div>
+                <h2>Sicherheitskopie erstellen</h2>
+                <div onclick="downloadBackUp()">
+                    <button class="btn blue">Sicherheitskopie erstellen</button>
+                </div>
+            </div>
+
+            <div>
+                <h2>GitHub Version</h2>
+                <div id="githubVersion"></div>
+            </div>
+
+            <script>
+                function downloadBackUp() {
+                    $.ajax({
+                        url: 'api.php',
+                        type: 'GET',
+                        data: {
+                            task: 'export_db'
+                        },
+                        success: function (data) {
+                            var blob = new Blob([data], {type: 'application/octet-stream'});
+                            var url = URL.createObjectURL(blob);
+                            var a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'Backup_' + new Date().toISOString().slice(0, 10) + '.sql';
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                        }
+                    });
                 }
-            }
 
-            function loadGitHubVersion() {
-                getLastGitHubCommit().then(data => {
-                    $('#githubVersion').html(`<p>Letzter Commit: ${data.message}</p>`);
-                });
-            }
+                async function getLastGitHubCommit() {
+                    try {
+                        const response = await fetch('https://api.github.com/repos/Leonlp9/Kochbuch/commits');
+                        const data = await response.json();
+                        return data[0].commit; // Dies gibt den Commit-Titel zurück
+                    } catch (error) {
+                        console.error('Fehler beim Abrufen des letzten Commit-Titels:', error);
+                        return null; // Im Fehlerfall null zurückgeben oder entsprechend anpassen
+                    }
+                }
 
-            loadGitHubVersion();
+                function loadGitHubVersion() {
+                    getLastGitHubCommit().then(data => {
+                        $('#githubVersion').html(`<p><em>Letzter Commit:</em> ${data.message}</p>`);
+                    });
+                }
 
-            function getLocalVersion() {
-                return fetch('version.txt').then(response => response.text());
-            }
+                loadGitHubVersion();
 
-        </script>
+                function getLocalVersion() {
+                    return fetch('version.txt').then(response => response.text());
+                }
+
+            </script>
+        </div>
 	</div>
 </div>
 </body>

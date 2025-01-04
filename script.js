@@ -192,6 +192,14 @@ class FormBuilder {
         this.fields.push({ type: 'button', text, onKlick });
     }
 
+    addDateInput(id, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'date', startValue, onChange });
+    }
+
+    addQuillField(id, placeholder, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'quill', placeholder, startValue, onChange });
+    }
+
     closeForm() {
         this.onCancel();
 
@@ -214,6 +222,8 @@ class FormBuilder {
         const title = document.createElement('h2');
         title.textContent = this.title;
         form.appendChild(title);
+        this.container.appendChild(form);
+        this.form = form;
 
         // Generate fields
         this.fields.forEach((field) => {
@@ -292,6 +302,18 @@ class FormBuilder {
                     element.textContent = field.text;
                     element.addEventListener('click', field.onKlick);
                     break;
+                case 'date':
+                    element = document.createElement('input');
+                    element.type = 'date';
+                    element.id = field.id;
+                    element.value = field.startValue || new Date().toISOString().split('T')[0];
+                    break;
+                case 'quill':
+                    element = document.createElement('div');
+                    element.id = field.id;
+                    break;
+                default:
+                    console.error(`Unknown field type: ${field.type}`);
             }
 
             if (field.type !== 'checkbox') {
@@ -299,6 +321,37 @@ class FormBuilder {
             }
             form.appendChild(element);
             form.appendChild(document.createElement('br'));
+        });
+
+        //register quill
+        this.fields.forEach((field) => {
+            if (field.type === 'quill') {
+                var settings = {
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'blockquote'],
+                            [{'list': 'ordered'}, {'list': 'bullet'}],
+                            ['link'],
+                            ['clean']
+                        ]
+                    },
+                    theme: 'snow'
+                };
+
+                const quill = new Quill(`#${field.id}`, {
+                    theme: 'snow',
+                    placeholder: field.placeholder,
+                    modules: {
+                        toolbar: settings.modules.toolbar
+                    },
+                });
+
+                quill.root.innerHTML = field.startValue || '';
+
+                quill.root.addEventListener('input', (e) => field.onChange(quill.root.innerHTML));
+
+                field.quill = quill;
+            }
         });
 
         // Add buttons
@@ -320,6 +373,10 @@ class FormBuilder {
                     if (field.type === 'button') {
                     }else if (field.type === 'checkbox') {
                         formData[field.id] = input.checked;
+                    } else if (field.type === 'file') {
+                        formData[field.id] = input.files[0];
+                    } else if (field.type === 'quill') {
+                        formData[field.id] = "\"" + field.quill.root.innerHTML + "\"";
                     } else {
                         formData[field.id] = input.value;
                     }
@@ -360,8 +417,6 @@ class FormBuilder {
             }
         });
 
-        this.container.appendChild(form);
-        this.form = form;
     }
 }
 class SystemMessage {

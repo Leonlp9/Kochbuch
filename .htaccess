@@ -11,3 +11,6 @@ RewriteRule ^search/?$ search.php [L]
 
 # Umschreiben von "localhost/rezept/" auf "localhost/rezept.php"
 RewriteRule ^rezept/?$ rezept.php [L]
+
+# Umschreiben von "localhost/new/" auf "localhost/addRezept.php"
+RewriteRule ^new/?$ addRezept.php [L]
