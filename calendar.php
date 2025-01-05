@@ -37,21 +37,31 @@ global $pdo;
     <link rel="stylesheet" href="style.css">
 
     <style>
+        #calendar {
+            display: grid;
+            gap: 10px;
+        }
+
+        .day {
+            display: grid;
+            gap: 10px;
+        }
+
         .entry {
             text-decoration: none;
             color: var(--color);
-        }
-
-        .entry:hover {
             background-color: var(--secondaryBackground);
             border-radius: 10px;
         }
 
+        .entry:hover {
+            background-color: var(--nonSelected);
+        }
+
         .recipe {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 10px;
             padding: 10px;
         }
 
@@ -150,16 +160,6 @@ global $pdo;
                     let recipeDiv = document.createElement('div');
                     recipeDiv.classList.add('recipe');
 
-                    let h3 = document.createElement('h3');
-                    h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                    recipeDiv.appendChild(h3);
-
-                    if (recipe['Text'] !== null && recipe['Image'] !== null) {
-                        let p = document.createElement('p');
-                        p.textContent = recipe['Text'];
-                        recipeDiv.appendChild(p);
-                    }
-
                     if (recipe['Image'] !== null) {
                         let img = document.createElement('img');
                         img.src = recipe['Image'];
@@ -169,7 +169,26 @@ global $pdo;
                         img.style.objectFit = 'cover';
                         img.style.borderRadius = '10px';
                         recipeDiv.appendChild(img);
+                    }else {
+                        recipeDiv.style.gridTemplateColumns = '1fr';
                     }
+
+
+                    let infos = document.createElement('div');
+
+                    let h3 = document.createElement('h3');
+                    h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                    infos.appendChild(h3);
+
+                    if (recipe['Text'] !== null && recipe['Image'] !== null) {
+                        let p = document.createElement('p');
+                        p.textContent = recipe['Text'];
+                        infos.appendChild(p);
+                    }
+
+                    recipeDiv.appendChild(infos);
+
+
 
                     entry.appendChild(recipeDiv);
                     dayDiv.appendChild(entry);
