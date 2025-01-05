@@ -44,10 +44,23 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
+<!--    QrCode-->
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
 
     <style>
+
+        #zutaten-tables {
+            display: grid;
+            gap: 20px;
+        }
+
+        #zutaten-tables h3 {
+            margin-bottom: 5px;
+        }
+
         .zutaten {
             list-style: none;
             padding: 0;
@@ -420,30 +433,64 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                         }
 
                     </script>
+
+                    <div id="qrCode" style="cursor: pointer;">
+                        <i class="fas fa-qrcode"></i>
+                    </div>
+                    <script>
+                        document.getElementById('qrCode').addEventListener('click', () => {
+                            let qrCode = new QRCode(document.createElement('div'), {
+                                text: window.location.href,
+                                width: 256,
+                                height: 256,
+                                colorDark: "#000000",
+                                colorLight: "#ffffff",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+
+                            let qrCodeWindow = window.open('', '_blank');
+                            qrCodeWindow.document.body.appendChild(qrCode._el);
+
+                        });
+                    </script>
                 </div>
 
                 <h2>Zutaten</h2>
-                <ul class="zutaten" id="zutaten-list"></ul>
+                <div id="zutaten-tables"></div>
                 <div style="display: flex; justify-content: center;" class="no-print">
                     <div class="number-input" style="width: auto;">
                         <button type="button" class="down"><i class="fas fa-minus"></i></button>
                         <input id="portionenInput" min="1" name="portionen" value="<?= $rezept['Portionen'] ?>" step="1" type="number" onchange="renderZutaten()">
-                        <button type="button"  class="up"><i class="fas fa-plus"></i></button>
+                        <button type="button" class="up"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
 
                 <script>
                     const zutaten = <?= json_encode($rezept['Zutaten_JSON']) ?>;
+                    const zutatenTables = <?= json_encode($rezept['ZutatenTables']) ?>;
                     let portionen = <?= $rezept['Portionen'] ?>;
 
                     function renderZutaten() {
-                        const zutatenList = document.getElementById('zutaten-list');
-                        zutatenList.innerHTML = '';
+                        const zutatenTablesContainer = document.getElementById('zutaten-tables');
+                        zutatenTablesContainer.innerHTML = '';
 
                         portionen = document.getElementById('portionenInput').value;
                         document.getElementById('portionen').innerText = portionen;
 
+                        // Create tables
+                        zutatenTables.forEach(table => {
+                            const tableDiv = document.createElement('div');
+                            tableDiv.classList.add('zutaten-table');
+                            if (table !== '') {
+                                tableDiv.innerHTML = `<h3>${table}</h3>`;
+                            }
+                            tableDiv.innerHTML += `<ul class="zutaten" id="zutaten-list-${table}"></ul>`;
+                            zutatenTablesContainer.appendChild(tableDiv);
+                        });
+
+                        // Add ingredients to the correct tables
                         zutaten.forEach(zutat => {
+                            const zutatenList = document.getElementById(`zutaten-list-${zutat.table}`);
                             const li = document.createElement('li');
 
                             let newMenge = zutat.Menge * portionen / <?= $rezept['Portionen'] ?>;

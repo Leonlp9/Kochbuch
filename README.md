@@ -117,3 +117,6 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert.
 
 ;extension=gd
 extension=gd2
+
+sudo a2enmod rewrite
+sudo systemctl restart apache2

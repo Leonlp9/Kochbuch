@@ -468,6 +468,39 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                         tables = [""];
                     }
 
+                    function edit(zutatId) {
+                        const aktuelleZutat = zutatenJSON[zutatId];
+
+                        if (!aktuelleZutat) return;
+
+                        const form = new FormBuilder(
+                            'Zutat bearbeiten',
+                            (formData) => {
+
+                                aktuelleZutat.Menge = formData.menge;
+                                aktuelleZutat.additionalInfo = formData.info;
+
+                                update();
+                            },
+                            () => {
+                            }
+                        );
+
+                        // Felder für die Zutat
+                        form.addHeader(aktuelleZutat.Name + ' (' + aktuelleZutat.unit + ')');
+                        form.addNumberField('menge', 0, Infinity, aktuelleZutat.Menge);
+                        form.addInputField('info', 'Zusätzliche Info', aktuelleZutat.additionalInfo);
+                        form.addButton('Löschen', () => {
+                            zutatenJSON.splice(zutatId, 1);
+                            update();
+                            form.closeForm();
+                        });
+
+                        form.renderForm();
+
+                        form.fucus("menge");
+                    }
+
                     function update() {
 
                         // Vorhandene Tabellen entfernen
@@ -478,6 +511,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                             let tableDiv = document.createElement('div');
                             tableDiv.classList.add('table');
                             tableDiv.dataset.table = table;
+
                             tableDiv.innerHTML = `
                                 <div class='tableHeader'>
                                     <input type='text' class='tableName' value='${table}' placeholder='Tabellenname'>
@@ -486,19 +520,18 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
                                 <div class='zutaten'>
                                     ${zutatenJSON
-                                                    .filter(zutat => zutat.table === table)
-                                                    .map(zutat => `
-                                            <div class='zutat' data-id='${zutat.ID}'>
+                                        .filter((zutat) => zutat.table === table)
+                                        .map((zutat) => `
+                                            <div class='zutat' data-id='${zutatenJSON.indexOf(zutat)}'>
                                                 <div class="grabber">☰</div>
                                                 <div class='zutatInfo'>
                                                     <img src='${zutat.Image}' alt='${zutat.Name}'>
                                                     <p>${zutat.Name} ${zutat.additionalInfo}</p>
                                                     <p>${zutat.Menge} ${zutat.unit}</p>
                                                 </div>
-
                                             </div>
                                         `)
-                                                    .join('')}
+                                        .join('')}
                                     <div class='zutat new' style='order: 9999;'>+</div>
                                 </div>
                             `;
@@ -510,40 +543,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                             if (!zutat.classList.contains('new')) {
                                 zutat.addEventListener('click', () => {
                                     const zutatId = zutat.dataset.id;
-                                    const aktuelleZutat = zutatenJSON.find(z => String(z.ID) === zutatId);
-
-                                    if (!aktuelleZutat) return;
-
-                                    const form = new FormBuilder(
-                                        'Zutat bearbeiten',
-                                        (formData) => {
-                                            // Zutat aktualisieren
-                                            zutatenJSON = zutatenJSON.map(z => {
-                                                if (String(z.ID) === zutatId) {
-                                                    return {
-                                                        ...z,
-                                                        Menge: formData.menge,
-                                                        additionalInfo: formData.info,
-                                                    };
-                                                }
-                                                return z;
-                                            });
-                                            update();
-                                        },
-                                        () => {}
-                                    );
-
-                                    // Felder für die Zutat
-                                    form.addHeader(aktuelleZutat.Name + ' (' + aktuelleZutat.unit + ')');
-                                    form.addNumberField('menge', 0, Infinity, aktuelleZutat.Menge);
-                                    form.addInputField('info', 'Zusätzliche Info', aktuelleZutat.additionalInfo);
-                                    form.addButton('Löschen', () => {
-                                        zutatenJSON = zutatenJSON.filter(z => String(z.ID) !== zutatId);
-                                        update();
-                                        form.closeForm();
-                                    });
-
-                                    form.renderForm();
+                                    edit(zutatId);
                                 });
                             }
                         });
@@ -556,29 +556,27 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                 filter: '.new',
                                 handle: '.grabber',
                                 onEnd: e => {
-                                    // Neue Tabelle ermitteln
-                                    let newParentTable = e.to.closest('.table').dataset.table;
+                                    const zutat = zutatenJSON[e.item.dataset.id];
+                                    const newTable = e.to.closest('.table').dataset.table;
 
-                                    // Sortierte IDs innerhalb der Ziel-Tabelle
-                                    let sortedIds = Array.from(e.to.children)
+                                    zutat.table = newTable;
+
+                                    let sortedIndexes = Array.from(e.to.children)
                                         .filter(child => child.classList.contains('zutat') && !child.classList.contains('new'))
                                         .map(child => child.dataset.id);
 
-                                    // Zutaten in zutatenJSON aktualisieren
-                                    zutatenJSON = zutatenJSON.map(zutat => {
-                                        if (sortedIds.includes(String(zutat.ID))) {
-                                            let newIndex = sortedIds.indexOf(String(zutat.ID));
-                                            return {
-                                                ...zutat,
-                                                sortIndex: newIndex,
-                                                table: newParentTable // Tabelle aktualisieren
-                                            };
-                                        }
-                                        return zutat;
-                                    });
+                                    //get all zutaten of the new table
+                                    let zutatenOfTable = zutatenJSON.filter(zutat => zutat.table === newTable);
 
-                                    // Nach sortIndex sortieren
-                                    zutatenJSON.sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0));
+                                    for (let i = 0; i < zutatenOfTable.length; i++) {
+                                        zutatenOfTable[i] = zutatenJSON[sortedIndexes[i]];
+                                    }
+
+                                    //update zutatenJSON
+                                    zutatenJSON = zutatenJSON.filter(zutat => zutat.table !== newTable);
+                                    zutatenJSON = zutatenJSON.concat(zutatenOfTable);
+
+                                    update();
 
                                     new SystemMessage('Zutaten aktualisiert').show();
                                 }
@@ -622,20 +620,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                             newButton.addEventListener('click', () => {
                                 const form = new FormBuilder(
                                     'Zutat hinzufügen',
-                                    (formData) => {
-                                        // Neue Zutat hinzufügen
-                                        const newZutat = {
-                                            ID: Date.now(), // Eindeutige ID
-                                            Menge: formData.menge,
-                                            unit: formData.unit,
-                                            Name: formData.name,
-                                            Image: 'ingredientIcons/default.svg', // Beispielbild
-                                            additionalInfo: formData.info,
-                                            table: newButton.closest('.table').dataset.table // Aktuelle Tabelle
-                                        };
-                                        zutatenJSON.push(newZutat);
-                                        update();
-                                    },
+                                    (formData) => {},
                                     () => {}
                                 );
 
@@ -679,6 +664,8 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                                     update();
 
                                                     form.closeForm();
+
+                                                    edit(zutatenJSON.indexOf(newZutat));
 
                                                 });
                                                 form.form.querySelector('.searchResults').appendChild(result);

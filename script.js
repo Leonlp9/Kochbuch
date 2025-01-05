@@ -154,6 +154,8 @@ class FormBuilder {
     closeForm() {
         this.onCancel();
 
+        this.background.style.pointerEvents = 'none';
+
         this.container.style.animation = 'form-container-out-animation 0.25s forwards';
         this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
 
@@ -162,6 +164,10 @@ class FormBuilder {
         }, 500);
 
         delete this;
+    }
+
+    fucus(id) {
+        document.getElementById(id).focus();
     }
 
     renderForm(showButtons = true) {
@@ -333,6 +339,7 @@ class FormBuilder {
                     }
                 });
                 this.onSubmit(formData);
+                this.background.style.pointerEvents = 'none';
 
                 this.container.style.animation = 'form-container-out-animation 0.25s forwards';
                 this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
@@ -357,6 +364,7 @@ class FormBuilder {
 
         this.background.addEventListener('click', (e) => {
             if (e.target === this.background) {
+                this.background.style.pointerEvents = 'none';
                 this.container.style.animation = 'form-container-out-animation 0.25s forwards';
                 this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
 
@@ -518,6 +526,10 @@ class KiChat {
                 setTimeout(() => {
                     this.container.style.height = 'min(calc(100% - 150px), 700px)';
                 }, 100);
+
+                setTimeout(() => {
+                    this.input.focus();
+                }, 500);
             }
         });
 

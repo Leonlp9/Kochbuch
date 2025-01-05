@@ -273,17 +273,21 @@ global $pdo;
                                 <a class="rezept" href="rezept?id=${result.rezepte_ID}" style="animation-delay: ${i * 0.01}s">
                                     <div class="image" style="background-image: url('${result.Image}')">
                                         <div class="overlay">
-                                            <div>${result.Zeit}</div>
-                                            <div class="rating">`;
-                                                for (let j = 0; j < 5; j++) {
-                                                    if (j < result.Rating) {
-                                                        html += `<i class="fas fa-star"></i>`;
-                                                    } else {
-                                                        html += `<i class="far fa-star"></i>`;
+                                            <div>${result.Zeit}</div>`;
+                                                if (result.Rating != null && result.Rating > 0) {
+
+                                                    html += `<div class="rating">`;
+                                                    for (let j = 0; j < 5; j++) {
+                                                        if (j < result.Rating) {
+                                                            html += `<i class="fas fa-star"></i>`;
+                                                        } else {
+                                                            html += `<i class="far fa-star"></i>`;
+                                                        }
                                                     }
+                                                    html += `</div>`;
+
                                                 }
                                                 html += `</div>
-                                        </div>
                                     </div>
                                     <h2>${result.Name}</h2>
                                 </a>
