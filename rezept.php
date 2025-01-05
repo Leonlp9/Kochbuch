@@ -129,11 +129,14 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
         .images {
             display: flex;
             gap: 10px;
+            width: 100%;
+            flex-wrap: wrap;
         }
 
         .images img {
             border-radius: 10px;
             max-height: 500px;
+            max-width: 100%;
         }
 
         @media print {
