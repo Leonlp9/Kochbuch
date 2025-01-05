@@ -83,56 +83,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function generateResponse(prompt) {
-    try {
-        const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyC5W1JUijGZeSbVAWFj5gmHOyYQ29vlf78";
 
-        const jsonInput = JSON.stringify({
-            contents: [
-                {
-                    role: "user",
-                    parts: [
-                        { text: prompt }
-                    ]
-                }
-            ],
-            systemInstruction: {
-                role: "user",
-                parts: [
-                    {
-                        text: "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
-                    }
-                ]
-            },
-            generationConfig: {
-                temperature: 1,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 8192,
-                responseMimeType: "text/plain"
-            }
-        });
-
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: jsonInput
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const jsonResponse = await response.json();
-
-        return jsonResponse.candidates[0].content.parts[0].text;
-    } catch (error) {
-        console.error(error);
-        return `Error: ${error.message}`;
-    }
-}
 class FormBuilder {
     form;
 
@@ -464,48 +415,332 @@ class SystemMessage {
 }
 class KiChat {
     constructor() {
+        this.messages = [];
+        this.kontextParts = [];
+        this.timestamp = new Date().getTime();
+
         this.container = document.createElement('div');
         this.container.className = 'ki-chat';
 
-        this.messages = [];
+        this.header = document.createElement('div');
+        this.header.className = 'ki-chat-header';
 
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.input.placeholder = 'Schreibe eine Nachricht...';
-        this.input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.sendMessage();
+        this.headerChatsSelect = document.createElement('select');
+        this.headerChatsSelect.className = 'ki-chat-header-chats-select';
+
+        this.updateChatsSelect();
+
+        this.headerChatsSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'new') {
+                this.messages = [];
+                this.kontextParts = [];
+                this.timestamp = new Date().getTime();
+                this.renderMessages();
+                return;
+            }
+
+            const chats = JSON.parse(localStorage.getItem('chats'));
+            const chat = chats[e.target.value];
+            this.messages = chat.messages;
+            this.kontextParts = chat.kontextParts;
+            this.timestamp = e.target.value;
+            this.renderMessages();
+        });
+
+        this.header.appendChild(this.headerChatsSelect);
+
+        const headerClosed = document.createElement('div');
+        headerClosed.className = 'ki-chat-header-closed';
+        this.header.appendChild(headerClosed);
+
+
+
+        this.headerClose = document.createElement('i');
+        this.headerClose.className = 'ki-chat-header-close';
+        this.headerClose.classList.add('fas', 'fa-robot');
+        this.headerClose.style.fontSize = '1.5em';
+
+        this.headerClose.addEventListener('click', () => {
+            if (this.container.classList.contains('open')) {
+                const editChatForm = new FormBuilder('Chat bearbeiten', (formData) => {}, () => {});
+
+                //löschen button
+                editChatForm.addButton('Löschen', () => {
+                    const chats = JSON.parse(localStorage.getItem('chats'));
+                    delete chats[this.timestamp];
+                    localStorage.setItem('chats', JSON.stringify(chats));
+                    this.messages = [];
+                    this.kontextParts = [];
+                    this.updateChatsSelect();
+                    editChatForm.closeForm();
+                    this.renderMessages();
+                });
+
+                editChatForm.renderForm(false);
             }
         });
 
-        this.container.appendChild(this.input);
+        this.container.appendChild(this.header);
+        this.header.appendChild(this.headerClose);
+
+        this.chat = document.createElement('div');
+        this.chat.className = 'ki-chat-chat';
+        this.container.appendChild(this.chat);
+        this.chat.scrollTop = this.chat.scrollHeight;
+
+        this.chatInput = document.createElement('div');
+        this.chatInput.className = 'ki-chat-input';
+        this.container.appendChild(this.chatInput);
+
+        this.input = document.createElement('textarea');
+        this.input.placeholder = 'Nachricht';
+        this.chatInput.appendChild(this.input);
+
+        this.send = document.createElement('button');
+        this.send.textContent = 'Senden';
+        this.chatInput.appendChild(this.send);
+
+        this.send.addEventListener('click', () => {
+            this.sendMessage(this.input.value);
+        });
+
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage(this.input.value);
+            }
+        });
+
+        this.container.addEventListener('click', () => {
+            if (!this.container.classList.contains('open')) {
+                this.container.classList.add('open');
+                this.container.style.width = 'min(calc(100% - 20px), 500px)';
+                setTimeout(() => {
+                    this.container.style.height = 'min(calc(100% - 150px), 700px)';
+                }, 100);
+            }
+        });
+
+        //wenn ausserhalb des chat-bereichs geklickt wird, wird der chat geschlossen
+        document.addEventListener('click', (e) => {
+            if (e.target !== this.container && !this.container.contains(e.target)) {
+
+                //wenn in einem formular geklickt wird, wird der chat nicht geschlossen
+                if (document.querySelector('.form-background')) return;
+
+                this.container.style.width = '65px';
+                setTimeout(() => {
+                    this.container.style.height = '65px';
+                    this.container.classList.remove('open');
+                }, 100);
+            }
+        });
 
         document.body.appendChild(this.container);
+
+        this.renderMessages();
+
     }
 
-    addMessage(text, role) {
-        const message = document.createElement('div');
-        message.className = `message ${role}`;
-        message.textContent = text;
+    updateChatsSelect() {
+        this.headerChatsSelect.innerHTML = '';
 
-        this.messages.push({ text, role });
+        const newChatOption = document.createElement('option');
+        newChatOption.value = 'new';
+        newChatOption.textContent = 'Neuer Chat';
+        this.headerChatsSelect.appendChild(newChatOption);
 
-        this.container.insertBefore(message, this.input);
-    }
+        const chats = JSON.parse(localStorage.getItem('chats')) || {};
+        Object.keys(chats).forEach((timestamp) => {
+            const chat = chats[timestamp];
+            const option = document.createElement('option');
+            option.value = timestamp;
+            option.textContent = new Date(parseInt(timestamp)).toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'numeric', year: 'numeric' }).split(', ').reverse().join(', ');
 
-    sendMessage() {
-        const text = this.input.value;
-        this.addMessage(text, 'user');
-        this.input.value = '';
+            //füge dem textContent die ersten 100 zeichen des ersten parts hinzu
+            if (chat.messages[0].parts[0].text.length > 30) {
+                option.textContent += ': ' + chat.messages[0].parts[0].text.substring(0, 30) + '...';
+            } else {
+                option.textContent += ': ' + chat.messages[0].parts[0].text;
+            }
 
-        generateResponse(text).then((response) => {
-            this.addMessage(response, 'ki');
+            this.headerChatsSelect.appendChild(option);
         });
+
+        //wenn es kein chat mit dem timestamp gibt, wird der new chat ausgewählt, sonst der letzte chat
+        if (!chats[this.timestamp]) {
+            this.headerChatsSelect.value = 'new';
+        } else {
+            this.headerChatsSelect.value = this.timestamp;
+        }
+    }
+
+    saveToStorage() {
+        //in localstorage bei chats array den neuen chat speichern mit timestamp als key und value mit messages und kontextParts
+        let chats = JSON.parse(localStorage.getItem('chats')) || {};
+        chats[this.timestamp] = {messages: this.messages, kontextParts: this.kontextParts};
+        localStorage.setItem('chats', JSON.stringify(chats));
+    }
+
+    async sendMessage(prompt) {
+
+        if (prompt === '') return;
+
+        this.input.value = '';
+        //close keyboard on mobile
+        this.input.blur();
+
+        this.messages.push({
+            role: 'user',
+            parts: [
+                { text: prompt }
+            ]
+        });
+
+        this.renderMessages();
+
+        this.showTypingIndicator();
+
+        const response = await this.generateResponse(this.messages);
+
+        this.messages.push({
+            role: 'model',
+            parts: [
+                { text: response }
+            ]
+        });
+
+        this.renderMessages();
+
+        this.saveToStorage();
+        this.updateChatsSelect();
+
+    }
+
+    renderMessages() {
+        this.chat.innerHTML = '';
+
+        //add start message "Hallo, ich bin CookMate, dein persönlicher Rezept-Assistent. Wie kann ich dir helfen?"
+        this.addRenderedMessage([{ text: "Hallo, ich bin CookMate, dein persönlicher Rezept-Assistent. Wie kann ich dir helfen?" }], 'model');
+
+        this.messages.forEach((message) => {
+            this.addRenderedMessage(message.parts, message.role);
+        });
+
+    }
+
+    addRenderedMessage(messages, role) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `ki-chat-message ki-chat-message-${role}`;
+
+        messages.forEach((message) => {
+            const partElement = document.createElement('p');
+            partElement.innerHTML = marked.parse(message.text);
+            messageElement.appendChild(partElement);
+        });
+
+        this.chat.appendChild(messageElement);
+        this.chat.scrollTop = this.chat.scrollHeight;
+    }
+
+    addKontext(kontext) {
+        if (kontext.name === 'Rezept') {
+
+            let response = "'" + kontext.value.Name + "' ist für " + kontext.value.Portionen + " Portionen und dauert " + kontext.value.Zeit + " Minuten. Die Zutaten sind: ";
+            kontext.value.Zutaten_JSON.forEach((zutat) => {
+                response += zutat.Menge + " " + zutat.unit + " " + zutat.Name + ", ";
+            });
+
+            response += "Die Zubereitung ist: " + kontext.value.Zubereitung;
+
+            this.kontextParts.push({
+                role: 'model',
+                parts: [
+                    { text: response }
+                ]
+            });
+        }
+        this.renderMessages();
+    }
+
+    async generateResponse(prompt) {
+        try {
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+
+            //bei prompt ganz oben die kontextParts hinzufügen
+            prompt = this.kontextParts.concat(prompt);
+
+            const jsonInput = JSON.stringify({
+                contents: prompt,
+                systemInstruction: {
+                    role: "user",
+                    parts: [
+                        {
+                            text: "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
+                        }
+                    ]
+                },
+                generationConfig: {
+                    temperature: 1,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                    responseMimeType: "text/plain"
+                }
+            });
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: jsonInput
+            });
+
+            console.log(JSON.parse(jsonInput));
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const jsonResponse = await response.json();
+
+            return jsonResponse.candidates[0].content.parts[0].text;
+        } catch (error) {
+            console.error(error);
+            return `Error: ${error.message}`;
+        }
+    }
+
+    showTypingIndicator() {
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'ki-chat-typing-indicator';
+
+        const dots = document.createElement('div');
+        dots.className = 'ki-chat-typing-indicator-dots';
+        typingIndicator.appendChild(dots);
+
+        const dot1 = document.createElement('div');
+        dot1.className = 'ki-chat-typing-indicator-dot';
+        dot1.style.animationDelay = '0s';
+        dots.appendChild(dot1);
+
+        const dot2 = document.createElement('div');
+        dot2.className = 'ki-chat-typing-indicator-dot';
+        dot2.style.animationDelay = '0.20s';
+        dots.appendChild(dot2);
+
+        const dot3 = document.createElement('div');
+        dot3.className = 'ki-chat-typing-indicator-dot';
+        dot3.style.animationDelay = '0.4s';
+        dots.appendChild(dot3);
+
+        this.chat.appendChild(typingIndicator);
+
+        this.chat.scrollTop = this.chat.scrollHeight;
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    //let kiChat = new KiChat();
-
     document.documentElement.setAttribute('theme', localStorage.getItem('theme') || 'light');
 });

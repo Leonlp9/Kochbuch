@@ -30,6 +30,8 @@ global $pdo;
 
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
     <link rel="stylesheet" href="style.css">
 
@@ -51,5 +53,4 @@ global $pdo;
         </div>
     </div>
 </body>
-<script src="script.js"></script>
 </html>

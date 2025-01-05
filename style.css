@@ -397,67 +397,190 @@ h1 {
 
 .ki-chat {
     position: fixed;
-    bottom: 0;
-    right: 0;
+    bottom: 8px;
+    right: 8px;
     z-index: 100;
     background: var(--secondaryBackground);
-    border-radius: var(--border-radius);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    animation: ki-chat-in-animation 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    width: 300px;
-    overflow-y: scroll;
-    max-height: 500px;
+    height: 65px;
+    width: 65px;
+    border-radius: 25px;
+    border: 4px solid var(--nonSelected);
+    transition: width 0.5s cubic-bezier(.5,0,.5,1), height 0.5s cubic-bezier(.5,0,.5,1), background 0.5s cubic-bezier(.5,0,.5,1), border 0.5s cubic-bezier(.5,0,.5,1), grid-template-rows 0.5s cubic-bezier(.5,0,.5,1);
+    max-width: 500px;
+    max-height: 700px;
+    display: grid;
+    grid-template-rows: 65px 1fr 50px;
+    grid-template-columns: 1fr;
+    overflow: hidden;
 }
 
-.ki-chat .message {
-    padding: 10px;
-    border-bottom: 1px solid var(--nonSelected);
-    word-break: break-word;
+.ki-chat-header {
+    display: grid;
+    grid-template-columns: 0 57px;
+    align-items: center;
+    border-bottom: 4px solid var(--nonSelected);
+    transition: grid-template-columns 0.5s cubic-bezier(.5,0,.5,1);
+    justify-items: center;
 }
 
-.ki-chat .message:last-child {
-    border-bottom: none;
-}
-
-.ki-chat .message.user {
-    color: var(--color);
-}
-
-.ki-chat .message.user:before {
-    content: "You: ";
-    color: var(--darkerColor);
-    margin-left: 5px;
-}
-
-.ki-chat .message.ki {
-    color: var(--color);
-}
-
-.ki-chat .message.ki:before {
-    content: "KI: ";
-    color: var(--darkerColor);
-    margin-left: 5px;
-}
-
-.ki-chat input[type="text"] {
+.ki-chat-header i {
+    height: 100%;
     width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.ki-chat.open .ki-chat-header-closed {
+    display: none;
+}
+
+.ki-chat.open .ki-chat-header {
+    grid-template-columns: 1fr 65px;
+}
+
+.ki-chat-chat {
+    overflow-y: scroll;
+    display: grid;
+    gap: 5px;
+    grid-auto-rows: min-content;
+    padding: 5px 0 5px 5px;
+    scroll-behavior: smooth;
+    min-height: 200px;
+}
+
+.ki-chat-chat::-webkit-scrollbar {
+    width: 10px;
+}
+
+.ki-chat-chat::-webkit-scrollbar-track {
+    background: var(--secondaryBackground);
+}
+
+.ki-chat-input {
+    display: grid;
+    grid-template-columns: 1fr 75px;
+    border-top: 4px solid var(--nonSelected);
+    transition: grid-template-columns 0.5s cubic-bezier(.5,0,.5,1);
+}
+
+.ki-chat-input textarea {
     padding: 10px;
     border: none;
-    border-radius: var(--border-radius);
     outline: none;
+    background: var(--background);
+    color: var(--color);
+    resize: none;
 }
 
+.ki-chat-input button {
+    padding: 10px;
+    border: none;
+    background: var(--selected);
+    color: var(--white);
+    cursor: pointer;
+}
+
+.ki-chat-message {
+    padding: 10px;
+    border-bottom: 2px solid var(--nonSelected);
+    word-break: break-word;
+    margin-right: 5px;
+}
+
+.ki-chat-message:last-child {
+    animation: ki-chat-message-in-animation 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes ki-chat-message-in-animation {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ki-chat-message ul, .ki-chat-message ol {
+    padding-left: 20px;
+}
+
+.ki-chat-message-user {
+    background: var(--selected);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    display: inline-block;
+}
+
+.ki-chat-message-model {
+    background: var(--nonSelected);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    display: inline-block;
+}
+
+.ki-chat-message-user::before {
+    content: 'Du:';
+    font-weight: bold;
+}
+
+.ki-chat-message-model::before {
+    content: 'CookMate:';
+    font-weight: bold;
+}
+
+.ki-chat-typing-indicator {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+.ki-chat-typing-indicator-dots {
+    display: flex;
+    gap: 5px;
+}
+
+.ki-chat-typing-indicator-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--selected);
+    border-radius: 50%;
+    animation: ki-chat-typing-indicator-dot-animation 1s infinite cubic-bezier(0.5, 0, 0.5, 1);
+}
+
+.ki-chat-header-chats-select {
+    height: 100%;
+    width: 100%;
+}
+
+.ki-chat:not(.open) .ki-chat-header-chats-select {
+    display: none;
+}
+
+@keyframes ki-chat-typing-indicator-dot-animation {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
 
 @media (max-width: 768px) {
     .ki-chat {
-        bottom: 50px;
+        bottom: 55px;
     }
 
     .system-messages {
         bottom: 55px;
     }
 }
-
 
 .divider {
     display: flex;
@@ -540,4 +663,60 @@ select {
     background: var(--secondaryBackground);
     color: var(--color);
     font-size: 1em;
+}
+
+.numbers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.number-input {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+    width: 100%;
+    overflow: hidden;
+    background: var(--secondaryBackground);
+    border: 2px solid var(--nonSelected);
+    border-radius: var(--border-radius);
+    color: var(--color);
+}
+
+.number-input input {
+    width: 100%;
+    min-width: 50px;
+    height: 40px;
+    padding: 5px;
+    font-size: 16px;
+    text-align: center;
+    border: none;
+    outline: none;
+    font-family: var(--font-family);
+    font-weight: bold;
+    background: var(--secondaryBackground);
+    color: var(--color);
+}
+
+.number-input button {
+    width: 40px;
+    background: var(--nonSelected);
+    color: var(--color);
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+}
+
+.number-input button:hover {
+    filter: brightness(1.05);
+}
+
+.number-input button:active {
+    filter: brightness(0.9);
+}
+
+.number-input input::-webkit-outer-spin-button,
+.number-input input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }

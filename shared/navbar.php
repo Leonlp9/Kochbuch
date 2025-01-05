@@ -23,7 +23,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
 
         overflow: hidden;
 
-
+        user-select: none;
     }
 
     .nav-grid-content {
@@ -59,7 +59,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
         align-items: center;
         -webkit-tap-highlight-color:  rgba(255, 255, 255, 0);
         position: relative;
-        color: var(--text);
+        color: var(--color);
     }
 
     @media (max-width: 768px) {
@@ -146,6 +146,16 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
 
         nav.navDesktop:hover span {
             display: inline-block;
+        }
+
+        nav.navDesktop a.active {
+            background-color: var(--nonSelected);
+            border-radius: 0;
+            transition: background-color 0.25s cubic-bezier(0.77, 0, 0.175, 1), border-radius 0.25s cubic-bezier(0.77, 0, 0.175, 1), width 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        nav.navDesktop a.active:hover {
+            border-radius: 0 10px 10px 0;
         }
 
     }

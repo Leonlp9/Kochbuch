@@ -40,6 +40,8 @@ global $pdo;
     <!-- jQuery UI Touch Punch -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
     <link rel="stylesheet" href="style.css">
 
@@ -82,5 +84,4 @@ global $pdo;
     </div>
 </div>
 </body>
-<script src="script.js"></script>
 </html>

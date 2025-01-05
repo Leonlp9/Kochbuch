@@ -42,6 +42,8 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
 
@@ -120,10 +122,27 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
             background: var(--secondaryBackground);
             padding: 10px;
             border-radius: 10px;
+            transition: background 0.2s ease;
+            user-select: none;
         }
 
         .infos > div:hover {
             background: var(--nonSelected);
+        }
+
+        #print:hover {
+            background: var(--green);
+            cursor: pointer;
+        }
+
+        #edit:hover {
+            background: var(--red);
+            cursor: pointer;
+        }
+
+        #addKalender:hover {
+            background: var(--blue);
+            cursor: pointer;
         }
 
         .images {
@@ -301,9 +320,12 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                 </div>
 
                 <div class="infos">
-                    <div>
+                    <div title="Erstellt für <?= $rezept['Portionen'] ?> Portionen">
                         <i class="fas fa-users"></i>
-                        <?= $rezept['Portionen'] ?> Portionen
+                        <span id="portionen">
+                            <?= $rezept['Portionen'] ?>
+                        </span>
+                         Portionen
                     </div>
 
                     <div>
@@ -368,11 +390,11 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                 </div>
 
                 <div class="infos no-print">
-                    <div onclick="window.print()">
+                    <div onclick="window.print()" id="print">
                          <i class="fas fa-print"></i>
                     </div>
 
-                    <div onclick="window.location.href = 'addRezept.php?rezept=<?= $rezept['ID'] ?>'">
+                    <div onclick="window.location.href = 'addRezept.php?rezept=<?= $rezept['ID'] ?>'" id="edit">
                          <i class="fas fa-edit"></i>
                     </div>
 
@@ -401,20 +423,46 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                 </div>
 
                 <h2>Zutaten</h2>
-                <ul class="zutaten">
-                    <?php
-                    foreach ($rezept['Zutaten_JSON'] as $zutat) {
-                        echo "<li>
-                                <img src='{$zutat['Image']}' alt='' width='20px' height='20px'>
-                                {$zutat['Menge']} {$zutat['unit']} {$zutat['Name']} {$zutat['additionalInfo']}
-                                <i class='fas no-print'></i>
-                            </li>";
-                    }
-                    ?>
-                </ul>
+                <ul class="zutaten" id="zutaten-list"></ul>
+                <div style="display: flex; justify-content: center;" class="no-print">
+                    <div class="number-input" style="width: auto;">
+                        <button type="button" class="down"><i class="fas fa-minus"></i></button>
+                        <input id="portionenInput" min="1" name="portionen" value="<?= $rezept['Portionen'] ?>" step="1" type="number" onchange="renderZutaten()">
+                        <button type="button"  class="up"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
                 <script>
-                    $('.zutaten li').click(function () {
-                        $(this).find('i').toggleClass('fa-check');
+                    const zutaten = <?= json_encode($rezept['Zutaten_JSON']) ?>;
+                    let portionen = <?= $rezept['Portionen'] ?>;
+
+                    function renderZutaten() {
+                        const zutatenList = document.getElementById('zutaten-list');
+                        zutatenList.innerHTML = '';
+
+                        portionen = document.getElementById('portionenInput').value;
+                        document.getElementById('portionen').innerText = portionen;
+
+                        zutaten.forEach(zutat => {
+                            const li = document.createElement('li');
+
+                            let newMenge = zutat.Menge * portionen / <?= $rezept['Portionen'] ?>;
+                            newMenge = newMenge.toLocaleString('de-DE', {maximumFractionDigits: 2});
+
+                            li.innerHTML = `
+                                <img src="${zutat.Image}" alt="" width="20px" height="20px">
+                                ${newMenge} ${zutat.unit} ${zutat.Name} ${zutat.additionalInfo}
+                                <i class="fas no-print"></i>
+                            `;
+                            li.addEventListener('click', () => {
+                                li.querySelector('i').classList.toggle('fa-check');
+                            });
+                            zutatenList.appendChild(li);
+                        });
+                    }
+
+                    document.addEventListener('DOMContentLoaded', () => {
+                        renderZutaten();
                     });
                 </script>
 
@@ -480,6 +528,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                                 let anmerkungIcon = document.createElement("i");
                                 anmerkungIcon.classList.add("fas");
                                 anmerkungIcon.classList.add("fa-edit");
+                                anmerkungIcon.classList.add("no-print");
                                 anmerkungGroup.appendChild(anmerkungIcon);
                               
                                 anmerkungGroup.addEventListener("click", () => {
@@ -644,4 +693,12 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
         </div>
     </div>
 </body>
+<script>
+    let kiChat = new KiChat();
+
+    kiChat.addKontext({
+        name: "Rezept",
+        value: <?= json_encode($rezept) ?>
+    });
+</script>
 </html>

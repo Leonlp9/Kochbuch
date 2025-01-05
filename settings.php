@@ -41,6 +41,8 @@ global $pdo;
 
 
 	<link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
     <style>
         .settings {
@@ -197,5 +199,4 @@ global $pdo;
 	</div>
 </div>
 </body>
-<script src="script.js"></script>
 </html>

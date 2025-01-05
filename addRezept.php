@@ -53,6 +53,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="script.js"></script>
 
     <style>
@@ -213,62 +214,6 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
         .buttons button {
             flex: 1;
-        }
-
-        .numbers {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .number-input {
-            display: grid;
-            grid-template-columns: 40px 1fr 40px;
-            width: 100%;
-            overflow: hidden;
-            background: var(--secondaryBackground);
-            border: 2px solid var(--nonSelected);
-            border-radius: var(--border-radius);
-            color: var(--color);
-        }
-
-        .number-input input {
-            width: 100%;
-            min-width: 50px;
-            height: 40px;
-            padding: 5px;
-            font-size: 16px;
-            text-align: center;
-            border: none;
-            outline: none;
-            font-family: var(--font-family);
-            font-weight: bold;
-            background: var(--secondaryBackground);
-            color: var(--color);
-        }
-
-        .number-input button {
-            width: 40px;
-            background: var(--nonSelected);
-            color: var(--color);
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            user-select: none;
-        }
-
-        .number-input button:hover {
-            filter: brightness(1.05);
-        }
-
-        .number-input button:active {
-            filter: brightness(0.9);
-        }
-
-        .number-input input::-webkit-outer-spin-button,
-        .number-input input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
         }
 
 

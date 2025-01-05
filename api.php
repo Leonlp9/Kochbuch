@@ -886,7 +886,7 @@ switch ($task) {
 
                 }
 
-                header('Location: index.php');
+                header('Location: rezept.php?id=' . $rezeptID);
                 die();
             }
     }
