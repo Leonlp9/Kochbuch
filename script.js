@@ -119,6 +119,10 @@ class FormBuilder {
         this.fields.push({ id, type: 'number', min, max, startValue, onChange });
     }
 
+    addCustomNumberField(id, min, max, step, startValue, onChange = () => {}) {
+        this.fields.push({ id, type: 'custom-number', min, max, step, startValue, onChange });
+    }
+
     addRangeField(id, min, max, startValue, onChange = () => {}) {
         this.fields.push({ id, type: 'range', min, max, startValue, onChange });
     }
@@ -268,6 +272,44 @@ class FormBuilder {
                 case 'quill':
                     element = document.createElement('div');
                     element.id = field.id;
+                    break;
+                case 'custom-number':
+
+                    element = document.createElement('div');
+                    element.className = 'number-input';
+
+                    const downButton = document.createElement('button');
+                    downButton.type = 'button';
+                    downButton.className = 'down';
+                    downButton.innerHTML = '<i class="fas fa-minus"></i>';
+                    downButton.addEventListener('click', () => {
+                        const input = element.querySelector('input[type=number]');
+                        input.stepDown();
+                        input.dispatchEvent(new Event('change'));
+                    });
+                    element.appendChild(downButton);
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.id = field.id;
+                    input.min = field.min;
+                    input.max = field.max;
+                    input.step = field.step;
+                    input.value = field.startValue || field.min;
+                    input.addEventListener('change', (e) => field.onChange(e.target.value));
+                    element.appendChild(input);
+
+                    const upButton = document.createElement('button');
+                    upButton.type = 'button';
+                    upButton.className = 'up';
+                    upButton.innerHTML = '<i class="fas fa-plus"></i>';
+                    upButton.addEventListener('click', () => {
+                        const input = element.querySelector('input[type=number]');
+                        input.stepUp();
+                        input.dispatchEvent(new Event('change'));
+                    });
+                    element.appendChild(upButton);
+
                     break;
                 default:
                     console.error(`Unknown field type: ${field.type}`);
@@ -429,6 +471,7 @@ class KiChat {
 
         this.container = document.createElement('div');
         this.container.className = 'ki-chat';
+        this.container.classList.add('no-print');
 
         this.header = document.createElement('div');
         this.header.className = 'ki-chat-header';

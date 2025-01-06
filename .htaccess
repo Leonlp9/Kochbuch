@@ -1,5 +1,8 @@
 RewriteEngine On
 
+ErrorDocument 404 /Kochbuch/error?code=404
+ErrorDocument 500 /Kochbuch/error?code=500
+
 # Umschreiben von "localhost/api/" auf "localhost/api.php"
 RewriteRule ^api/?$ api.php [L]
 
@@ -14,3 +17,18 @@ RewriteRule ^rezept/?$ rezept.php [L]
 
 # Umschreiben von "localhost/new/" auf "localhost/addRezept.php"
 RewriteRule ^new/?$ addRezept.php [L]
+
+# Umschreiben von "localhost/calendar/" auf "localhost/calendar.php"
+RewriteRule ^calendar/?$ calendar.php [L]
+
+# Umschreiben von "localhost/settings/" auf "localhost/settings.php"
+RewriteRule ^settings/?$ settings.php [L]
+
+# Umschreiben von "localhost/cart/" auf "localhost/cart.php"
+RewriteRule ^cart/?$ cart.php [L]
+
+<FilesMatch "\.(htaccess|htpasswd|ini|phps|fla|psd|log|sh)$">
+    Order Allow,Deny
+    Deny from all
+    ErrorDocument 403 /Kochbuch/error?code=403
+</FilesMatch>

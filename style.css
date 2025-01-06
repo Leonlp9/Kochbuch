@@ -323,6 +323,30 @@ body {
     gap: 5px;
 }
 
+.form-container .number-input {
+    border: none;
+}
+
+.form-container .number-input input {
+    padding: 10px;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    background: var(--background);
+    color: var(--color);
+    height: 100%;
+}
+
+.form-container .number-input button {
+    padding: 10px;
+    border: none;
+    border-radius: 0;
+    background: var(--selected);
+    color: var(--white);
+    cursor: pointer;
+    height: 100%;
+}
+
 .form-container .button-container button {
     flex: 1;
 }
@@ -660,6 +684,7 @@ select {
     background: var(--secondaryBackground);
     color: var(--color);
     font-size: 1em;
+    width: 100%;
 }
 
 .numbers {
@@ -716,4 +741,57 @@ select {
 .number-input input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    background: var(--secondaryBackground);
+    border-radius: 5px;
+    outline: none;
+    margin: 20px 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: var(--selected);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: var(--selected_highlight);
+}
+
+input[type="radio"] {
+    accent-color: var(--selected);
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 2px solid var(--nonSelected);
+    border-radius: 50%;
+    position: relative;
+}
+
+input[type="radio"]:checked {
+    background-color: var(--background);
+}
+
+input[type="radio"]:checked::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--selected);
 }

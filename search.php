@@ -187,7 +187,7 @@ global $pdo;
 
             <div id="erweitert">
                 <label class="divider" for="order">Sortierung</label>
-                <div class="radio">
+                <div class="radio" style="margin-top: 15px">
                     <div><input type="radio" id="order" name="order" value="Name" checked onchange="search()"> Sortieren von A-Z</div>
                     <div><input type="radio" id="order" name="order" value="Rating" onchange="search()"> Sortieren nach Bewertung</div>
                     <div><input type="radio" id="order" name="order" value="Zeit" onchange="search()"> Sortieren nach Zubereitungszeit</div>
@@ -221,7 +221,7 @@ global $pdo;
                 </script>
 
                 <label class="divider" for="kategorie">Kategorie</label>
-                <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 0;">
+                <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 15px; margin-top: 10px">
                     <option value="*">Alle Kategorien</option>
                     <?php
                     $kategorien = $pdo->query("    SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID

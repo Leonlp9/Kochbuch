@@ -185,17 +185,17 @@ $currentPage = basename($_SERVER['PHP_SELF'], ".php");
     <a href="search" <?php if ($currentPage == "search") echo "class='active'" ?>>
         <i class="fas fa-search"></i> <span>Suche</span>
     </a>
-    <a href="cart.php" <?php if ($currentPage == "cart") echo "class='active'" ?>>
+    <a href="cart" <?php if ($currentPage == "cart") echo "class='active'" ?>>
         <i class="fas fa-shopping-cart"></i> <span>Einkaufsliste</span>
     </a>
-    <a href="calendar.php" <?php if ($currentPage == "calendar") echo "class='active'" ?>>
+    <a href="calendar" <?php if ($currentPage == "calendar") echo "class='active'" ?>>
         <i class="fas fa-calendar-alt"></i> <span>Kalender</span>
     </a>
     <a id="addRezept" href="new" <?php if ($currentPage == "addRezept") echo "class='active'" ?>>
         <i class="fas fa-plus"></i> <span>Rezept hinzufügen</span>
     </a>
     <div style="margin-top: auto;">
-        <a href="settings.php" <?php if ($currentPage == "settings"){ echo "class='active desktop'"; } else { echo "class='desktop'"; } ?>>
+        <a href="settings" <?php if ($currentPage == "settings"){ echo "class='active desktop'"; } else { echo "class='desktop'"; } ?>>
             <i class="fas fa-cog"></i> <span>Einstellungen</span>
         </a>
     </div>

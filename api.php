@@ -431,6 +431,11 @@ switch ($task) {
             $filterprofile[$key]['Filter'] = json_decode($filter['Filter'], true);
         }
 
+        foreach ($filterprofile as &$filter) {
+            $filter['Image'] = 'https://api.dicebear.com/9.x/bottts-neutral/svg?seed=' . $filter['Name'];
+        }
+
+
         echo json_encode($filterprofile);
         die();
     case "getAnmerkungen":
@@ -541,9 +546,9 @@ switch ($task) {
         echo json_encode($kalender);
         die();
     case "addKalender":
-        if (isset($_GET['date']) && isset($_GET['rezept']) && isset($_GET['info'])) {
+        if (isset($_GET['date']) && isset($_GET['info'])) {
             $date = $_GET['date'];
-            $rezept = $_GET['rezept'];
+            $rezept = isset($_GET['rezept']) ? $_GET['rezept'] : null;
             $info = $_GET['info'];
 
             $stmt = $pdo->prepare("INSERT INTO kalender (Datum, Rezept_ID, Text) VALUES (?, ?, ?)");

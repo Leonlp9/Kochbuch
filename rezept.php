@@ -407,7 +407,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                          <i class="fas fa-print"></i>
                     </div>
 
-                    <div onclick="window.location.href = 'addRezept.php?rezept=<?= $rezept['ID'] ?>'" id="edit">
+                    <div onclick="window.location.href = 'new?rezept=<?= $rezept['ID'] ?>'" id="edit">
                          <i class="fas fa-edit"></i>
                     </div>
 

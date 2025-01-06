@@ -486,9 +486,28 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                             }
                         );
 
+                        let step = 1;
+                        if (aktuelleZutat.unit === 'Stück') {
+                            step = 1;
+                        }else if (aktuelleZutat.unit === 'l') {
+                            step = 0.1;
+                        }else if (aktuelleZutat.unit === 'ml') {
+                            step = 10;
+                        }else if (aktuelleZutat.unit === 'Prise') {
+                            step = 0.1;
+                        }else if (aktuelleZutat.unit === 'TL') {
+                            step = 0.5;
+                        }else if (aktuelleZutat.unit === 'EL') {
+                            step = 1;
+                        }else if (aktuelleZutat.unit === 'Tasse') {
+                            step = 0.25;
+                        }else if (aktuelleZutat.unit === 'g') {
+                            step = 50;
+                        }
+
                         // Felder für die Zutat
                         form.addHeader(aktuelleZutat.Name + ' (' + aktuelleZutat.unit + ')');
-                        form.addNumberField('menge', 0, Infinity, aktuelleZutat.Menge);
+                        form.addCustomNumberField('menge', 0, Infinity, step, aktuelleZutat.Menge);
                         form.addInputField('info', 'Zusätzliche Info', aktuelleZutat.additionalInfo);
                         form.addButton('Löschen', () => {
                             zutatenJSON.splice(zutatId, 1);

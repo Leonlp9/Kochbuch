@@ -72,6 +72,34 @@ global $pdo;
             object-fit: cover;
             border-radius: 10px;
         }
+
+        #addEntry {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: var(--nonSelected);
+            color: var(--color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            #addEntry {
+                bottom: 70px;
+            }
+        }
+
+        #addEntry:hover {
+            background-color: var(--selected);
+        }
+
+        #addEntry i {
+            font-size: 24px;
+        }
     </style>
 
 </head>
@@ -100,105 +128,135 @@ global $pdo;
 
             <script>
 
-                let showPast = <?php echo isset($_GET['showPast']) && $_GET['showPast'] == 'true' ? 'true' : 'false' ?>;
-                let data = JSON.parse($.ajax({
-                    url: `api?task=getKalender&showPast=${showPast}`,
-                    async: false
-                }).responseText);
+                function update() {
+                    let showPast = <?php echo isset($_GET['showPast']) && $_GET['showPast'] == 'true' ? 'true' : 'false' ?>;
+                    let data = JSON.parse($.ajax({
+                        url: `api?task=getKalender&showPast=${showPast}`,
+                        async: false
+                    }).responseText);
 
-                let lastDate = null;
-                const calendar = document.getElementById('calendar');
-                calendar.innerHTML = '';
+                    let lastDate = null;
+                    const calendar = document.getElementById('calendar');
+                    calendar.innerHTML = '';
 
-                for (let i = 0; i < data.length; i++) {
-                    let recipe = data[i];
+                    for (let i = 0; i < data.length; i++) {
+                        let recipe = data[i];
 
-                    if (recipe['Datum'] !== lastDate) {
-                        if (lastDate !== null) {
-                            calendar.appendChild(dayDiv);
-                        }
-                        lastDate = recipe['Datum'];
-                        var dayDiv = document.createElement('div');
-                        dayDiv.classList.add('day');
+                        if (recipe['Datum'] !== lastDate) {
+                            if (lastDate !== null) {
+                                calendar.appendChild(dayDiv);
+                            }
+                            lastDate = recipe['Datum'];
+                            var dayDiv = document.createElement('div');
+                            dayDiv.classList.add('day');
 
-                        let h2 = document.createElement('h2');
-                        h2.classList.add('divider');
-                        h2.textContent = new Date(recipe['Datum']).toLocaleDateString('de-DE');
-                        dayDiv.appendChild(h2);
-                    }
-
-                    let entry = document.createElement('div');
-                    entry.classList.add('entry');
-
-                    entry.addEventListener('click', () => {
-                        let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
-                            fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
-                                method: 'GET'
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        }, () => {});
-
-                        if (recipe['Rezept_ID'] !== null) {
-                            form.addButton("Rezept öffnen", () => {
-                                window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
-                            });
+                            let h2 = document.createElement('h2');
+                            h2.classList.add('divider');
+                            h2.textContent = new Date(recipe['Datum']).toLocaleDateString('de-DE');
+                            dayDiv.appendChild(h2);
                         }
 
-                        form.addInputField('Text', 'Text', recipe['Text']);
+                        let entry = document.createElement('div');
+                        entry.classList.add('entry');
 
-                        form.addButton("Löschen", () => {
-                            fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
-                                method: 'GET'
-                            }).then(() => {
-                                window.location.reload();
+                        entry.addEventListener('click', () => {
+                            let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
+                                fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
+                                    method: 'GET'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            }, () => {
                             });
+
+                            if (recipe['Rezept_ID'] !== null) {
+                                form.addButton("Rezept öffnen", () => {
+                                    window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
+                                });
+                            }
+
+                            form.addInputField('Text', 'Text', recipe['Text']);
+
+                            form.addButton("Löschen", () => {
+                                fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
+                                    method: 'GET'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            });
+
+                            form.renderForm();
                         });
 
-                        form.renderForm();
-                    });
+                        let recipeDiv = document.createElement('div');
+                        recipeDiv.classList.add('recipe');
 
-                    let recipeDiv = document.createElement('div');
-                    recipeDiv.classList.add('recipe');
+                        if (recipe['Image'] !== null) {
+                            let img = document.createElement('img');
+                            img.src = recipe['Image'];
+                            img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                            img.style.width = '100px';
+                            img.style.height = '100px';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '10px';
+                            recipeDiv.appendChild(img);
+                        } else {
+                            recipeDiv.style.gridTemplateColumns = '1fr';
+                        }
 
-                    if (recipe['Image'] !== null) {
-                        let img = document.createElement('img');
-                        img.src = recipe['Image'];
-                        img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                        img.style.width = '100px';
-                        img.style.height = '100px';
-                        img.style.objectFit = 'cover';
-                        img.style.borderRadius = '10px';
-                        recipeDiv.appendChild(img);
-                    }else {
-                        recipeDiv.style.gridTemplateColumns = '1fr';
+
+                        let infos = document.createElement('div');
+
+                        let h3 = document.createElement('h3');
+                        h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                        infos.appendChild(h3);
+
+                        if (recipe['Text'] !== null && recipe['Image'] !== null) {
+                            let p = document.createElement('p');
+                            p.textContent = recipe['Text'];
+                            infos.appendChild(p);
+                        }
+
+                        recipeDiv.appendChild(infos);
+
+
+                        entry.appendChild(recipeDiv);
+                        dayDiv.appendChild(entry);
                     }
 
-
-                    let infos = document.createElement('div');
-
-                    let h3 = document.createElement('h3');
-                    h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                    infos.appendChild(h3);
-
-                    if (recipe['Text'] !== null && recipe['Image'] !== null) {
-                        let p = document.createElement('p');
-                        p.textContent = recipe['Text'];
-                        infos.appendChild(p);
+                    if (lastDate !== null) {
+                        calendar.appendChild(dayDiv);
                     }
-
-                    recipeDiv.appendChild(infos);
-
-
-
-                    entry.appendChild(recipeDiv);
-                    dayDiv.appendChild(entry);
                 }
+                update();
 
-                if (lastDate !== null) {
-                    calendar.appendChild(dayDiv);
-                }
+            </script>
 
+            <div id="addEntry">
+                <i class="fas fa-plus"></i>
+            </div>
+
+            <script>
+                document.getElementById('addEntry').addEventListener('click', () => {
+                    let form = new FormBuilder("Kalendereintrag hinzufügen", (formData) => {
+
+                        if (formData["Text"] === '') {
+                            new SystemMessage('Bitte fülle alle Felder aus.').show();
+                            return;
+                        }
+
+                        fetch(`api.php?task=addKalender&date=${formData["Datum"]}&info=${formData["Text"]}`, {
+                            method: 'GET'
+                        }).then(() => {
+                            update();
+                        });
+                    }, () => {});
+
+                    form.addDateInput('Datum', new Date().toISOString().split('T')[0]);
+                    form.addInputField('Text', 'Text');
+
+                    form.renderForm();
+                });
             </script>
 
         </div>

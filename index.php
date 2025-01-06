@@ -35,6 +35,97 @@ global $pdo;
 
     <link rel="stylesheet" href="style.css">
 
+    <style>
+        #titleImage {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 600px;
+            transition: background-image 1s ease;
+        }
+
+        #lastAdded {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #today {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+
+        #profiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #profiles div {
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+
+        #profiles div img {
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            #lastAdded {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #today {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #profiles {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+
+        .recipe {
+            cursor: pointer;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.5s ease;
+        }
+
+        .recipe img {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+        }
+
+        .recipe h3 {
+            margin: 0;
+            padding: 10px;
+            background-color: var(--secondaryBackground);
+            color: var(--color);
+            text-align: center;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+        }
+
+        .recipe:hover h3 {
+            background-color: var(--nonSelected);
+        }
+
+    </style>
+
 </head>
 <body>
     <div class="nav-grid-content">
@@ -44,11 +135,116 @@ global $pdo;
         <div class="container">
 
 <!--            Einstellungen oben rechts-->
-            <a style="position: absolute; top: 10px; right: 10px;" href="settings.php" class="mobile">
+            <a style="position: absolute; top: 10px; right: 10px;" href="settings" class="mobile">
                 <button id="settings">
                     <i class="fas fa-cog"></i>
                 </button>
             </a>
+
+            <h1>Willkommen im Kochbuch <i class="fas fa-utensils"></i></h1>
+
+            <div id="titleImage"></div>
+
+            <script>
+                let recipes = [];
+
+                fetch("api?task=search&random=true&search=")
+                    .then(response => response.json())
+                    .then(data => {
+                        recipes = data;
+                        update();
+                    });
+
+                function update() {
+                    if (recipes.length > 0) {
+                        let recipe = recipes[Math.floor(Math.random() * recipes.length)];
+                        $("#titleImage").css("background-image", `url(${recipe.Image})`);
+                        //onklick
+                        $("#titleImage").click(() => {
+                            window.location.href = `rezept?id=${recipe.rezepte_ID}`;
+                        });
+                    }
+                }
+
+                setInterval(() => {
+                    update();
+                }, 5000);
+            </script>
+
+
+            <h2>Heute steht an</h2>
+            <div id="today"></div>
+
+            <script>
+                fetch("api?task=getKalender&date=" + new Date().toISOString().split("T")[0])
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(entry => {
+                            let entryDiv = $(`<div class="recipe" data-id="${entry.rezepte_ID}"></div>`);
+
+                            if (entry.Image === null) {
+                                entryDiv.html(`
+                                <h3>${entry.Text}</h3>
+                                `);
+                            }else{
+                                entryDiv.html(`
+                                <img src="${entry.Image}" alt="${entry.Name}">
+                                <h3>${entry.Name}</h3>
+                            `);
+                            }
+
+                            entryDiv.click(() => {
+                                if (entry.Rezept_ID !== null){
+                                    window.location.href = `rezept?id=${entry.Rezept_ID}`;
+                                }
+                            });
+                            $("#today").append(entryDiv);
+                        });
+                    });
+            </script>
+
+
+            <div id="profiles"></div>
+            <script>
+                fetch("api?task=getFilterprofile")
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(profile => {
+                            console.log(profile);
+                            let profileDiv = $(`<div data-id="${profile.ID}"></div>`);
+                            profileDiv.html(`
+                                <img src="${profile.Image}" alt="${profile.Name}">
+                                <h3>${profile.Name}</h3>
+                            `);
+                            profileDiv.click(() => {
+                                window.location.href = `filterprofile?id=${profile.ID}`;
+                            });
+                            $("#profiles").append(profileDiv);
+                        });
+                    });
+            </script>
+
+
+            <h2>Zuletzt hinzugefügt</h2>
+            <div id="lastAdded"></div>
+
+            <script>
+                fetch("api?task=search&neueste=true&search=")
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(recipe => {
+                            let recipeDiv = $(`<div class="recipe" data-id="${recipe.rezepte_ID}"></div>`);
+                            recipeDiv.html(`
+                                <img src="${recipe.Image}" alt="${recipe.Name}">
+                                <h3>${recipe.Name}</h3>
+                            `);
+                            recipeDiv.click(() => {
+                                window.location.href = `rezept?id=${recipe.rezepte_ID}`;
+                            });
+                            $("#lastAdded").append(recipeDiv);
+                        });
+                    });
+            </script>
 
         </div>
     </div>

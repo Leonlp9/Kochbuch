@@ -2,12 +2,14 @@
 
 //error codes
 $errors = [
+    403 => "Zugriff verweigert!",
     404 => "Seite nicht gefunden",
+    500 => "Interner Serverfehler",
     1001 => "Datenbankverbindung fehlgeschlagen"
 ];
 
-if (isset($_GET['error'])) {
-    $error = $_GET['error'];
+if (isset($_GET['code'])) {
+    $error = $_GET['code'];
     if (array_key_exists($error, $errors)) {
         $errorText = $errors[$error];
     } else {
