@@ -22,7 +22,7 @@ if (file_exists("config.ini") && is_readable("config.ini")) {
         try {
             $pdo = new PDO('mysql:host=localhost;dbname=kochbuch', $config['username'], $config['password']);
         } catch (PDOException $e) {
-            header("Location: error.php?error=1001");
+            header("Location: error?code=1001");
             die();
         }
     } else {

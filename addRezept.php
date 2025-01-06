@@ -509,13 +509,18 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                         form.addHeader(aktuelleZutat.Name + ' (' + aktuelleZutat.unit + ')');
                         form.addCustomNumberField('menge', 0, Infinity, step, aktuelleZutat.Menge);
                         form.addInputField('info', 'Zusätzliche Info', aktuelleZutat.additionalInfo);
+
+                        form.addButton("Speichern", () => {
+                            form.submitForm();
+                        });
+
                         form.addButton('Löschen', () => {
                             zutatenJSON.splice(zutatId, 1);
                             update();
                             form.closeForm();
                         });
 
-                        form.renderForm();
+                        form.renderForm(false);
 
                         form.fucus("menge");
                     }
@@ -644,7 +649,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                 );
 
                                 form.addHTML(`
-                                    <input type='text' name='name' placeholder='Zutat suchen' required class="zutatSuche">
+                                    <input type='text' name='name' placeholder='Zutat suchen' required class="zutatSuche" autocomplete="off">
                                     <div class="divider">Zutaten Ergebnisse (Ersten 20)</div>
                                     <div class="searchResults"></div>
                                 `);
@@ -699,6 +704,8 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                                 <p>Neue Zutat</p>
                                             `;
                                             newZutat.addEventListener('click', () => {
+                                                form.closeForm();
+
                                                 const newZutatForm = new FormBuilder(
                                                     'Neue Zutat hinzufügen',
                                                     (formData) => {
@@ -722,6 +729,8 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                                                 };
                                                                 zutatenJSON.push(newZutat);
                                                                 update();
+
+                                                                edit(zutatenJSON.indexOf(newZutat));
                                                             });
                                                     },
                                                     () => {}

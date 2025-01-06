@@ -158,6 +158,11 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
             cursor: pointer;
         }
 
+        #qrCode:hover {
+            background: #36e39e;
+            cursor: pointer;
+        }
+
         .images {
             display: flex;
             gap: 10px;
@@ -440,16 +445,28 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                     <script>
                         document.getElementById('qrCode').addEventListener('click', () => {
                             let qrCode = new QRCode(document.createElement('div'), {
-                                text: window.location.href,
+                                text: '<?= BASE_URL ?>rating?id=<?= $rezept['ID'] ?>',
                                 width: 256,
                                 height: 256,
                                 colorDark: "#000000",
-                                colorLight: "#ffffff",
+                                colorLight: "transparent",
                                 correctLevel: QRCode.CorrectLevel.H
                             });
 
-                            let qrCodeWindow = window.open('', '_blank');
-                            qrCodeWindow.document.body.appendChild(qrCode._el);
+                            const qrCodeForm = new FormBuilder('QR-Code', () => {}, () => {});
+                            qrCodeForm.addHTML(`
+                                <div style="display: flex; justify-content: center;">
+                                    <div id="qrCodeForm"></div>
+                                </div>
+                            `)
+
+                            qrCodeForm.addButton('Öffnen', () => {
+                                window.open("<?php echo BASE_URL ?>rating?id=<?= $rezept['ID'] ?>");
+                            });
+
+                            qrCodeForm.renderForm(false);
+
+                            document.getElementById('qrCodeForm').appendChild(qrCode._el);
 
                         });
                     </script>

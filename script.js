@@ -174,6 +174,38 @@ class FormBuilder {
         document.getElementById(id).focus();
     }
 
+    submitForm() {
+        const formData = {};
+        this.fields.forEach((field) => {
+            if (field.type === 'header' || field.type === 'html') return;
+
+            const input = this.form.querySelector(`#${field.id}`);
+
+
+            if (field.type === 'button') {
+            }else if (field.type === 'checkbox') {
+                formData[field.id] = input.checked;
+            } else if (field.type === 'file') {
+                formData[field.id] = input.files[0];
+            } else if (field.type === 'quill') {
+                formData[field.id] = "\"" + field.quill.root.innerHTML + "\"";
+            } else {
+                formData[field.id] = input.value;
+            }
+        });
+        this.onSubmit(formData);
+        this.background.style.pointerEvents = 'none';
+
+        this.container.style.animation = 'form-container-out-animation 0.25s forwards';
+        this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
+
+        setTimeout(() => {
+            document.body.removeChild(this.background);
+        }, 500);
+
+        delete this;
+    }
+
     renderForm(showButtons = true) {
         // Clear previous content
         this.container.innerHTML = '';
@@ -196,6 +228,7 @@ class FormBuilder {
                     element.id = field.id;
                     element.placeholder = field.placeholder;
                     element.value = field.startValue || '';
+                    element.autocomplete = 'off';
                     break;
                 case 'color':
                     element = document.createElement('input');
@@ -362,35 +395,7 @@ class FormBuilder {
             saveButton.type = 'button';
             saveButton.textContent = 'Speichern';
             saveButton.addEventListener('click', () => {
-                const formData = {};
-                this.fields.forEach((field) => {
-                    if (field.type === 'header' || field.type === 'html') return;
-
-                    const input = form.querySelector(`#${field.id}`);
-
-
-                    if (field.type === 'button') {
-                    }else if (field.type === 'checkbox') {
-                        formData[field.id] = input.checked;
-                    } else if (field.type === 'file') {
-                        formData[field.id] = input.files[0];
-                    } else if (field.type === 'quill') {
-                        formData[field.id] = "\"" + field.quill.root.innerHTML + "\"";
-                    } else {
-                        formData[field.id] = input.value;
-                    }
-                });
-                this.onSubmit(formData);
-                this.background.style.pointerEvents = 'none';
-
-                this.container.style.animation = 'form-container-out-animation 0.25s forwards';
-                this.background.style.animation = 'form-background-out-animation 0.25s forwards ease';
-
-                setTimeout(() => {
-                    document.body.removeChild(this.background);
-                }, 500);
-
-                delete this;
+                this.submitForm();
             });
 
             const cancelButton = document.createElement('button');
@@ -795,6 +800,67 @@ class KiChat {
         this.chat.scrollTop = this.chat.scrollHeight;
     }
 }
+
+document.querySelectorAll('.horizontalScrollBarJS').forEach((element) => {
+    let scrollAmount = 0;
+    let isScrolling = false;
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
+
+    element.addEventListener('wheel', function(event) {
+        if (event.deltaY !== 0) {
+            event.preventDefault();
+            scrollAmount += event.deltaY;
+            if (!isScrolling) {
+                isScrolling = true;
+                requestAnimationFrame(smoothScroll);
+            }
+        }
+    });
+
+    element.addEventListener('mousedown', (event) => {
+        isDragging = true;
+        startX = event.pageX - element.offsetLeft;
+        scrollLeft = element.scrollLeft;
+        element.classList.add('active');
+    });
+
+    element.addEventListener('mouseleave', () => {
+        isDragging = false;
+        element.classList.remove('active');
+    });
+
+    element.addEventListener('mouseup', () => {
+        isDragging = false;
+        element.classList.remove('active');
+    });
+
+    element.addEventListener('mousemove', (event) => {
+        if (!isDragging) return;
+        event.preventDefault();
+        const x = event.pageX - element.offsetLeft;
+        const walk = (x - startX) * 1.5; // The multiplier can be adjusted for sensitivity
+        element.scrollLeft = scrollLeft - walk;
+    });
+
+    function smoothScroll() {
+        if (scrollAmount !== 0) {
+            const scrollStep = scrollAmount / 10;
+            element.scrollBy({
+                left: scrollStep,
+                behavior: 'auto'
+            });
+            scrollAmount -= scrollStep;
+            if (Math.abs(scrollAmount) < 1) {
+                scrollAmount = 0;
+            }
+            requestAnimationFrame(smoothScroll);
+        } else {
+            isScrolling = false;
+        }
+    }
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('theme', localStorage.getItem('theme') || 'light');
