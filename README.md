@@ -39,6 +39,7 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     ```
 
 2. **Abhängigkeiten installieren**:
+   https://tutorials-raspberrypi.de/webserver-installation-teil-4-phpmyadmin/
     ```bash
     sudo apt update
     sudo apt install apache2 php mysql-server
