@@ -45,8 +45,6 @@ function getRepositoryInfo() {
 
 // Prüfen, ob Updates vorhanden sind und Commit-Nachrichten anzeigen
 function checkForUpdates() {
-    $repoPath = 'C:\\Users\\leonm\\PhpstormProjects\\GitUpdateButton'; // Passe den Pfad an
-    chdir($repoPath);
 
     if (!executeGitCommand('git fetch', $output)) {
         return "Fehler beim Prüfen auf Updates: Git fetch fehlgeschlagen.";
@@ -71,8 +69,6 @@ function checkForUpdates() {
 
 // Repository aktualisieren
 function updateRepository() {
-    $repoPath = 'C:\\Users\\leonm\\PhpstormProjects\\GitUpdateButton'; // Passe den Pfad an
-    chdir($repoPath);
 
     foreach ($GLOBALS['exclude'] as $item) {
         executeGitCommand("git update-index --assume-unchanged $item");
