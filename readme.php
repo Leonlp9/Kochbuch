@@ -44,6 +44,7 @@
             margin: 0 auto;
             max-width: 800px;
             padding: 20px;
+            overflow: auto;
         }
 
         .readme h1, .readme h2, .readme h3, .readme h4, .readme h5, .readme h6 {
