@@ -26,6 +26,7 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 ## Installation
 1. **Repository klonen**:
     ```bash
+    cd /var/www/home/
     git clone https://github.com/Leonlp9/kochbuch.git
     cd kochbuch
     ```
