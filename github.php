@@ -79,6 +79,11 @@ function updateRepository() {
         executeGitCommand("git update-index --assume-unchanged $item");
     }
 
+    //git checkout -- .
+    if (!executeGitCommand('git checkout -- .', $output)) {
+        return "Fehler beim Zurücksetzen der Dateien: <br>" . implode('<br>', $output);
+    }
+
     if (executeGitCommand('git pull', $output)) {
 
         //Dateien wieder auf den Vergleichsstand setzen
