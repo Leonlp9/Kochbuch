@@ -64,6 +64,10 @@ if (isset($_GET['code'])) {
     ?>
     <div class="container">
         <h1><?php echo $errorText; ?></h1>
+
+        <?php if ($error == 1001) { ?>
+            <p>Hilfe zur Installation findest du <a href="readme#installation">hier</a></p>
+        <?php } ?>
     </div>
 </div>
 </body>

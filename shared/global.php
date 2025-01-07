@@ -36,6 +36,98 @@ if (file_exists("config.ini") && is_readable("config.ini")) {
         define('BASE_URL', 'http://localhost/Kochbuch/');
     }
 
+    //erstelle tabellen, wenn sie noch nicht existieren
+    $pdo->exec("
+CREATE TABLE IF NOT EXISTS `anmerkungen` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Rezept_ID` int(11) NOT NULL,
+  `Anmerkung` text NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `zutaten` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Image` varchar(255) NOT NULL,
+  `unit` varchar(255) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `anmerkungen` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Rezept_ID` int(11) NOT NULL,
+  `Anmerkung` text NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `bewertungen` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Rezept_ID` int(11) NOT NULL,
+  `Bewertung` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Text` text NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `bilder` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Rezept_ID` int(11) NOT NULL,
+  `Image` varchar(255) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `einkaufsliste` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Zutat_ID` int(11) NOT NULL,
+  `Item` varchar(255) DEFAULT NULL,
+  `Menge` int(11) NOT NULL,
+  `Einheit` varchar(255) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `filterprofile` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Filter` text NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `kalender` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Datum` date NOT NULL,
+  `Rezept_ID` int(11) DEFAULT NULL,
+  `Text` text DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `kategorien` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `ColorHex` varchar(255) NOT NULL DEFAULT '#000000',
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `rezepte` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Kategorie_ID` int(11) NOT NULL,
+  `Zubereitung` text NOT NULL,
+  `Portionen` int(11) NOT NULL,
+  `Zeit` int(11) NOT NULL,
+  `Zutaten_JSON` text NOT NULL,
+  `OptionalInfos` text DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `zutaten` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Image` varchar(255) NOT NULL,
+  `unit` varchar(255) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+");
 
 } else {
     echo "Error: config.ini file is missing or not readable";
