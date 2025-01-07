@@ -210,7 +210,7 @@ sudo systemctl restart apache2
 ## Git Configuration:
 Add the repository to the list of safe directories:
 ```bash
-sudo git config --system --add safe.directory /var/www/home/Data-PullShow-Server/test/Kochbuch
+sudo git config --system --add safe.directory /var/www/home/Kochbuch
 ```
 Disable file mode changes:
 ```bash
@@ -220,6 +220,6 @@ git config --global core.filemode false
 ## Permissions:
 Set the correct permissions and ownership for the project directory:
 ```bash
-sudo chmod -R 775 /var/www/home/Data-PullShow-Server/test/Kochbuch/
-sudo chown -R www-data:www-data /var/www/home/Data-PullShow-Server/test/Kochbuch/
+sudo chmod -R 775 /var/www/home/Kochbuch/
+sudo chown -R www-data:www-data /var/www/home/Kochbuch/
 ```
