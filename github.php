@@ -181,6 +181,10 @@ $repoInfo = getRepositoryInfo();
             border-radius: 5px;
             cursor: pointer;
         }
+
+        .container{
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
