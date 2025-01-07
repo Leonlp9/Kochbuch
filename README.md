@@ -123,5 +123,5 @@ sudo systemctl restart apache2
 
 sudo git config --system --add safe.directory /var/www/home/Data-PullShow-Server/test/Kochbuch
 
-sudo chown -R www-data:www-data .git
-sudo chmod -R 755 .git
+sudo chmod -R 775 /var/www/home/Data-PullShow-Server/test/Kochbuch/
+sudo chown -R www-data:www-data /var/www/home/Data-PullShow-Server/test/Kochbuch/
