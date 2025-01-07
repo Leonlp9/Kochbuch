@@ -147,8 +147,15 @@ global $pdo;
 
             <div>
                 <h2>GitHub Version</h2>
-                <a href="github.php">
+                <a href="github">
                     <button class="btn blue">GitHub Version</button>
+                </a>
+            </div>
+
+            <div>
+                <h2>Readme</h2>
+                <a href="readme">
+                    <button class="btn blue">Readme</button>
                 </a>
             </div>
 

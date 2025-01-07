@@ -30,6 +30,9 @@ RewriteRule ^cart/?$ cart.php [L]
 # Umschreiben von "localhost/github/" auf "localhost/github.php"
 RewriteRule ^github/?$ github.php [L]
 
+# Umschreiben von "localhost/readme/" auf "localhost/readme.php"
+RewriteRule ^readme/?$ readme.php [L]
+
 
 <FilesMatch "\.(htaccess|htpasswd|ini|phps|fla|psd|log|sh)$">
     Order Allow,Deny

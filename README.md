@@ -4,13 +4,14 @@
 - [Über das Projekt](#über-das-projekt)
 - [Technologien](#technologien)
 - [Installation](#installation)
-- [Verwendung](#verwendung)
-- [Projektstruktur](#projektstruktur)
-- [Datenbankstruktur](#datenbankstruktur)
 - [API-Endpunkte](#api-endpunkte)
 - [Stilrichtlinien](#stilrichtlinien)
 - [Autoren](#autoren)
 - [Lizenz](#lizenz)
+- [Required Apache2 Modules](#required-apache2-modules)
+- [Apache2 Configuration](#apache2-configuration)
+- [Git Configuration](#git-configuration)
+- [Permissions](#permissions)
 
 ## Über das Projekt
 Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsuchen, zu speichern und zu teilen. Die Anwendung bietet eine benutzerfreundliche Oberfläche und verschiedene Kategorien, um Rezepte einfach zu finden.
