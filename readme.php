@@ -145,6 +145,89 @@
         .readme blockquote p {
             margin: 0;
         }
+
+        .readme table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+
+            /*wenn zu breit*/
+            overflow-x: auto;
+        }
+
+        .readme th, .readme td {
+            border: 1px solid var(--nonSelected);
+            padding: 5px;
+        }
+
+        .readme th {
+            background-color: var(--secondaryBackground);
+        }
+
+        .readme tr:nth-child(even) {
+            background-color: var(--secondaryBackground);
+        }
+
+        .readme tr:nth-child(odd) {
+            background-color: var(--background);
+        }
+
+        .readme thead {
+            background-color: var(--secondaryBackground);
+        }
+
+        .readme thead th {
+            border: 1px solid var(--nonSelected);
+        }
+
+        .readme tbody {
+            background-color: var(--background);
+        }
+
+        .readme tbody td {
+            border: 1px solid var(--nonSelected);
+        }
+
+        .readme hr {
+            border: none;
+            border-top: 1px solid var(--nonSelected);
+            margin: 20px 0;
+        }
+
+        .readme .toc {
+            display: none;
+        }
+
+        .readme .toc h2 {
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .readme .toc ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .readme .toc li {
+            margin: 5px 0;
+        }
+
+        .readme .toc a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        .readme .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .readme .toc .toc-2 {
+            padding-left: 20px;
+        }
+
+        .readme .toc .toc-3 {
+            padding-left: 40px;
+        }
     </style>
 
 </head>
