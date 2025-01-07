@@ -11,10 +11,14 @@ $exclude = [
 
 // Funktion, um Git-Befehl auszuführen
 function executeGitCommand($command, &$output = null, &$returnVar = null) {
-    $command .= ' 2>&1'; // Fehlerausgabe (stderr) mit Standardausgabe (stdout) zusammenführen
+    $command .= ' 2>&1'; // Fehlerausgabe zusammenführen
     exec($command, $output, $returnVar);
+    $output = array_filter($output, function($line) {
+        return !preg_match('/^hint:/', $line); // Hinweise ignorieren
+    });
     return $returnVar === 0;
 }
+
 
 // Repository-Information abrufen
 function getRepositoryInfo() {

@@ -125,3 +125,5 @@ sudo git config --system --add safe.directory /var/www/home/Data-PullShow-Server
 
 sudo chmod -R 775 /var/www/home/Data-PullShow-Server/test/Kochbuch/
 sudo chown -R www-data:www-data /var/www/home/Data-PullShow-Server/test/Kochbuch/
+
+git config --global core.filemode false
