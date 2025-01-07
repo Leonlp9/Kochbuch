@@ -31,20 +31,21 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 ---
 
 ## Installation
-1. **Repository klonen**:
-    ```bash
-    cd /var/www/home/
-    git clone https://github.com/Leonlp9/kochbuch.git
-    cd kochbuch
-    ```
 
-2. **Abhängigkeiten installieren**:
+1. **Abhängigkeiten installieren**:
    https://tutorials-raspberrypi.de/webserver-installation-teil-4-phpmyadmin/
     ```bash
     sudo apt update
     sudo apt install apache2 php mysql-server
     ```
    phpmyadmin eventuell
+
+2. **Repository klonen**:
+    ```bash
+    cd /var/www/home/
+    git clone https://github.com/Leonlp9/kochbuch.git
+    cd kochbuch
+    ```
 
 3. **Datenbank konfigurieren**:
     - `config.ini`-Datei erstellen:
