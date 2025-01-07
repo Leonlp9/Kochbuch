@@ -3,179 +3,6 @@
 require_once 'shared/global.php';
 global $pdo;
 
-if (isset($_POST['search'])) {
-    $search = $_POST['search'];
-    $order = (isset($_POST['order'])) ? $_POST['order'] : "Name";
-    $zeit = (isset($_POST['zeit'])) ? $_POST['zeit'] : "4";
-    $kategorie = (isset($_POST['kategorie'])) ? $_POST['kategorie'] : "*";
-    $random = (isset($_POST['random'])) ? $_POST['random'] : false;
-    $neueste = (isset($_POST['neueste'])) ? $_POST['neueste'] : false;
-
-    $join = "LEFT JOIN bilder ON rezepte.ID = bilder.Rezept_ID";
-    $where = "WHERE rezepte.Name LIKE '%$search%'";
-    if ($kategorie != "*") {
-        $where .= " AND rezepte.Kategorie_ID = $kategorie";
-    }
-
-    switch ($zeit) {
-        case "0":
-            $where .= " AND rezepte.Zeit <= 15";
-            break;
-        case "1":
-            $where .= " AND rezepte.Zeit > 15 AND rezepte.Zeit <= 30";
-            break;
-        case "2":
-            $where .= " AND rezepte.Zeit > 30 AND rezepte.Zeit <= 60";
-            break;
-        case "3":
-            $where .= " AND rezepte.Zeit > 60";
-            break;
-    }
-
-    $order = "ORDER BY rezepte.$order";
-
-    $join .= " LEFT JOIN bewertungen ON rezepte.ID = bewertungen.Rezept_ID";
-
-    if ($order == "ORDER BY rezepte.Rating") {
-        $order = "ORDER BY AVG(bewertungen.Bewertung) DESC";
-    }
-
-    if ($random) {
-        $order = "ORDER BY RAND() LIMIT 8";
-    }
-
-    if ($neueste) {
-        $order = "ORDER BY rezepte.ID DESC LIMIT 8";
-    }
-
-    $rezepte = $pdo->query("
-        SELECT
-            rezepte.ID as rezepte_ID, 
-            rezepte.Name as Name,
-            MIN(bilder.Image) as Image,   -- Nimm das erste Bild (alphabetisch)
-            rezepte.Zeit,
-            AVG(bewertungen.Bewertung) as Durchschnittsbewertung -- Durchschnitt der Bewertungen
-        FROM
-            rezepte
-        $join
-        $where
-        GROUP BY
-            rezepte.ID
-        $order
-    ")->fetchAll();
-
-    if (!$random && !$neueste) {
-    ?>
-        <div class="divider" style="margin: 30px 0 10px 0">Suchergebnisse</div>
-    <?php
-    }
-
-    if (count($rezepte) > 0 && !$random && !$neueste) {
-        ?>
-
-        <span><?= count($rezepte) ?> Rezepte gefunden</span>
-
-        <?php
-    }
-    ?>
-
-    <div class="rezepte">
-    <?php
-
-    foreach ($rezepte as $rezept) {
-        ?>
-        <a href="rezept.php?id=<?= $rezept['rezepte_ID'] ?>" class="fadeInOpacity">
-            <div class="rezept">
-                <div class="image" style="background-image: url('<?php
-                if (!file_exists("uploads/". $rezept['Image']) || $rezept['Image'] == null) {
-                    echo "ingredientIcons/default.svg";
-                } else {
-                    echo "uploads/" . $rezept['Image'];
-                }
-                ?>')">
-                    <div class="overlays">
-                        <div class="overlay">
-                            <i class="fas fa-clock"></i>
-                            <span><?php
-                                $zeit = $rezept['Zeit'];
-                                $stunden = floor($zeit / 60);
-                                $minuten = $zeit % 60;
-                                if ($stunden > 0) {
-                                    echo $stunden . "h ";
-                                }
-                                if ($minuten > 0) {
-                                    echo $minuten . "min";
-                                }
-                                ?></span>
-                        </div>
-                        <?php
-                        $rating = $pdo->query("SELECT AVG(Bewertung) as Rating, COUNT(Bewertung) as Anzahl
-                            FROM bewertungen WHERE Rezept_ID = " . $rezept['rezepte_ID'])->fetch();
-                        $count = $rating['Anzahl'];
-                        $rating = $rating['Rating'];
-                        if ($rating == null) {
-                            $rating = 0;
-                        }
-
-                        if ($rating != 0) {
-                            ?>
-                            <div class="overlay">
-                                <?php
-                                    for ($i = 0; $i < 5; $i++) {
-                                        if ($rating - $i >= 1) {
-                                            ?>
-                                            <i class="fas fa-star"></i>
-                                            <?php
-                                        } else if ($rating - $i > 0) {
-                                            ?>
-                                            <i class="fas fa-star-half-alt"></i>
-                                            <?php
-                                        } else {
-                                            ?>
-                                            <i class="far fa-star"></i>
-                                            <?php
-                                        }
-                                    }
-
-                                    echo " (" . $count . ")";
-                                ?>
-                            </div>
-                            <?php
-                        }
-
-
-                        ?>
-                    </div>
-                </div>
-                <h2><?= $rezept['Name'] ?></h2>
-            </div>
-        </a>
-        <?php
-    }
-
-    ?>
-    </div>
-    <?php
-
-    if (count($rezepte) == 0) {
-        ?>
-        <h3>Keine Rezepte gefunden</h3>
-        <?php
-    }
-
-    die();
-}
-
-if (isset($_POST['banner'])) {
-    $rezepte = $pdo->query("SELECT * FROM rezepte ORDER BY RAND() LIMIT 1")->fetch();
-    $rezept = $rezepte['Name'];
-    $id = $rezepte['ID'];
-    $image = $pdo->query("SELECT Image FROM bilder WHERE Rezept_ID = $id")->fetch();
-    $image = $image['Image'];
-    echo json_encode(array("rezept" => $rezept, "image" => $image, "id" => $id));
-    die();
-}
-
 ?>
 
 <!doctype html>
@@ -205,32 +32,12 @@ if (isset($_POST['banner'])) {
 
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            color: var(--color);
-            font-weight: normal;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 2px solid var(--nonSelected);
-        }
-
-        .divider::before {
-            margin-right: 10px;
-        }
-
-        .divider::after {
-            margin-left: 10px;
-        }
 
         .radio {
             display: flex;
@@ -245,16 +52,14 @@ if (isset($_POST['banner'])) {
             gap: 5px;
         }
 
-        .fadeInOpacity {
-            animation: fadeInOpacity 0.3s cubic-bezier(0.42, 0, 0.58, 1);
-        }
-
         @keyframes fadeInOpacity {
             from {
                 opacity: 0;
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -274,6 +79,7 @@ if (isset($_POST['banner'])) {
             border: none;
             height: 100%;
             background-color: transparent;
+            color: var(--color);
         }
 
         .search input:focus {
@@ -287,10 +93,87 @@ if (isset($_POST['banner'])) {
             border: none;
             outline: none;
         }
+
+
+        #results {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        @media (max-width: 768px) {
+            #results {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        .rezept {
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--color);
+            animation: fadeInOpacity 0.3s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+            opacity: 0;
+        }
+
+        .rezept .image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+
+        .rezept h2 {
+            margin: 0;
+            font-size: 1.2em;
+            word-break: break-word;
+            text-align: center;
+        }
+
+        .rating {
+            display: flex;
+        }
+
+        .rating i {
+            color: var(--color);
+        }
+
+        .rezept:hover {
+            background-color: var(--secondaryBackground);
+            transform: translateY(-5px);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .overlay{
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: flex-end;
+            padding: 5px;
+        }
+
+        .overlay div{
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #27292c;
+            padding: 5px;
+            border-radius: 10px;
+            display: flex;
+            gap: 5px;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .overlay div i {
+            color: #27292c;
+        }
     </style>
 </head>
 <body>
-    <div class="nav-grid">
+    <div class="nav-grid-content">
         <?php
         require_once 'shared/navbar.php';
         ?>
@@ -304,7 +187,7 @@ if (isset($_POST['banner'])) {
 
             <div id="erweitert">
                 <label class="divider" for="order">Sortierung</label>
-                <div class="radio">
+                <div class="radio" style="margin-top: 15px">
                     <div><input type="radio" id="order" name="order" value="Name" checked onchange="search()"> Sortieren von A-Z</div>
                     <div><input type="radio" id="order" name="order" value="Rating" onchange="search()"> Sortieren nach Bewertung</div>
                     <div><input type="radio" id="order" name="order" value="Zeit" onchange="search()"> Sortieren nach Zubereitungszeit</div>
@@ -338,7 +221,7 @@ if (isset($_POST['banner'])) {
                 </script>
 
                 <label class="divider" for="kategorie">Kategorie</label>
-                <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 0;">
+                <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 15px; margin-top: 10px">
                     <option value="*">Alle Kategorien</option>
                     <?php
                     $kategorien = $pdo->query("    SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID
@@ -355,6 +238,9 @@ if (isset($_POST['banner'])) {
                 </select>
             </div>
 
+            <label class="divider">Suchergebnisse</label>
+            <span style="font-size: 13px;"><span style="font-size: 13px" id="resultsCount">0</span> Rezepte gefunden</span>
+
             <div id="results"></div>
 
             <script>
@@ -368,8 +254,8 @@ if (isset($_POST['banner'])) {
                     }
 
                     $.ajax({
-                        url: "search.php",
-                        type: "POST",
+                        url: "api?task=search",
+                        type: "GET",
                         data: {
                             search: search,
                             order: order,
@@ -377,7 +263,37 @@ if (isset($_POST['banner'])) {
                             kategorie: kategorie
                         },
                         success: function (data) {
-                            $("#results").html(data);
+
+                            $("#resultsCount").text(data.length);
+
+                            let html = "";
+                            for (let i = 0; i < data.length; i++) {
+                                let result = data[i];
+                                html += `
+                                <a class="rezept" href="rezept?id=${result.rezepte_ID}" style="animation-delay: ${i * 0.01}s">
+                                    <div class="image" style="background-image: url('${result.Image}')">
+                                        <div class="overlay">
+                                            <div>${result.Zeit}</div>`;
+                                                if (result.Rating != null && result.Rating > 0) {
+
+                                                    html += `<div class="rating">`;
+                                                    for (let j = 0; j < 5; j++) {
+                                                        if (j < result.Rating) {
+                                                            html += `<i class="fas fa-star"></i>`;
+                                                        } else {
+                                                            html += `<i class="far fa-star"></i>`;
+                                                        }
+                                                    }
+                                                    html += `</div>`;
+
+                                                }
+                                                html += `</div>
+                                    </div>
+                                    <h2>${result.Name}</h2>
+                                </a>
+                                `;
+                            }
+                            $("#results").html(html);
                         }
                     });
                 }
@@ -394,5 +310,4 @@ if (isset($_POST['banner'])) {
         </div>
     </div>
 </body>
-<script src="script.js"></script>
 </html>

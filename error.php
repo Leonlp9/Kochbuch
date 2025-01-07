@@ -2,12 +2,14 @@
 
 //error codes
 $errors = [
+    403 => "Zugriff verweigert!",
     404 => "Seite nicht gefunden",
+    500 => "Interner Serverfehler",
     1001 => "Datenbankverbindung fehlgeschlagen"
 ];
 
-if (isset($_GET['error'])) {
-    $error = $_GET['error'];
+if (isset($_GET['code'])) {
+    $error = $_GET['code'];
     if (array_key_exists($error, $errors)) {
         $errorText = $errors[$error];
     } else {
@@ -46,11 +48,13 @@ if (isset($_GET['error'])) {
 
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="nav-grid">
+<div class="nav-grid-content">
     <?php
 
     //wenn kein datenbankfehler, dann navbar anzeigen
@@ -63,5 +67,4 @@ if (isset($_GET['error'])) {
     </div>
 </div>
 </body>
-<script src="script.js"></script>
 </html>

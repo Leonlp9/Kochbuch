@@ -12,95 +12,32 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if dbInfo.ini file exists and is readable
-if (file_exists("dbInfo.ini") && is_readable("dbInfo.ini")) {
-    // Get username and password from dbInfo.ini
-    $dbInfo = parse_ini_file("dbInfo.ini");
+// Check if config.ini file exists and is readable
+if (file_exists("config.ini") && is_readable("config.ini")) {
+    // Get username and password from config.ini
+    $config = parse_ini_file("config.ini");
 
     // Check if username and password keys exist in the parsed array
-    if (isset($dbInfo['username']) && isset($dbInfo['password'])) {
+    if (isset($config['username']) && isset($config['password'])) {
         try {
-            $pdo = new PDO('mysql:host=localhost;dbname=kochbuch', $dbInfo['username'], $dbInfo['password']);
+            $pdo = new PDO('mysql:host=localhost;dbname=kochbuch', $config['username'], $config['password']);
         } catch (PDOException $e) {
-            header("Location: error.php?error=1001");
+            header("Location: error?code=1001");
             die();
         }
     } else {
-        echo "Error: 'username' or 'password' key is missing in dbInfo.ini";
+        echo "Error: 'username' or 'password' key is missing in config.ini";
         die();
     }
+
+    if (isset($config['base_url'])) {
+        define('BASE_URL', $config['base_url']);
+    } else {
+        define('BASE_URL', 'http://localhost/Kochbuch/');
+    }
+
+
 } else {
-    echo "Error: dbInfo.ini file is missing or not readable";
+    echo "Error: config.ini file is missing or not readable";
     die();
 }
-
-
-//Rezepte
-//ID, Name, Kategorie_ID, Zubereitung, Portionen, Zeit, Zutaten_JSON
-$rezepte = "CREATE TABLE IF NOT EXISTS rezepte (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    Kategorie_ID INT NOT NULL,
-    Zubereitung TEXT NOT NULL,
-    Portionen INT NOT NULL,
-    Zeit INT NOT NULL,
-    Zutaten_JSON TEXT NOT NULL
-)";
-
-//Kategorien
-//ID, Name
-$kategorien = "CREATE TABLE IF NOT EXISTS kategorien (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    ColorHex VARCHAR(255) NOT NULL
-)";
-
-//Bewertungen
-//ID, Rezept_ID, Bewertung
-$bewertungen = "CREATE TABLE IF NOT EXISTS bewertungen (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Rezept_ID INT NOT NULL,
-    Bewertung INT NOT NULL,
-    Name VARCHAR(255) NOT NULL,
-    Text TEXT NOT NULL
-)";
-
-//Default Zutaten
-//ID, Name, Image, unit (Stück, Gramm, Liter, etc.)
-$zutaten = "CREATE TABLE IF NOT EXISTS zutaten (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Name VARCHAR(255) NOT NULL,
-    Image VARCHAR(255) NOT NULL,
-    unit VARCHAR(255) NOT NULL 
-)";
-
-//Bilder
-//ID, Rezept_ID, Image
-$bilder = "CREATE TABLE IF NOT EXISTS bilder (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Rezept_ID INT NOT NULL,
-    Image VARCHAR(255) NOT NULL
-)";
-
-//Anmerkungen
-//ID, Rezept_ID, Anmerkung
-$anmerkungen = "CREATE TABLE IF NOT EXISTS anmerkungen (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    Rezept_ID INT NOT NULL,
-    Anmerkung TEXT NOT NULL
-)";
-
-$filterprofile = "CREATE TABLE IF NOT EXISTS filterprofile (
-	ID INT AUTO_INCREMENT PRIMARY KEY,
-	Name VARCHAR(255) NOT NULL,
-	Filter TEXT NOT NULL
-)";
-
-//Ausführen der SQL-Statements
-$pdo->exec($rezepte);
-$pdo->exec($kategorien);
-$pdo->exec($bewertungen);
-$pdo->exec($zutaten);
-$pdo->exec($bilder);
-$pdo->exec($anmerkungen);
-$pdo->exec($filterprofile);

@@ -2,255 +2,24 @@
 include 'shared/global.php';
 global $pdo;
 
-//add column optionalInfos json if not exists
-$stmt = $pdo->query("SHOW COLUMNS FROM rezepte LIKE 'OptionalInfos'");
-if ($stmt->rowCount() == 0) {
-    $stmt = $pdo->prepare("ALTER TABLE rezepte ADD OptionalInfos TEXT");
-    $stmt->execute();
+$edit = isset($_GET['rezept']);
+$rezeptID = $edit ? $_GET['rezept'] : null;
+
+//api.php?task=getRezept&id=$rezeptID
+$rezept = $edit ? json_decode(file_get_contents(BASE_URL. "api.php?task=getRezept&id=$rezeptID&zutaten", true), true)[0] : null;
+
+if ($edit && !$rezept) {
+    header("Location: index.php");
+    die();
 }
 
-$edit = false;
-//bearbeiten
-if (isset($_GET['rezept'])) {
-    $rezeptID = $_GET['rezept'];
+$name = $edit ? $rezept['Name'] : '';
+$dauer = $edit ? $rezept['Zeit'] : 5;
+$portionen = $edit ? $rezept['Portionen'] : 4;
 
-    $stmt = $pdo->prepare("SELECT * FROM rezepte WHERE ID = ?");
-    $stmt->execute([$rezeptID]);
-    $rezept = $stmt->fetch();
-    $zutaten = json_decode($rezept['Zutaten_JSON'], true);
-    $edit = true;
-    $name = $rezept['Name'];
-    $dauer = $rezept['Zeit'];
-    $portionen = $rezept['Portionen'];
-    $anleitung = $rezept['Zubereitung'];
-
-    if ($rezept['OptionalInfos'] == null) {
-        $optionalInfos = [];
-    } else {
-        $optionalInfos = json_decode($rezept['OptionalInfos'], true);
-    }
-
-    if ($rezept['OptionalInfos'] == null) {
-        $optionalInfos = [];
-    } else {
-        $optionalInfos = json_decode($rezept['OptionalInfos'], true);
-    }
-
-    //add name and unit to every zutat
-    for ($i = 0; $i < count($zutaten); $i++) {
-        $stmt = $pdo->prepare("SELECT * FROM zutaten WHERE ID = ?");
-        $stmt->execute([$zutaten[$i]['ID']]);
-        $zutat = $stmt->fetch();
-
-        $zutaten[$i]['Name'] = $zutat['Name'];
-        $zutaten[$i]['Einheit'] = $zutat['unit'];
-        $zutaten[$i]['Image'] = (file_exists('ingredientIcons/' . $zutat['Image']) ? $zutat['Image'] : 'default.svg');
-
-        //add additional info to zutaten but when it is not set, then set it to an empty string
-        if (isset($zutaten[$i]['additionalInfo'])) {
-            $zutaten[$i]['AdditionalInfo'] = $zutaten[$i]['additionalInfo'];
-        } else {
-            $zutaten[$i]['AdditionalInfo'] = '';
-        }
-
-        //add table to zutaten but when it is not set, then set it to an empty string
-        if (isset($zutaten[$i]['table'])) {
-            $zutaten[$i]['Tabelle'] = $zutaten[$i]['table'];
-        } else {
-            $zutaten[$i]['Tabelle'] = '';
-        }
-    }
-}
-
-if (isset($_GET['edit'])) {
-    //bearbeiten
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $name = $_POST['name'];
-        $kategorie = $_POST['kategorie'];
-        $dauer = $_POST['dauer'];
-        $portionen = $_POST['portionen'];
-        $anleitung = $_POST['anleitung'];
-        $zutaten = json_decode($_POST['zutaten']);
-        $files = $_FILES['bilder'];
-        $optionalInfos = json_decode($_POST['extraCustomInfos']);
-
-        $sql = "UPDATE rezepte SET Name = :name, Kategorie_ID = :kategorie, Zeit = :dauer, Portionen = :portionen, Zubereitung = :anleitung, Zutaten_JSON = :zutaten, OptionalInfos = :optionalInfos WHERE ID = :id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'name' => $name,
-            'kategorie' => $kategorie,
-            'dauer' => $dauer,
-            'portionen' => $portionen,
-            'anleitung' => $anleitung,
-            'zutaten' => json_encode($zutaten),
-            'optionalInfos' => json_encode($optionalInfos),
-            'id' => $rezeptID
-        ]);
-
-        //Bilder als webp convertieren und speichern
-        foreach ($files['name'] as $key => $file) {
-            $fileName = $files['name'][$key];
-            $fileTmpName = $files['tmp_name'][$key];
-            $fileSize = $files['size'][$key];
-            $fileError = $files['error'][$key];
-            $fileType = $files['type'][$key];
-
-            $fileExt = explode('.', $fileName);
-            $fileActualExt = strtolower(end($fileExt));
-
-            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (in_array($fileActualExt, $allowed)) {
-                if ($fileError === 0) {
-                    $img = imagecreatefromstring(file_get_contents($fileTmpName));
-                    imagepalettetotruecolor($img);
-                    imagealphablending($img, true);
-                    imagesavealpha($img, true);
-
-                    // Überprüfe die aktuellen Dimensionen des Bildes
-                    $width = imagesx($img);
-                    $height = imagesy($img);
-                    $maxWidth = 1080;
-                    $maxHeight = 566;
-
-                    // Berechne das Seitenverhältnis
-                    $aspectRatio = $width / $height;
-
-                    // Berechne die neuen Dimensionen, falls das Bild zu groß ist
-                    if ($width > $maxWidth || $height > $maxHeight) {
-                        if ($aspectRatio > ($maxWidth / $maxHeight)) {
-                            $newWidth = $maxWidth;
-                            $newHeight = $maxWidth / $aspectRatio;
-                        } else {
-                            $newHeight = $maxHeight;
-                            $newWidth = $maxHeight * $aspectRatio;
-                        }
-
-                        // Erstelle ein neues, skaliertes Bild
-                        $newImg = imagecreatetruecolor($newWidth, $newHeight);
-                        imagealphablending($newImg, false);
-                        imagesavealpha($newImg, true);
-                        imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                        imagedestroy($img);
-                        $img = $newImg;
-                    }
-
-                    // Speichern des Bildes im WebP-Format
-                    $fileNameNew = uniqid('', true) . ".webp";
-                    $fileDestination = 'uploads/' . $fileNameNew;
-                    imagewebp($img, $fileDestination, 45);
-                    imagedestroy($img);
-
-                    // SQL zum Einfügen in die Datenbank
-                    $sql = "INSERT INTO bilder (Rezept_ID, Image) VALUES (:rezeptID, :image)";
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->execute([
-                        'rezeptID' => $rezeptID,
-                        'image' => $fileNameNew
-                    ]);
-                }
-            }
-        }
-
-        header('Location: rezept.php?id=' . $rezeptID);
-    }
-}else {
-//hinzufügen
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $name = $_POST['name'];
-        $kategorie = $_POST['kategorie'];
-        $dauer = $_POST['dauer'];
-        $portionen = $_POST['portionen'];
-        $anleitung = $_POST['anleitung'];
-        $zutaten = json_decode($_POST['zutaten']);
-        $files = $_FILES['bilder'];
-        $optionalInfos = json_decode($_POST['extraCustomInfos']);
-
-        $sql = "INSERT INTO rezepte (Name, Kategorie_ID, Zeit, Portionen, Zubereitung, Zutaten_JSON, OptionalInfos) VALUES (:name, :kategorie, :dauer, :portionen, :anleitung, :zutaten, :optionalInfos)";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'name' => $name,
-            'kategorie' => $kategorie,
-            'dauer' => $dauer,
-            'portionen' => $portionen,
-            'anleitung' => $anleitung,
-            'zutaten' => json_encode($zutaten),
-            'optionalInfos' => json_encode($optionalInfos)
-        ]);
-
-        $rezeptID = $pdo->lastInsertId();
-
-
-        //Bilder als webp convertieren und speichern
-        foreach ($files['name'] as $key => $file) {
-            $fileName = $files['name'][$key];
-            $fileTmpName = $files['tmp_name'][$key];
-            $fileSize = $files['size'][$key];
-            $fileError = $files['error'][$key];
-            $fileType = $files['type'][$key];
-
-            $fileExt = explode('.', $fileName);
-            $fileActualExt = strtolower(end($fileExt));
-
-            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (in_array($fileActualExt, $allowed)) {
-                if ($fileError === 0) {
-                    $img = imagecreatefromstring(file_get_contents($fileTmpName));
-                    imagepalettetotruecolor($img);
-                    imagealphablending($img, true);
-                    imagesavealpha($img, true);
-
-                    // Überprüfe die aktuellen Dimensionen des Bildes
-                    $width = imagesx($img);
-                    $height = imagesy($img);
-                    $maxWidth = 1080;
-                    $maxHeight = 566;
-
-                    // Berechne das Seitenverhältnis
-                    $aspectRatio = $width / $height;
-
-                    // Berechne die neuen Dimensionen, falls das Bild zu groß ist
-                    if ($width > $maxWidth || $height > $maxHeight) {
-                        if ($aspectRatio > ($maxWidth / $maxHeight)) {
-                            $newWidth = $maxWidth;
-                            $newHeight = $maxWidth / $aspectRatio;
-                        } else {
-                            $newHeight = $maxHeight;
-                            $newWidth = $maxHeight * $aspectRatio;
-                        }
-
-                        // Erstelle ein neues, skaliertes Bild
-                        $newImg = imagecreatetruecolor($newWidth, $newHeight);
-                        imagealphablending($newImg, false);
-                        imagesavealpha($newImg, true);
-                        imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                        imagedestroy($img);
-                        $img = $newImg;
-                    }
-
-                    // Speichern des Bildes im WebP-Format
-                    $fileNameNew = uniqid('', true) . ".webp";
-                    $fileDestination = 'uploads/' . $fileNameNew;
-                    imagewebp($img, $fileDestination, 45);
-                    imagedestroy($img);
-
-                    // SQL zum Einfügen in die Datenbank
-                    $sql = "INSERT INTO bilder (Rezept_ID, Image) VALUES (:rezeptID, :image)";
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->execute([
-                        'rezeptID' => $rezeptID,
-                        'image' => $fileNameNew
-                    ]);
-                }
-            }
-
-        }
-
-        header('Location: index.php');
-        die();
-    }
-}
+// Zutaten laden
+$Zutaten_JSON = $edit ? $rezept['Zutaten_JSON'] : null;
+$ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
 ?>
 <!doctype html>
@@ -281,245 +50,313 @@ if (isset($_GET['edit'])) {
     <!-- QuillJS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
     <style>
-        .preview {
-            margin-top: 10px;
+
+        #tabellen {
+            display: grid;
+            gap: 10px;
+        }
+
+        .table {
             padding: 10px;
+            background: var(--secondaryBackground);
             border: 2px solid var(--nonSelected);
-            border-radius: 10px;
-            display: none;
+            border-radius: var(--border-radius);
+        }
+
+        .tableHeader {
+            display: grid;
+            grid-template-columns: 1fr 80px;
+            height: 40px;
+            gap: 10px;
+        }
+
+        #addTable {
+            padding: 10px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            background: var(--nonSelected);
+            color: var(--color);
+        }
+
+        .tableHeader input {
+            width: 100%;
+            padding: 5px;
+            border: none;
+            border-radius: var(--border-radius);
+            outline: none;
+            background: var(--background);
+            color: var(--color);
+        }
+
+        .tableHeader button {
+            background: var(--nonSelected);
+            color: var(--color);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .zutaten {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .zutat {
+            display: grid;
+            grid-template-columns: 18px 1fr;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            align-items: center;
+            justify-items: center;
+            background: var(--nonSelected);
+        }
+
+        .grabber {
+            cursor: grab;
+            user-select: none;
+            height: 100%;
+            background-color: var(--secondaryBackground);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5px;
+        }
+
+        .zutat.new {
+            background-color: var(--green);
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .zutatInfo {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .zutatInfo img {
+            width: 25px;
+            height: 25px;
+        }
+
+        .zutatInfo p {
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .zutatSuche {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        .searchResults {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .searchResults div {
+            cursor: pointer;
+        }
+
+        #alreadyUploaded, .preview {
+            display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 10px;
         }
 
-        .numbers {
-            display:grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .zutaten {
-            border-radius: 20px;
-            background: var(--nonSelected);
-            padding: 10px 20px;
-        }
-
-        #queryZutaten {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        #queryZutaten div {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
+        #alreadyUploaded div, .preview img {
+            width: 100px;
+            height: 100px;
+            background-size: cover;
+            background-position: center;
+            object-fit: cover;
             border-radius: 10px;
-            background: var(--selected);
-            border: 2px solid var(--selected_highlight);
-            border-bottom: 6px solid var(--selected_highlight);
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 10px;
+            position: relative;
         }
 
-        #queryZutaten div.addZutat {
-            background: rgba(0, 0, 0, 0.1);
-            border: 2px dashed rgba(0, 0, 0, 0.2);
-            border-bottom: 6px dashed rgba(0, 0, 0, 0.2);
-        }
-
-        #queryZutaten div.addZutat:hover {
-            background: rgba(0, 0, 0, 0.2);
-            border-color: rgba(0, 0, 0, 0.3);
-        }
-
-        #queryZutaten img {
-            width: 50px;
-            height: 50px;
-            filter: drop-shadow(3px 3px 0px rgba(0, 0, 0, 0.1)) drop-shadow(3px 3px 3px rgba(0, 0, 0, 0.2));
-        }
-
-        #queryZutaten span {
-            font-family: var(--font-family);
-            word-break: break-word;
-            text-align: center;
-            hyphens: auto;
-        }
-
-        #queryZutaten span:nth-child(2) {
-            font-weight: bold;
-        }
-
-        #queryZutaten div:hover {
-            background: var(--selected_highlight);
-            border-color: var(--selected_highlight);
-        }
-
-        .search {
+        .container form {
             display: grid;
-            align-items: center;
-            grid-template-columns: 1fr auto;
-            background: var(--secondaryBackground);
-            border-radius: 20px;
+            gap: 10px;
         }
 
-        .search i {
+        .buttons {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .buttons button {
+            flex: 1;
+        }
+
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .container form > label {
+            width: 100%;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .container form > label > input {
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+            color: var(--color);
+        }
+
+        .container form > label > select {
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            outline: none;
+            color: var(--color);
+        }
+
+
+        @media (max-width: 768px) {
+            .container form > label {
+                grid-template-columns: 1fr;
+            }
+
+            .numbers {
+                grid-template-columns: 1fr;
+            }
+
+            .zutaten {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+
+        .upload {
+            display: block !important;
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            cursor: pointer;
+            color: var(--color);
+        }
+
+        .upload:hover {
+            background: var(--nonSelected);
+        }
+
+        .upload > span {
+            display: block;
+            text-align: center;
+        }
+
+        #alreadyUploadedGroup {
+            background: var(--secondaryBackground);
+            border: 2px solid var(--nonSelected);
+            border-radius: var(--border-radius);
             padding: 10px;
         }
 
-        #zutaten {
-            margin-bottom: 0;
+        .ql-container {
+            height: auto;
+        }
+
+        .ql-toolbar.ql-snow {
+            border: none;
+            background: var(--nonSelected);
+            display: flex;
+        }
+
+        .ql-container.ql-snow {
             border: none;
         }
 
-        .zutatenTabelle{
-            overflow-y: auto;
-            width: 100%;
+        .ql-snow .ql-stroke {
+            stroke: var(--color);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: var(--font-family);
-            margin-top: 10px;
-            border-radius: 20px;
-            background: var(--secondaryBackground);
-            overflow: hidden;
-            border: 2px solid var(--selected_highlight);
-        }
-
-        td, th {
-            padding: 10px;
-        }
-
-        th {
-            background: var(--nonSelected);
-            color: var(--color);
-        }
-
-        tr:not(:last-child) {
-            border-bottom: 2px solid var(--nonSelected);
-        }
-
-        th {
-            text-align: left;
-        }
-
-        .editButton {
-            background: var(--blue);
-            border: 2px solid var(--darkerBlue);
-            cursor: pointer;
-            color: var(--color);
-            height: 40px;
-            width: 40px;
-            border-radius: 10px;
+        #extraCustomInfos {
             display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .extraCustomTabellenInput {
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid var(--nonSelected);
-            background: var(--secondaryBackground);
-            color: var(--color);
-            font-family: var(--font-family);
-            font-size: 16px;
-            transition: border 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            outline: none;
-            width: 160px;
-        }
-
-        #addBackground {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: grid;
-            place-items: center;
-            z-index: 100000;
-        }
-
-        #addBackground .popup {
-            background: var(--secondaryBackground);
-            border-radius: 20px;
-            padding: 20px;
-            display: grid;
-            gap: 10px;
-        }
-
-        .zutatenTabelle {
-            margin-top: 20px;
-            margin-bottom: 40px;
-        }
-
-        #extraCustomInfosListe {
-            display: flex;
-            gap: 10px;
             flex-wrap: wrap;
-            margin-top: 10px;
-            background: var(--secondaryBackground);
-            border-radius: 20px;
-            padding: 10px;
-            margin-bottom: 20px;
+            gap: 10px;
         }
 
-        #extraCustomInfosListe div {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 10px;
-            padding: 5px 5px 5px 15px;
-            border-radius: 20px;
+        #extraCustomInfos > div {
+            background: var(--secondaryBackground);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        #extraCustomInfos > div:hover {
             background: var(--nonSelected);
-            border: 2px solid var(--selected_highlight);
-            color: var(--color);
-            font-family: var(--font-family);
-            font-size: 16px;
-            border-bottom-width: 6px;
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-drag: none;
         }
     </style>
 </head>
 <body>
-    <div class="nav-grid">
+    <div class="nav-grid-content">
         <?php
         require_once 'shared/navbar.php';
         ?>
         <div class="container">
 
             <h1>Rezept <?php echo $edit ? 'bearbeiten' : 'hinzufügen' ?></h1>
-            <form action="addRezept.php<?php echo $edit ? '?edit=true&rezept=' . $rezeptID : '' ?>
+            <br>
+            <form action="api.php?task=addRezept<?php echo $edit ? '&edit=true&rezept=' . $rezeptID : '' ?>
 " method="post" enctype="multipart/form-data">
-                <label for="name">Name</label>
-                <input type="text" name="name" id="name" required placeholder="Rezeptname" style="text-transform: none" value="<?php echo $edit ? $name : '' ?>">
+                <label for="name">Name
+                    <input type="text" name="name" id="name" required placeholder="Rezeptname" style="text-transform: none" value="<?php echo $edit ? $name : '' ?>">
+                </label>
 
-                <label for="kategorie">Kategorie</label>
-
-                <select name="kategorie" id="kategorie" required>
-                    <option value="" disabled selected>Kategorie</option>
-                    <?php
-                    $sql = "SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID
-                        FROM kategorien k
-                        LEFT JOIN rezepte r ON k.ID = r.Kategorie_ID
-                        GROUP BY k.ID, k.Name
-                        ORDER BY k.Name";
-                    $stmt = $pdo->query($sql);
-                    while ($row = $stmt->fetch()) {
-                        echo "<option value='" . $row['ID'] . "' " . ($edit && $rezept['Kategorie_ID'] == $row['ID'] ? 'selected' : '') . ">" . $row['Name'] . " (" . $row['Anzahl'] . ")</option>";
-                    }
-                    ?>
-                </select>
+                <label for="kategorie">Kategorie
+                    <select name="kategorie" id="kategorie" required>
+                        <option value="" disabled selected>Kategorie</option>
+                        <?php
+                        $sql = "SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID
+                            FROM kategorien k
+                            LEFT JOIN rezepte r ON k.ID = r.Kategorie_ID
+                            GROUP BY k.ID, k.Name
+                            ORDER BY k.Name";
+                        $stmt = $pdo->query($sql);
+                        while ($row = $stmt->fetch()) {
+                            echo "<option value='" . $row['ID'] . "' " . ($edit && $rezept['Kategorie_ID'] == $row['ID'] ? 'selected' : '') . ">&nbsp" . $row['Name'] . " (" . $row['Anzahl'] . ")</option>";
+                        }
+                        ?>
+                    </select>
+                </label>
 
         <!--        Dropdown mit allen zutaaten und einem custom input feld für zutaten die noch nicht in der datenbank sind. Wenn angeklickt, dann wird in eine liste da drunter eingefügt-->
 
@@ -539,145 +376,442 @@ if (isset($_GET['edit'])) {
                     </div>
                 </div>
 
-<!--                Custom Infos Optional-->
-                <div id="extraCustomInfos">
-                    <label for="extraCustomInfos">Zusätzliche Informationen (Optional)</label>
-                    <div class="extraCustomInfos" style="display: grid; grid-template-columns: 1fr auto; gap: 10px;">
-                        <div style="display: grid; gap: 10px;">
-                            <input type="text" class="extraCustomTabellenInput" placeholder="Titel" style="margin-bottom: 0; text-transform: none">
-                            <input type="text" class="extraCustomTabellenInput" placeholder="Inhalt" style="margin-bottom: 0; text-transform: none">
-                        </div>
-                        <div class="editButton" style="height: auto;"
-                        >+</div>
-                    </div>
-                    <div id="extraCustomInfosListe">
-                    </div>
-                    <script>
-                        let extraCustomInfos = [];
+                <input type="text" name="extraCustomInfos" id="extraCustomInfosInput" hidden>
 
-                        <?php if ($edit) {
-                            if ($optionalInfos != null) {
-                                echo 'extraCustomInfos = ' . json_encode($optionalInfos) . ';';
-                            }
-                        } ?>
+                <h2>Zusätzliche Informationen</h2>
+                <div id="extraCustomInfos"></div>
+                <script>
+                    let extraCustomInfos = JSON.parse(<?php echo $edit ? json_encode($rezept['OptionalInfos']) : json_encode('[]') ?>);
 
-                        document.querySelector('.editButton').onclick = function() {
-                            let inputs = document.querySelectorAll('.extraCustomTabellenInput');
-                            let title = inputs[0].value;
-                            let content = inputs[1].value;
-                            extraCustomInfos.push({title: title, content: content});
-                            updateExtraCustomInfos();
+                    function updateExtraCustomInfos() {
+                        document.getElementById('extraCustomInfos').innerHTML = '';
+                        extraCustomInfos.forEach((info, index) => {
+                            let div = document.createElement('div');
+                            div.classList.add('extraCustomInfo');
+                            div.innerHTML = info.title + ': ' + info.content;
+                            div.dataset.index = index;
 
-                            inputs[0].value = '';
-                            inputs[1].value = '';
-                        };
+                            document.getElementById('extraCustomInfos').appendChild(div);
 
-                        function updateExtraCustomInfos() {
-                            let extraCustomInfosListe = document.querySelector('#extraCustomInfosListe');
-                            extraCustomInfosListe.innerHTML = '';
-                            for (let info of extraCustomInfos) {
-                                let div = document.createElement('div');
-                                div.innerHTML = info.title + ': ' + info.content;
-                                div.onclick = function() {
-
-                                    var background = document.createElement('div');
-                                    background.id = 'addBackground';
-                                    background.onclick = function() {
-                                        this.remove();
-                                    };
-                                    var popup = document.createElement('div');
-                                    popup.className = 'popup';
-                                    popup.onclick = function(e) {
-                                        e.stopPropagation();
-                                    };
-                                    background.appendChild(popup);
-                                    document.body.appendChild(background);
-
-                                    var popUpTitle = document.createElement('h2');
-                                    popUpTitle.innerHTML = 'Zusätzliche Informationen bearbeiten';
-                                    popup.appendChild(popUpTitle);
-
-                                    var title = document.createElement('input');
-                                    title.value = info.title;
-                                    title.style.width = '100%';
-                                    title.placeholder = 'Titel';
-                                    title.className = 'extraCustomTabellenInput';
-
-                                    var content = document.createElement('input');
-                                    content.value = info.content;
-                                    content.style.width = '100%';
-                                    content.placeholder = 'Inhalt';
-                                    content.className = 'extraCustomTabellenInput';
-
-                                    var save = document.createElement('div');
-                                    save.className = 'btn green';
-                                    save.innerHTML = 'Speichern';
-                                    save.onclick = function() {
-                                        info.title = title.value;
-                                        info.content = content.value;
+                            div.addEventListener('click', function () {
+                                let index = this.dataset.index;
+                                let info = extraCustomInfos[index];
+                                const form = new FormBuilder(
+                                    'Information bearbeiten',
+                                    (formData) => {
+                                        extraCustomInfos[index] = {
+                                            title: formData.title,
+                                            content: formData.content
+                                        };
                                         updateExtraCustomInfos();
-                                        background.remove();
-                                    };
+                                    },
+                                    () => {}
+                                );
 
-                                    var remove = document.createElement('div');
-                                    remove.className = 'btn red';
-                                    remove.innerHTML = 'Löschen';
-                                    remove.onclick = function() {
-                                        extraCustomInfos.splice(extraCustomInfos.indexOf(info), 1);
-                                        updateExtraCustomInfos();
-                                        background.remove();
-                                    };
+                                form.addInputField('title', 'Titel', info.title);
+                                form.addInputField('content', 'Inhalt', info.content);
+                                form.addButton('Löschen', () => {
+                                    // aus extraCustomInfos das element mit dem index entfernen
+                                    extraCustomInfos.splice(index, 1);
+                                    console.log(extraCustomInfos);
+                                    updateExtraCustomInfos();
+                                    form.closeForm();
+                                });
 
-                                    popup.appendChild(title);
-                                    popup.appendChild(content);
-                                    popup.appendChild(save);
-                                    popup.appendChild(remove);
+                                form.renderForm();
+                            });
+                        });
+
+                        let addExtraCustomInfoButton = document.createElement('div');
+                        addExtraCustomInfoButton.id = 'addExtraCustomInfo';
+                        addExtraCustomInfoButton.type = 'button';
+                        addExtraCustomInfoButton.innerText = 'Information hinzufügen';
+                        addExtraCustomInfoButton.style.background = 'var(--green)';
+                        document.getElementById('extraCustomInfos').appendChild(addExtraCustomInfoButton);
+                        addExtraCustomInfoButton.addEventListener('click', () => {
+                            const form = new FormBuilder(
+                                'Information hinzufügen',
+                                (formData) => {
+                                    extraCustomInfos.push({
+                                        title: formData.title,
+                                        content: formData.content
+                                    });
+                                    updateExtraCustomInfos();
+                                },
+                                () => {}
+                            );
+
+                            form.addInputField('title', 'Titel');
+                            form.addInputField('content', 'Inhalt');
+                            form.renderForm();
+                        });
+
+                    }
+
+                    updateExtraCustomInfos();
+                </script>
 
 
-                                };
-                                extraCustomInfosListe.appendChild(div);
+                <h2>Zutaten</h2>
+                <input type="hidden" name="zutaten" id="zutatenInput" required>
+                <div id="tabellen"></div>
+                <button id="addTable" type="button">Neue Tabelle hinzufügen</button>
+                <script>
+                    let zutatenJSON = <?php echo json_encode($Zutaten_JSON) ?>;
+                    let tables = <?php echo json_encode($ZutatenTables) ?>;
+
+                    if (!zutatenJSON) {
+                        zutatenJSON = [];
+                    }
+
+                    if (!tables) {
+                        tables = [""];
+                    }
+
+                    function edit(zutatId) {
+                        const aktuelleZutat = zutatenJSON[zutatId];
+
+                        if (!aktuelleZutat) return;
+
+                        const form = new FormBuilder(
+                            'Zutat bearbeiten',
+                            (formData) => {
+
+                                aktuelleZutat.Menge = formData.menge;
+                                aktuelleZutat.additionalInfo = formData.info;
+
+                                update();
+                            },
+                            () => {
                             }
+                        );
+
+                        let step = 1;
+                        if (aktuelleZutat.unit === 'Stück') {
+                            step = 1;
+                        }else if (aktuelleZutat.unit === 'l') {
+                            step = 0.1;
+                        }else if (aktuelleZutat.unit === 'ml') {
+                            step = 10;
+                        }else if (aktuelleZutat.unit === 'Prise') {
+                            step = 0.1;
+                        }else if (aktuelleZutat.unit === 'TL') {
+                            step = 0.5;
+                        }else if (aktuelleZutat.unit === 'EL') {
+                            step = 1;
+                        }else if (aktuelleZutat.unit === 'Tasse') {
+                            step = 0.25;
+                        }else if (aktuelleZutat.unit === 'g') {
+                            step = 50;
                         }
 
-                        updateExtraCustomInfos();
+                        // Felder für die Zutat
+                        form.addHeader(aktuelleZutat.Name + ' (' + aktuelleZutat.unit + ')');
+                        form.addCustomNumberField('menge', 0, Infinity, step, aktuelleZutat.Menge);
+                        form.addInputField('info', 'Zusätzliche Info', aktuelleZutat.additionalInfo);
 
-                        //stop the form from submitting when pressing enter in the input fields
-                        document.querySelectorAll('.extraCustomTabellenInput').forEach(input => {
-                            input.onkeypress = function(e) {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
+                        form.addButton("Speichern", () => {
+                            form.submitForm();
+                        });
+
+                        form.addButton('Löschen', () => {
+                            zutatenJSON.splice(zutatId, 1);
+                            update();
+                            form.closeForm();
+                        });
+
+                        form.renderForm(false);
+
+                        form.fucus("menge");
+                    }
+
+                    function update() {
+
+                        // Vorhandene Tabellen entfernen
+                        document.querySelectorAll('.table').forEach(table => table.remove());
+
+                        // Tabellen rendern
+                        tables.forEach((table, index) => {
+                            let tableDiv = document.createElement('div');
+                            tableDiv.classList.add('table');
+                            tableDiv.dataset.table = table;
+
+                            tableDiv.innerHTML = `
+                                <div class='tableHeader'>
+                                    <input type='text' class='tableName' value='${table}' placeholder='Tabellenname'>
+                                    <button type='button' class='deleteTable'>Löschen</button>
+                                </div>
+
+                                <div class='zutaten'>
+                                    ${zutatenJSON
+                                        .filter((zutat) => zutat.table === table)
+                                        .map((zutat) => `
+                                            <div class='zutat' data-id='${zutatenJSON.indexOf(zutat)}'>
+                                                <div class="grabber">☰</div>
+                                                <div class='zutatInfo'>
+                                                    <img src='${zutat.Image}' alt='${zutat.Name}'>
+                                                    <p>${zutat.Name} ${zutat.additionalInfo}</p>
+                                                    <p>${zutat.Menge} ${zutat.unit}</p>
+                                                </div>
+                                            </div>
+                                        `)
+                                        .join('')}
+                                    <div class='zutat new' style='order: 9999;'>+</div>
+                                </div>
+                            `;
+                            document.getElementById('tabellen').appendChild(tableDiv);
+                        });
+
+                        // Event-Listener für Zutaten hinzufügen
+                        document.querySelectorAll('.zutat').forEach(zutat => {
+                            if (!zutat.classList.contains('new')) {
+                                zutat.addEventListener('click', () => {
+                                    const zutatId = zutat.dataset.id;
+                                    edit(zutatId);
+                                });
+                            }
+                        });
+
+                        // Sortierfunktion hinzufügen
+                        document.querySelectorAll('.table').forEach(table => {
+                            new Sortable(table.querySelector('.zutaten'), {
+                                animation: 250,
+                                group: 'shared',
+                                filter: '.new',
+                                handle: '.grabber',
+                                onEnd: e => {
+                                    const zutat = zutatenJSON[e.item.dataset.id];
+                                    const newTable = e.to.closest('.table').dataset.table;
+
+                                    zutat.table = newTable;
+
+                                    let sortedIndexes = Array.from(e.to.children)
+                                        .filter(child => child.classList.contains('zutat') && !child.classList.contains('new'))
+                                        .map(child => child.dataset.id);
+
+                                    //get all zutaten of the new table
+                                    let zutatenOfTable = zutatenJSON.filter(zutat => zutat.table === newTable);
+
+                                    for (let i = 0; i < zutatenOfTable.length; i++) {
+                                        zutatenOfTable[i] = zutatenJSON[sortedIndexes[i]];
+                                    }
+
+                                    //update zutatenJSON
+                                    zutatenJSON = zutatenJSON.filter(zutat => zutat.table !== newTable);
+                                    zutatenJSON = zutatenJSON.concat(zutatenOfTable);
+
+                                    update();
+
+                                    new SystemMessage('Zutaten aktualisiert').show();
                                 }
+                            });
+                        });
+
+                        // Tabellen-Löschen-Buttons aktivieren
+                        document.querySelectorAll('.deleteTable').forEach(button => {
+                            button.addEventListener('click', function () {
+                                let table = this.closest('.table');
+                                let tableName = table.dataset.table;
+
+                                // Tabelle und zugehörige Zutaten entfernen
+                                tables = tables.filter(t => t !== tableName);
+                                zutatenJSON = zutatenJSON.filter(zutat => zutat.table !== tableName);
+
+                                update();
+                            });
+                        });
+
+                        // Tabellen-Umbenennen-Event hinzufügen
+                        document.querySelectorAll('.tableName').forEach((input, index) => {
+                            input.addEventListener('input', function () {
+                                let oldTableName = tables[index];
+                                let newTableName = this.value;
+
+                                // Tabellenname aktualisieren
+                                tables[index] = newTableName;
+
+                                // Zutaten entsprechend aktualisieren
+                                zutatenJSON = zutatenJSON.map(zutat => {
+                                    if (zutat.table === oldTableName) {
+                                        return { ...zutat, table: newTableName };
+                                    }
+                                    return zutat;
+                                });
+                            });
+                        });
+
+                        document.querySelectorAll('.zutat.new').forEach(newButton => {
+                            newButton.addEventListener('click', () => {
+                                const form = new FormBuilder(
+                                    'Zutat hinzufügen',
+                                    (formData) => {},
+                                    () => {}
+                                );
+
+                                form.addHTML(`
+                                    <input type='text' name='name' placeholder='Zutat suchen' required class="zutatSuche" autocomplete="off">
+                                    <div class="divider">Zutaten Ergebnisse (Ersten 20)</div>
+                                    <div class="searchResults"></div>
+                                `);
+
+                                form.renderForm(false);
+
+                                form.form.parentElement.style.maxWidth = 'min(calc(100vw - 40px), 900px)';
+
+                                function search(name) {
+                                    fetch('api.php?task=getZutaten&name=' + name)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            form.form.querySelector('.searchResults').innerHTML = '';
+                                            data.forEach(zutat => {
+                                                let result = document.createElement('div');
+                                                result.classList.add('zutat');
+                                                result.classList.add('zutatInfo');
+                                                result.innerHTML = `
+                                                    <img src='${zutat.Image}' alt='${zutat.Name}'>
+                                                    <p>${zutat.Name}</p>
+                                                    <p>${zutat.unit}</p>
+                                                `;
+                                                result.addEventListener('click', () => {
+                                                    // Zutat in Liste einfügen
+                                                    const newZutat = {
+                                                        ID: zutat.ID,
+                                                        Menge: 0,
+                                                        unit: zutat.unit,
+                                                        Name: zutat.Name,
+                                                        Image: zutat.Image,
+                                                        additionalInfo: '',
+                                                        table: newButton.closest('.table').dataset.table
+                                                    };
+
+                                                    zutatenJSON.push(newZutat);
+                                                    update();
+
+                                                    form.closeForm();
+
+                                                    edit(zutatenJSON.indexOf(newZutat));
+
+                                                });
+                                                form.form.querySelector('.searchResults').appendChild(result);
+                                            });
+
+                                            //New Zutat hinzufügen button
+                                            let newZutat = document.createElement('div');
+                                            newZutat.classList.add('zutat');
+                                            newZutat.classList.add('new');
+                                            newZutat.innerHTML = `
+                                                <img src='ingredientIcons/default.svg' alt='Neue Zutat'>
+                                                <p>Neue Zutat</p>
+                                            `;
+                                            newZutat.addEventListener('click', () => {
+                                                form.closeForm();
+
+                                                const newZutatForm = new FormBuilder(
+                                                    'Neue Zutat hinzufügen',
+                                                    (formData) => {
+
+                                                        if (formData.name === '') {
+                                                            new SystemMessage('Bitte gib einen Namen ein').show();
+                                                            return;
+                                                        }
+
+                                                        fetch(`api.php?task=addZutat&name=${formData.name}&unit=${formData.unit}`)
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                const newZutat = {
+                                                                    ID: data.ID,
+                                                                    Menge: 0,
+                                                                    unit: formData.unit,
+                                                                    Name: formData.name,
+                                                                    Image: 'ingredientIcons/default.svg', // Beispielbild
+                                                                    additionalInfo: '',
+                                                                    table: newButton.closest('.table').dataset.table
+                                                                };
+                                                                zutatenJSON.push(newZutat);
+                                                                update();
+
+                                                                edit(zutatenJSON.indexOf(newZutat));
+                                                            });
+                                                    },
+                                                    () => {}
+                                                );
+
+                                                newZutatForm.addInputField('name', 'Name', name);
+                                                newZutatForm.addSelectField('unit', [{value: 'g', text: 'g'}, {value: 'ml', text: 'ml'}, {value: 'Stück', text: 'Stück'}, {value: 'Prise', text: 'Prise'}, {value: 'TL', text: 'TL'}, {value: 'EL', text: 'EL'}, {value: 'Tasse', text: 'Tasse'}, {value: 'Packung', text: 'Packung'}, {value: 'Bund', text: 'Bund'}, {value: 'Dose', text: 'Dose'}, {value: 'Paket', text: 'Paket'}, {value: 'Becher', text: 'Becher'}, {value: 'Scheibe', text: 'Scheibe'}, {value: 'Zehe', text: 'Zehe'}, {value: 'Zweige', text: 'Zweige'}, {value: 'Prise', text: 'Prise'}, {value: 'Würfel', text: 'Würfel'}, {value: 'Messerspitze', text: 'Messerspitze'}], 'g');
+
+                                                newZutatForm.renderForm();
+                                            });
+                                            form.form.querySelector('.searchResults').appendChild(newZutat);
+                                        });
+                                }
+                                search("");
+
+                                form.form.querySelector('input[name=name]').addEventListener('input', function () {
+                                    search(this.value);
+                                });
+
+                                form.form.querySelector('input[name=name]').focus();
+
+                            });
+                        });
+
+                    }
+
+                    document.getElementById('addTable').addEventListener('click', () => {
+                        let newTableName = `Tabelle ${tables.length + 1}`;
+                        tables.push(newTableName);
+                        update();
+                    });
+
+                    update();
+
+                    function getRawZutatenJson() {
+                        return zutatenJSON.map(zutat => {
+                            return {
+                                ID: zutat.ID,
+                                Menge: zutat.Menge,
+                                additionalInfo: zutat.additionalInfo,
+                                table: zutat.table
                             };
                         });
-                    </script>
-                </div>
-                <input type="hidden" name="extraCustomInfos" id="extraCustomInfosInput">
-
-        <!--        Zutaten soll so sein, dass es eine such bar gibt, in der man nach etwas sucht und dann die Zutaten mit dem Namen dann aus der Datenbank angezeigt werden und wenn man die anklickt, dann sind die im rezept drin, und man kann noch die Menge wenn es hinzugefügt ist bestimmen-->
-        <!--        getZutaten.php [{"ID":58,"0":58,"Name":"Ananas","1":"Ananas","Image":"ananas.svg","2":"ananas.svg","unit":"St\u00fcck","3":"St\u00fcck"}...] -->
-                <label for="zutaten" id="zutatenLabel">Zutaten</label>
-                <div class="zutaten">
-                    <div class="search">
-                        <input type="text" id="zutaten" placeholder="Zutat suchen" style="text-transform: none;">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div id="queryZutaten"></div>
-                </div>
-
-                <div class="zutatenTabelle">
-                    <label for="zutatenListe">Zutatenlisten</label>
-                    <div id="zutatenListen">
-                        Leer
-                    </div>
-                </div>
-                <input type="hidden" name="zutaten" id="zutatenInput" required>
-
-                <label for="anleitung">Anleitung</label>
+                    }
+                </script>
+                <h2>Zubereitung</h2>
                 <input type="hidden" name="anleitung" id="anleitung" required>
-                <div id="editor"></div>
+
+                <div style="background: var(--secondaryBackground); border: 2px solid var(--nonSelected); border-radius: var(--border-radius)">
+                    <div id="editor"></div>
+                </div>
+
+                <!-- QuillJS -->
+                <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+                <script>
+                    var settings = {
+                        modules: {
+                            toolbar: [
+                                ['bold', 'italic', 'underline', 'blockquote'],
+                                [{'list': 'ordered'}, {'list': 'bullet'}],
+                                ['link'],
+                                ['clean']
+                            ]
+                        },
+                        theme: 'snow'
+                    };
+
+                    var quill = new Quill('#editor', {
+                        modules: {
+                            toolbar: settings.modules.toolbar
+                        },
+                        theme: 'snow'
+                    });
+
+                    quill.root.innerHTML = '<?php echo $edit ? $rezept['Zubereitung'] : '' ?>';
+                </script>
 
                 <label class="upload">
-                    <i class="fas fa-upload"></i> Bilder hochladen
+                    <span>
+                        <i class="fas fa-upload"></i> Bilder hochladen
+                    </span>
                     <input type="file" name="bilder[]" multiple accept="image/png, image/jpeg, image/jpg, image/webp">
                     <div class="preview"></div>
                     <script>
@@ -690,7 +824,6 @@ if (isset($_GET['edit'])) {
                                 reader.onload = function(e) {
                                     var img = document.createElement('img');
                                     img.src = e.target.result;
-                                    img.style.width = '100%';
                                     preview.appendChild(img);
                                 };
                                 reader.readAsDataURL(file);
@@ -699,464 +832,89 @@ if (isset($_GET['edit'])) {
                     </script>
                 </label>
 
-                <div id="alreadyUploadedImages">
+                <div id="alreadyUploadedGroup">
+                    <div class="divider">Bereits hochgeladene Bilder</div>
+                    <div id="alreadyUploaded"></div>
+                </div>
+                <script>
+                    function updateImages() {
+                        fetch('api.php?task=getImages&rezept_id=<?php echo $rezeptID ?>')
+                            .then(response => response.json())
+                            .then(data => {
+                                var alreadyUploaded = document.getElementById('alreadyUploaded');
+                                alreadyUploaded.innerHTML = '';
+                                for (var image of data) {
+                                    var img = document.createElement('div');
+                                    img.style.backgroundImage = `url('${image.Image}')`;
+                                    img.style.position = 'relative';
+                                    alreadyUploaded.appendChild(img);
+
+                                    var deleteButton = document.createElement('button');
+                                    deleteButton.innerHTML = 'Löschen';
+                                    deleteButton.type = 'button';
+                                    deleteButton.style.position = 'absolute';
+                                    deleteButton.style.bottom = '5px';
+                                    deleteButton.style.right = '5px';
+                                    deleteButton.style.backgroundColor = 'var(--red)';
+                                    deleteButton.style.color = 'white';
+                                    deleteButton.style.border = 'none';
+                                    deleteButton.style.borderRadius = '5px';
+                                    deleteButton.style.padding = '5px';
+                                    deleteButton.style.cursor = 'pointer';
+                                    deleteButton.onclick = function() {
+                                        fetch(`api.php?task=deleteImage&rezept_id=<?php echo $rezeptID ?>&image=${image.ID}`)
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                updateImages();
+                                            });
+                                    };
+                                    img.appendChild(deleteButton);
+
+                                }
+                            });
+                    }
+                    updateImages();
+                </script>
+
+                <div class="buttons">
+                    <button type="submit" class="btn green"><?php echo $edit ? 'Speichern' : 'Hinzufügen' ?></button>
+
+                    <?php
+                    if ($edit) {
+                        echo "<a href='api.php?task=deleteRezept&id=$rezeptID' class='btn delete'>Löschen</a>";
+                    }
+                    ?>
                 </div>
 
-                <br>
-                <button type="submit" class="btn green"><?php echo $edit ? 'Bearbeiten' : 'Hinzufügen' ?></button>
 
-                <?php if ($edit) { ?>
-                    <div class="btn red" onclick="if (confirm('Möchtest du das Rezept \'\'<?= $name ?>\'\' wirklich löschen?')) {
+                <script>
+
+                    // confirm that the user wants to leave the page
+                    window.onbeforeunload = function(e) {
+                        e.returnValue = 'Möchtest du die Seite wirklich verlassen?';
+                        return 'Möchtest du die Seite wirklich verlassen?';
+                    };
+
+                    document.querySelector('form').onsubmit = function() {
+                        var anleitung = document.querySelector('input[name=anleitung]');
+                        anleitung.value = quill.root.innerHTML;
+
+                        var zutaten = document.querySelector('#zutatenInput');
+
+                        zutaten.value = JSON.stringify(getRawZutatenJson());
+
+                        let extraCustomInfosElement = document.querySelector('#extraCustomInfosInput');
+                        extraCustomInfosElement.value = JSON.stringify(extraCustomInfos);
+
                         // remove confirmation when leaving the page
                         window.onbeforeunload = function(e) {
                             return null;
                         };
-                        window.location.href = 'deleteRezept.php?id=<?= $rezeptID ?>'; }">Rezept löschen</div>
-                <?php } ?>
-
+                    }
+                </script>
             </form>
-            <!-- QuillJS -->
-            <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-            <script>
-
-                //Json
-                let zutatenListe = [];
-
-                <?php if ($edit) { ?>
-                zutatenListe = <?php echo json_encode($zutaten) ?>;
-                updateZutatenListe();
-                <?php } ?>
-
-                var settings = {
-                    modules: {
-                        toolbar: [
-                            ['bold', 'italic', 'underline', 'blockquote'],
-                            [{'list': 'ordered'}, {'list': 'bullet'}],
-                            ['link'],
-                            ['clean']
-                        ]
-                    },
-                    theme: 'snow'
-                };
-
-                var quill = new Quill('#editor', {
-                    modules: {
-                        toolbar: settings.modules.toolbar
-                    },
-                    theme: 'snow'
-                });
-
-                //Wenn bearbeiten, dann füge die anleitung ein
-                <?php if ($edit) { ?>
-                quill.root.innerHTML = '<?php echo $anleitung ?>';
-                <?php } ?>
-
-
-                //add already uploaded images when editing
-                <?php if ($edit) { ?>
-                fetch('getImages.php?rezept_id=<?= $rezeptID ?>')
-                    .then(response => response.json())
-                    .then(images => {
-                        var alreadyUploadedImages = document.querySelector('#alreadyUploadedImages');
-
-                        alreadyUploadedImages.innerHTML = '';
-                        alreadyUploadedImages.style.display = 'grid';
-                        alreadyUploadedImages.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr)';
-                        alreadyUploadedImages.style.gap = '10px';
-                        alreadyUploadedImages.style.marginTop = '10px';
-                        alreadyUploadedImages.style.background = 'var(--secondaryBackground)';
-                        alreadyUploadedImages.style.borderRadius = '20px';
-                        alreadyUploadedImages.style.padding = '10px';
-                        alreadyUploadedImages.style.border = '2px solid var(--selected_highlight)';
-
-                        for (var image of images) {
-                            var img = document.createElement('div');
-                            img.style.height = '150px';
-                            img.style.backgroundSize = 'contain';
-                            img.style.backgroundPosition = 'center';
-                            img.style.backgroundRepeat = 'no-repeat';
-                            img.style.backgroundImage = 'url(uploads/' + image.Image + ')';
-                            img.onclick = function() {
-                                if (confirm('Möchtest du das Bild wirklich löschen?')) {
-                                    fetch('getImages.php?rezept_id=<?= $rezeptID ?>&image=' + image.Image + '&delete=true')
-                                        .then(response => {
-                                            if (response.ok) {
-                                                img.remove();
-                                            }
-                                        });
-                                }
-                            };
-                            alreadyUploadedImages.appendChild(img);
-                        }
-                    });
-                <?php } ?>
-
-
-                document.querySelector('form').onsubmit = function() {
-                    var anleitung = document.querySelector('input[name=anleitung]');
-                    anleitung.value = quill.root.innerHTML;
-
-                    var zutaten = document.querySelector('#zutatenInput');
-
-                    // Entferne name und unit aus zutatenListe
-                    zutatenListe = zutatenListe.map(z => {
-                        return {
-                            ID: z.ID,
-                            Menge: z.Menge,
-                            table: z.Tabelle,
-                            additionalInfo: z.AdditionalInfo
-                        };
-                    });
-
-                    zutaten.value = JSON.stringify(zutatenListe);
-
-                    let extraCustomInfosElement = document.querySelector('#extraCustomInfosInput');
-                    extraCustomInfosElement.value = JSON.stringify(extraCustomInfos);
-
-                    // remove confirmation when leaving the page
-                    window.onbeforeunload = function(e) {
-                        return null;
-                    };
-                };
-
-
-                document.querySelector('#zutaten').oninput = function() {
-                    search();
-                };
-
-                function search(){
-                    var input = document.querySelector('#zutaten').value;
-                    var zutatenListe = document.querySelector('#queryZutaten');
-
-                    if (input.length < 1) {
-                        zutatenListe.innerHTML = '';
-                        return;
-                    }
-
-                    fetch('getZutaten.php?name=' + input)
-                        .then(response => response.json())
-                        .then(zutaten => {
-                            zutatenListe.innerHTML = '';
-
-                            for (var zutat of zutaten) {
-                                //div mit bild name und einheit
-                                var div = document.createElement('div');
-                                div.innerHTML = `
-                                            <img src="ingredientIcons/${zutat.Image}" alt="${zutat.Name}">
-                                            <span>${zutat.Name}</span>
-                                            <span>(${zutat.unit})</span>
-                                        `;
-
-                                const id = zutat.ID;
-                                div.onclick = function() {
-                                    addZutatToRezept(id);
-                                };
-
-                                //fade in
-                                $(div).hide().appendTo(zutatenListe).fadeIn(150);
-                            }
-
-                            if (input.length < 2) {
-                                return;
-                            }
-
-                            //return wenns auf * endet
-                            if (input.endsWith('*')) {
-                                return;
-                            }
-
-                            //knopf um es in die datenbank mit aufzunehmen
-                            var div = document.createElement('div');
-                            div.classList.add('addZutat');
-                            div.innerHTML = `
-                                        <img src="ingredientIcons/plus.svg" alt="Hinzufügen">
-                                        <span>${input}</span>
-                                        <span>(Neue Zutat)</span>
-                                    `;
-
-                            div.onclick = function() {
-                                //open a prompt to add the zutat with the unit
-                                //wenn rückmeldung dann search();
-                                var zutat = prompt('Einheit der Zutat');
-                                if (zutat === null || zutat === '') {
-                                    return;
-                                }
-                                fetch('addZutat.php', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/x-www-form-urlencoded'
-                                    },
-                                    body: 'name=' + input + '&unit=' + zutat
-                                }).then(response => {
-                                    if (response.ok) {
-                                        search();
-                                    }
-                                });
-                            };
-
-                            //fade in
-                            $(div).hide().appendTo(zutatenListe).fadeIn(150);
-
-
-                            //scroll window to top of the zutatenListe
-                            document.getElementById("zutatenLabel").scrollIntoView({behavior: "smooth", block: "start"});
-
-                        });
-
-                }
-
-                // Function to add a zutat to the rezept
-                function addZutatToRezept(zutatID) {
-
-                    //clear the search bar
-                    document.querySelector('#zutaten').value = '';
-                    search();
-
-                    fetch('getZutaten.php?id=' + zutatID)
-                        .then(response => response.json())
-                        .then(zutat => {
-
-                            let zutatName = zutat[0].Name;
-                            let zutatUnit = zutat[0].unit;
-
-                            //wenn zutatunit Stück ist, dann soll die Menge um 1 verändert werden, bei ml um 10, bei g um 50 und bei l um 0.1
-                            let zutatMenge = 1;
-                            if (zutatUnit === 'Stück') {
-                                zutatMenge = 1;
-                            } else if (zutatUnit === 'ml') {
-                                zutatMenge = 10;
-                            } else if (zutatUnit === 'g') {
-                                zutatMenge = 50;
-                            } else if (zutatUnit === 'l') {
-                                zutatMenge = 0.1;
-                            }
-
-                            const background = document.createElement('div');
-                            background.classList.add('background');
-                            background.id = 'addBackground';
-                            background.onclick = function(e) {
-                                if (e.target === background)
-                                    background.remove();
-                            };
-                            document.body.appendChild(background);
-
-                            //datalist mit allen tabellen die es gibt ohne dopplungen
-                            var tables = [];
-                            for (var zutatT of zutatenListe) {
-                                if (zutatT.Tabelle !== '' && !tables.includes(zutatT.Tabelle)) {
-                                    tables.push(zutatT.Tabelle);
-                                }
-                            }
-                            var datalist = document.createElement('datalist');
-                            datalist.id = 'tables';
-                            for (var table of tables) {
-                                var option = document.createElement('option');
-                                option.value = table;
-                                datalist.appendChild(option);
-                            }
-                            background.appendChild(datalist);
-
-                            const popup = document.createElement('div');
-                            popup.classList.add('popup');
-                            popup.innerHTML = `
-                        <h2>${zutatName}
-                            <img src="ingredientIcons/${zutat[0].Image}" alt="${zutatName}" style="height: 30px; display: inline-block">
-                        </h2>
-                        <div class="numbers">
-                            <div class="number-input" style="width: 100%; height: 45px">
-                                <button class="down" onclick="this.nextElementSibling.value = parseFloat(this.nextElementSibling.value) - ${zutatMenge}">-</button>
-                                <input class="quantity" min="0" name="quantity" value="${zutatMenge}" step="any" type="number">
-                                <button class="up" onclick="this.previousElementSibling.value = parseFloat(this.previousElementSibling.value) + ${zutatMenge}">+</button>
-                            </div>
-                            <input type="text" class="extraCustomTabellenInput" placeholder="Einheit" id="zutatEinheit" value="${zutatUnit}" disabled>
-                        </div>
-                        <input type="text" class="extraCustomTabellenInput" placeholder="Zusätzliche Infos (optional)" id="zutatAdditionalInfo" style="text-transform: none">
-                        <input type="text" class="extraCustomTabellenInput" placeholder="Tabelle (optional)" id="zutatTabelle" list="tables" style="text-transform: none">
-                        <button class="btn green" id="addZutatButton">Hinzufügen</button>
-                    `;
-                            background.appendChild(popup);
-
-                            document.querySelector('#addZutatButton').onclick = function() {
-                                addZutatToList(zutatID, zutatName, document.querySelector('.quantity').value, zutatUnit, document.querySelector('#zutatAdditionalInfo').value, document.querySelector('#zutatTabelle').value, zutat[0].Image);
-                                background.remove();
-                            };
-
-                            document.body.appendChild(background);
-                        });
-                }
-
-                function addZutatToList(zutatID, name, menge, einheit, additionalInfo, tabelle, image) {
-                    //add the zutat to the list
-                    zutatenListe.push({
-                        ID: zutatID,
-                        Name: name,
-                        Image: image,
-                        Menge: menge,
-                        Einheit: einheit,
-                        AdditionalInfo: additionalInfo,
-                        Tabelle: tabelle
-                    });
-                    updateZutatenListe();
-                }
-
-                function deleteZutatFromList(index) {
-                    zutatenListe.splice(index, 1);
-                    updateZutatenListe();
-                }
-
-                function updateZutatenListe() {
-                    console.log(zutatenListe);
-
-                    var zutatenListen = document.querySelector('#zutatenListen');
-                    zutatenListen.innerHTML = '';
-
-                    // Globales Tabellen-Element erstellen
-                    var table = document.createElement('table');
-
-                    table.innerHTML = `
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Menge</th>
-                                        <th>Zusätzliche Infos</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody> <!-- Leeres tbody für Einträge -->
-                            `;
-
-                    zutatenListen.appendChild(table);
-
-                    var tbody = table.querySelector('tbody'); // Referenz auf das tbody der globalen Tabelle
-
-                    // Objekt zum Verfolgen der bereits erstellten benutzerdefinierten Tabellen
-                    var customTables = {};
-
-                    for (var i = 0; i < zutatenListe.length; i++) {
-                        var zutat = zutatenListe[i];
-
-                        var tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${zutat.Name}</td>
-                            <td>${zutat.Menge} ${zutat.Einheit}</td>
-                            <td>${zutat.AdditionalInfo}</td>
-                            <td style="display: flex; gap: 10px">
-                                <div class="editButton" onclick="editZutatFromList(${i})"><i class="fas fa-edit"></i></div>
-                            </td>
-                        `;
-
-                        if (zutat.Tabelle !== '') {
-                            // Überprüfen, ob eine benutzerdefinierte Tabelle bereits existiert
-                            if (!customTables[zutat.Tabelle]) {
-                                // Neue benutzerdefinierte Tabelle erstellen
-                                var customTableContainer = document.createElement('div');
-                                customTableContainer.style.marginTop = '20px';
-                                customTableContainer.innerHTML = `<h3>${zutat.Tabelle}</h3>`; // Tabelle mit Titel
-                                var customTable = document.createElement('table');
-                                customTable.innerHTML = `
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Menge</th>
-                                            <th>Zusätzliche Infos</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody> <!-- Leeres tbody für Einträge -->
-                                `;
-                                customTableContainer.appendChild(customTable);
-                                zutatenListen.appendChild(customTableContainer);
-
-                                // Speichern der Tabelle im customTables-Objekt
-                                customTables[zutat.Tabelle] = customTable.querySelector('tbody');
-                            }
-
-                            // Zeile zur entsprechenden benutzerdefinierten Tabelle hinzufügen
-                            customTables[zutat.Tabelle].appendChild(tr);
-                        } else {
-                            // Zeile zur globalen Tabelle hinzufügen
-                            tbody.appendChild(tr);
-                        }
-                    }
-                }
-
-                function editZutatFromList(index) {
-                    var zutat = zutatenListe[index];
-
-                    const background = document.createElement('div');
-                    background.classList.add('background');
-                    background.id = 'addBackground';
-                    background.onclick = function(e) {
-                        if (e.target === background)
-                            background.remove();
-                    };
-                    document.body.appendChild(background);
-
-                    //datalist mit allen tabellen die es gibt ohne dopplungen
-                    var tables = [];
-                    for (var zutatT of zutatenListe) {
-                        if (zutatT.Tabelle !== '' && !tables.includes(zutatT.Tabelle)) {
-                            tables.push(zutatT.Tabelle);
-                        }
-                    }
-                    var datalist = document.createElement('datalist');
-                    datalist.id = 'tables';
-                    for (var table of tables) {
-                        var option = document.createElement('option');
-                        option.value = table;
-                        datalist.appendChild(option);
-                    }
-                    background.appendChild(datalist);
-
-                    const popup = document.createElement('div');
-                    popup.classList.add('popup');
-                    popup.innerHTML = `
-                        <h2>${zutat.Name}
-                            <img src="ingredientIcons/${zutat.Image}" alt="${zutat.Name}" style="height: 30px; display: inline-block">
-                        </h2>
-                        <div class="numbers">
-                            <div class="number-input" style="width: 100%; height: 45px">
-                                <button class="down" onclick="this.nextElementSibling.value = parseFloat(this.nextElementSibling.value) - ${zutat.Menge}">-</button>
-                                <input class="quantity" min="0" name="quantity" value="${zutat.Menge}" step="any" type="number">
-                                <button class="up" onclick="this.previousElementSibling.value = parseFloat(this.previousElementSibling.value) + ${zutat.Menge}">+</button>
-                            </div>
-                            <input type="text" class="extraCustomTabellenInput" placeholder="Einheit" id="zutatEinheit" value="${zutat.Einheit}" disabled style="text-transform: none">
-                        </div>
-                        <input type="text" class="extraCustomTabellenInput" placeholder="Zusätzliche Infos (optional)" id="zutatAdditionalInfo" value="${zutat.AdditionalInfo}" style="text-transform: none">
-                        <input type="text" class="extraCustomTabellenInput" placeholder="Tabelle (optional)" id="zutatTabelle" list="tables" value="${zutat.Tabelle}" style="text-transform: none">
-                        <button class="btn green" id="addZutatButton">Aktualisieren</button>
-                        <button class="btn red" id="deleteZutatButton">Löschen</button>
-                    `;
-                    background.appendChild(popup);
-
-                    document.querySelector('#addZutatButton').onclick = function() {
-                        zutatenListe[index].Menge = document.querySelector('.quantity').value;
-                        zutatenListe[index].AdditionalInfo = document.querySelector('#zutatAdditionalInfo').value;
-                        zutatenListe[index].Tabelle = document.querySelector('#zutatTabelle').value;
-                        background.remove();
-                        updateZutatenListe();
-                    };
-
-                    document.querySelector('#deleteZutatButton').onclick = function() {
-                        if (confirm('Möchtest du ' + zutatenListe[index].Name + ' wirklich löschen?')) {
-                            deleteZutatFromList(index);
-                            background.remove();
-                        }
-                    };
-
-                    document.body.appendChild(background);
-                }
-
-                // confirm that the user wants to leave the page
-                window.onbeforeunload = function(e) {
-                    e.returnValue = 'Möchtest du die Seite wirklich verlassen?';
-                    return 'Möchtest du die Seite wirklich verlassen?';
-                };
-
-            </script>
         </div>
     </div>
 </body>
-<script src="script.js"></script>
 </html>
 

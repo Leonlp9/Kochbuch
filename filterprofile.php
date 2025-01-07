@@ -65,6 +65,8 @@ if (isset($_POST['type'])) {
 	<!-- jQuery UI Touch Punch -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="script.js"></script>
 
 	<link rel="stylesheet" href="style.css">
 
@@ -186,7 +188,7 @@ if (isset($_POST['type'])) {
     </style>
 </head>
 <body>
-<div class="nav-grid">
+<div class="nav-grid-content">
 	<?php require_once 'shared/navbar.php'; ?>
 	<div class="container">
 
@@ -409,5 +411,4 @@ if (isset($_POST['type'])) {
 	</div>
 </div>
 </body>
-<script src="script.js"></script>
 </html>
