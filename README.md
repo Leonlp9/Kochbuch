@@ -43,6 +43,7 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     sudo apt update
     sudo apt install apache2 php mysql-server
     ```
+   phpmyadmin eventuell
 
 3. **Datenbank konfigurieren**:
     - `config.ini`-Datei erstellen:
