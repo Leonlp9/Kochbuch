@@ -31,8 +31,11 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     ```
 
 2. **Abhängigkeiten installieren**:
-    - PHP installieren
-    - Datenbank (z.B. MySQL) einrichten
+    - Apache2, PHP und MySQL installieren:
+        ```bash
+        sudo apt update
+        sudo apt install apache2 php mysql-server
+        ```
 
 3. **Datenbank konfigurieren**:
     - `config.ini`-Datei erstellen und die Datenbankinformationen eintragen:
@@ -43,10 +46,7 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
       base_url = http://localhost/Kochbuch/
       ```
 
-4. **Datenbanktabellen erstellen**:
-    - SQL-Skripte ausführen, um die erforderlichen Tabellen zu erstellen (siehe [Datenbankstruktur](#datenbankstruktur)).
-
-5. **Eventuell erforderliche Konfigurationen**:
+4. **Eventuell erforderliche Konfigurationen**:
     - [Apache2-Module](#required-apache2-modules) aktivieren
     - [Apache2-Konfiguration](#apache2-configuration) anpassen
     - [Git-Konfiguration](#git-configuration) anpassen
