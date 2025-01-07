@@ -1,2 +1,4 @@
 uploads/
 ingredientIcons/
+
+sudo git config --system --add safe.directory /var/www/home/Data-PullShow-Server/test/Kochbuch
