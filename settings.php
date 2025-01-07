@@ -147,7 +147,9 @@ global $pdo;
 
             <div>
                 <h2>GitHub Version</h2>
-                <div id="githubVersion"></div>
+                <a href="github.php">
+                    <button class="btn blue">GitHub Version</button>
+                </a>
             </div>
 
             <script>
@@ -170,30 +172,6 @@ global $pdo;
                         }
                     });
                 }
-
-                async function getLastGitHubCommit() {
-                    try {
-                        const response = await fetch('https://api.github.com/repos/Leonlp9/Kochbuch/commits');
-                        const data = await response.json();
-                        return data[0].commit; // Dies gibt den Commit-Titel zurück
-                    } catch (error) {
-                        console.error('Fehler beim Abrufen des letzten Commit-Titels:', error);
-                        return null; // Im Fehlerfall null zurückgeben oder entsprechend anpassen
-                    }
-                }
-
-                function loadGitHubVersion() {
-                    getLastGitHubCommit().then(data => {
-                        $('#githubVersion').html(`<p><em>Letzter Commit:</em> ${data.message}</p>`);
-                    });
-                }
-
-                loadGitHubVersion();
-
-                function getLocalVersion() {
-                    return fetch('version.txt').then(response => response.text());
-                }
-
             </script>
         </div>
 	</div>

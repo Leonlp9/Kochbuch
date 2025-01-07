@@ -27,6 +27,10 @@ RewriteRule ^settings/?$ settings.php [L]
 # Umschreiben von "localhost/cart/" auf "localhost/cart.php"
 RewriteRule ^cart/?$ cart.php [L]
 
+# Umschreiben von "localhost/github/" auf "localhost/github.php"
+RewriteRule ^github/?$ github.php [L]
+
+
 <FilesMatch "\.(htaccess|htpasswd|ini|phps|fla|psd|log|sh)$">
     Order Allow,Deny
     Deny from all
