@@ -102,11 +102,10 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert.
 ## Konfigurationen
 
 ### Erforderliche Apache2-Module
-- Aktivieren Sie das `rewrite`-Modul und die `gd2`-Erweiterung:
+- Aktivieren Sie die `gd2`-Erweiterung:
     ```bash
-    sudo a2enmod rewrite
-    sudo systemctl restart apache2
     sudo nano /etc/php/7.4/apache2/php.ini
+    sudo systemctl restart apache2
     ```
     Entfernen Sie das `;` vor `;extension=gd2`.
 
