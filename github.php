@@ -11,6 +11,7 @@ $exclude = [
 
 // Funktion, um Git-Befehl auszuführen
 function executeGitCommand($command, &$output = null, &$returnVar = null) {
+    $command .= ' 2>&1'; // Fehlerausgabe (stderr) mit Standardausgabe (stdout) zusammenführen
     exec($command, $output, $returnVar);
     return $returnVar === 0;
 }
@@ -46,11 +47,11 @@ function getRepositoryInfo() {
 // Prüfen, ob Updates vorhanden sind und Commit-Nachrichten anzeigen
 function checkForUpdates() {
 
-    if (!executeGitCommand('git fetch', $output)) {
-        return "Fehler beim Prüfen auf Updates: Git fetch fehlgeschlagen.";
+    if (!executeGitCommand('git fetch', $output, $returnVar)) {
+        // Fehlerdetails in der Statusmeldung zurückgeben
+        return "Fehler beim Prüfen auf Updates: " . implode('<br>', $output);
     }
 
-    // Holen der Commit-Meldungen für neue Commits
     if (executeGitCommand('git log HEAD..origin/master --oneline', $output)) {
         if (empty($output)) {
             return "Ihr Repository ist auf dem neuesten Stand.";
