@@ -46,6 +46,12 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 4. **Datenbanktabellen erstellen**:
     - SQL-Skripte ausführen, um die erforderlichen Tabellen zu erstellen (siehe [Datenbankstruktur](#datenbankstruktur)).
 
+5. **Eventuell erforderliche Konfigurationen**:
+    - [Apache2-Module](#required-apache2-modules) aktivieren
+    - [Apache2-Konfiguration](#apache2-configuration) anpassen
+    - [Git-Konfiguration](#git-configuration) anpassen
+    - [Berechtigungen](#permissions) setzen
+
 ## API-Endpunkte
 <details>
   <summary>Klicken, um die API-Endpunkte anzuzeigen</summary>
