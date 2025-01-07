@@ -189,6 +189,8 @@ $repoInfo = getRepositoryInfo();
     <div class="container">
         <h1>GitHub</h1>
 
+        Test
+
         <h2 class="repo-name"><a href="<?php echo htmlspecialchars($repoInfo['url']); ?>" target="_blank">
                 <?php echo htmlspecialchars($repoInfo['name']); ?></a></h2>
         <p class="status">Status: <?php echo $status; ?></p>
