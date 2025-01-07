@@ -1,20 +1,25 @@
 # Kochbuch
 
 ## Inhaltsverzeichnis
-- [Über das Projekt](#über-das-projekt)
-- [Technologien](#technologien)
-- [Installation](#installation)
-- [API-Endpunkte](#api-endpunkte)
-- [Stilrichtlinien](#stilrichtlinien)
-- [Autoren](#autoren)
-- [Lizenz](#lizenz)
-- [Required Apache2 Modules](#required-apache2-modules)
-- [Apache2 Configuration](#apache2-configuration)
-- [Git Configuration](#git-configuration)
-- [Permissions](#permissions)
+1. [Über das Projekt](#über-das-projekt)
+2. [Technologien](#technologien)
+3. [Installation](#installation)
+4. [API-Endpunkte](#api-endpunkte)
+5. [Stilrichtlinien](#stilrichtlinien)
+6. [Autoren](#autoren)
+7. [Lizenz](#lizenz)
+8. [Konfigurationen](#konfigurationen)
+   - [Erforderliche Apache2-Module](#erforderliche-apache2-module)
+   - [Apache2-Konfiguration](#apache2-konfiguration)
+   - [Git-Konfiguration](#git-konfiguration)
+   - [Berechtigungen](#berechtigungen)
+
+---
 
 ## Über das Projekt
 Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsuchen, zu speichern und zu teilen. Die Anwendung bietet eine benutzerfreundliche Oberfläche und verschiedene Kategorien, um Rezepte einfach zu finden.
+
+---
 
 ## Technologien
 - **PHP**: Backend-Logik und Datenbankinteraktionen
@@ -22,6 +27,8 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 - **jQuery**: AJAX-Anfragen und DOM-Manipulation
 - **QuillJS**: Rich-Text-Editor für Rezeptbeschreibungen
 - **HTML/CSS**: Struktur und Styling der Anwendung
+
+---
 
 ## Installation
 1. **Repository klonen**:
@@ -32,195 +39,100 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     ```
 
 2. **Abhängigkeiten installieren**:
-    - Apache2, PHP und MySQL installieren:
-        ```bash
-        sudo apt update
-        sudo apt install apache2 php mysql-server
-        ```
+    ```bash
+    sudo apt update
+    sudo apt install apache2 php mysql-server
+    ```
 
 3. **Datenbank konfigurieren**:
-    - `config.ini`-Datei erstellen und die Datenbankinformationen eintragen:
-        ```ini
+    - `config.ini`-Datei erstellen:
+      ```ini
       [database]
       username = root
       password =
       base_url = http://localhost/Kochbuch/
       ```
 
-4. **Eventuell erforderliche Konfigurationen**:
-    - [Apache2-Module](#required-apache2-modules) aktivieren
-    - [Apache2-Konfiguration](#apache2-configuration) anpassen
-    - [Git-Konfiguration](#git-configuration) anpassen
-    - [Berechtigungen](#permissions) setzen
+4. **Erforderliche Konfigurationen**:
+    - [Erforderliche Apache2-Module](#erforderliche-apache2-module) aktivieren
+    - [Apache2-Konfiguration](#apache2-konfiguration) anpassen
+    - [Git-Konfiguration](#git-konfiguration) einrichten
+    - [Berechtigungen](#berechtigungen) setzen
+
+---
 
 ## API-Endpunkte
-<details>
-  <summary>Klicken, um die API-Endpunkte anzuzeigen</summary>
+| **Endpunkt**                   | **Beschreibung**                     | **Parameter**                                                                                   |
+|--------------------------------|-------------------------------------|-------------------------------------------------------------------------------------------------|
+| `GET /api.php?task=getImages`  | Gibt alle Bilder eines Rezepts zurück | `rezept_id` (erforderlich)                                                                      |
+| `GET /api.php?task=deleteImage`| Löscht ein Bild eines Rezepts       | `rezept_id`, `image` (erforderlich)                                                            |
+| `GET /api.php?task=deleteRezept`| Löscht ein Rezept                   | `id` (erforderlich)                                                                             |
+| `GET /api.php?task=getZutaten` | Gibt Zutaten zurück                 | `name`, `limit`, `id` (optional)                                                               |
+| `GET /api.php?task=getRezept`  | Gibt ein Rezept zurück              | `id` (erforderlich), `zutaten` (optional)                                                      |
+| `GET /api.php?task=addEvaluation` | Fügt eine Bewertung hinzu         | `rezept`, `rating`, `name`, `text` (alle erforderlich)                                         |
+| `GET /api.php?task=editEvaluation`| Bearbeitet eine Bewertung         | `rezept`, `rating`, `name`, `text` (alle erforderlich)                                         |
+| `GET /api.php?task=deleteEvaluation` | Löscht eine Bewertung         | `id` (erforderlich)                                                                             |
+| `GET /api.php?task=search`     | Sucht nach Rezepten                 | `search` (erforderlich), `order`, `zeit`, `kategorie`, `random`, `neueste` (optional)           |
+| `GET /api.php?task=getKategorien` | Gibt alle Kategorien zurück       | `includeCount` (optional)                                                                      |
 
-  - **`api.php`**:
-    - **GET** `/api.php?task=getImages`:
-        - Gibt alle Bilder eines Rezepts zurück
-        - **Parameter**:
-            - `rezept_id` (erforderlich): ID des Rezepts
-    - **GET** `/api.php?task=deleteImage`:
-        - Löscht ein Bild eines Rezepts
-        - **Parameter**:
-            - `rezept_id` (erforderlich): ID des Rezepts
-            - `image` (erforderlich): Name des Bildes
-    - **GET** `/api.php?task=deleteRezept`:
-        - Löscht ein Rezept
-        - **Parameter**:
-            - `id` (erforderlich): ID des Rezepts
-    - **GET** `/api.php?task=getZutaten`:
-        - Gibt Zutaten zurück
-        - **Parameter**:
-            - `name` (optional): Name der Zutat
-            - `limit` (optional): Limit der Zutaten
-            - `id` (optional): ID der Zutat
-    - **GET** `/api.php?task=getRezept`:
-        - Gibt ein Rezept zurück
-        - **Parameter**:
-            - `id` (erforderlich): ID des Rezepts
-            - `zutaten` (optional): Zutaten des Rezepts
-    - **GET** `/api.php?task=addEvaluation`:
-        - Fügt eine Bewertung hinzu
-        - **Parameter**:
-            - `rezept` (erforderlich): ID des Rezepts
-            - `rating` (erforderlich): Bewertung
-            - `name` (erforderlich): Name des Bewerters
-            - `text` (erforderlich): Text der Bewertung
-    - **GET** `/api.php?task=editEvaluation`:
-        - Bearbeitet eine Bewertung
-        - **Parameter**:
-            - `rezept` (erforderlich): ID des Rezepts
-            - `rating` (erforderlich): Bewertung
-            - `name` (erforderlich): Name des Bewerters
-            - `text` (erforderlich): Text der Bewertung
-    - **GET** `/api.php?task=deleteEvaluation`:
-        - Löscht eine Bewertung
-        - **Parameter**:
-            - `id` (erforderlich): ID der Bewertung
-    - **GET** `/api.php?task=search`:
-        - Sucht nach Rezepten
-        - **Parameter**:
-            - `search` (erforderlich): Suchbegriff
-            - `order` (optional): Sortierung
-            - `zeit` (optional): Zeit
-            - `kategorie` (optional): Kategorie
-            - `random` (optional): Zufällige Rezepte
-            - `neueste` (optional): Neueste Rezepte
-    - **GET** `/api.php?task=getKategorien`:
-        - Gibt alle Kategorien zurück
-        - **Parameter**:
-            - `includeCount` (optional): Anzahl der Rezepte in jeder Kategorie
-    - **GET** `/api.php?task=getFilterprofile`:
-        - Gibt alle Filterprofile zurück
-    - **GET** `/api.php?task=getAnmerkungen`:
-        - Gibt alle Anmerkungen eines Rezepts zurück
-        - **Parameter**:
-            - `rezept` (erforderlich): ID des Rezepts
-    - **GET** `/api.php?task=addZutat`:
-        - Fügt eine Zutat hinzu
-        - **Parameter**:
-            - `name` (erforderlich): Name der Zutat
-            - `unit` (erforderlich): Einheit der Zutat
-    - **GET** `/api.php?task=anmerkung`:
-        - Fügt eine Anmerkung zu einem Rezept hinzu
-        - **Parameter**:
-            - `rezept` (erforderlich): ID des Rezepts
-            - `text` (erforderlich): Text der Anmerkung
-    - **GET** `/api.php?task=getKalender`:
-        - Gibt alle Kalendereinträge zurück
-        - **Parameter**:
-            - `showPast` (optional): Vergangene Einträge anzeigen
-    - **GET** `/api.php?task=addKalender`:
-        - Fügt einen Eintrag zum Kalender hinzu
-        - **Parameter**:
-            - `date` (erforderlich): Datum des Eintrags
-            - `rezept` (optional): ID des Rezepts
-            - `info` (erforderlich): Info des Eintrags
-    - **GET** `/api.php?task=deleteKalender`:
-        - Löscht einen Eintrag aus dem Kalender
-        - **Parameter**:
-            - `id` (erforderlich): ID des Eintrags
-    - **GET** `/api.php?task=updateKalender`:
-        - Aktualisiert einen Kalendereintrag
-        - **Parameter**:
-            - `id` (erforderlich): ID des Eintrags
-            - `text` (erforderlich): Text des Eintrags
-    - **GET** `/api.php?task=getEinkaufsliste`:
-        - Gibt die Einkaufsliste zurück
-    - **POST** `/api.php?task=addEinkaufsliste`:
-        - Fügt ein Element zur Einkaufsliste hinzu
-        - **Parameter**:
-            - `zutat` (erforderlich): ID der Zutat
-            - `menge` (erforderlich): Menge der Zutat
-            - `einheit` (erforderlich): Einheit der Zutat
-    - **POST** `/api.php?task=deleteEinkaufsliste`:
-        - Löscht ein Element von der Einkaufsliste
-        - **Parameter**:
-            - `id` (erforderlich): ID des Elements
-    - **GET** `/api.php?task=export_db`:
-        - Exportiert die Datenbank
-    - **POST** `/api.php?task=addRezept`:
-        - Fügt ein Rezept hinzu
-        - **Parameter**:
-            - `name` (erforderlich): Name des Rezepts
-            - `kategorie` (erforderlich): Kategorie des Rezepts
-            - `dauer` (erforderlich): Dauer des Rezepts
-            - `portionen` (erforderlich): Portionen des Rezepts
-            - `anleitung` (erforderlich): Anleitung des Rezepts
-            - `zutaten` (erforderlich): Zutaten des Rezepts
-            - `extraCustomInfos` (erforderlich): Zusätzliche Informationen
-            - `bilder` (erforderlich): Bilder des Rezepts
+**Weitere Endpunkte** können im vollständigen Dokument eingesehen werden.
 
-</details>
+---
 
 ## Stilrichtlinien
 - **CSS**:
-    - Verwenden von flexbox für Layouts
-    - Responsive Design mit Media Queries
+  - Verwenden von flexbox für Layouts
+  - Responsive Design mit Media Queries
 - **JavaScript**:
-    - jQuery für DOM-Manipulation und AJAX-Anfragen
-    - Funktionen klar benennen und dokumentieren
+  - jQuery für DOM-Manipulation und AJAX-Anfragen
+  - Funktionen klar benennen und dokumentieren
+
+---
 
 ## Autoren
 - **Leonlp9**: Hauptentwickler
 
+---
+
 ## Lizenz
 Dieses Projekt ist unter der MIT-Lizenz lizenziert.
 
+---
 
-## Required Apache2 Modules:
-To enable the `gd2` extension in `php.ini`, open the file with:
-```bash
-sudo nano /etc/php/7.4/apache2/php.ini
-```
-Find the line `;extension=gd2`, remove the `;`, and restart Apache2:
-```bash
-sudo systemctl restart apache2
-```
+## Konfigurationen
 
-## Apache2 Configuration:
-Enable the `rewrite` module and restart Apache2:
-```bash
-sudo a2enmod rewrite
-sudo systemctl restart apache2
-```
+### Erforderliche Apache2-Module
+- Aktivieren Sie das `rewrite`-Modul und die `gd2`-Erweiterung:
+    ```bash
+    sudo a2enmod rewrite
+    sudo systemctl restart apache2
+    sudo nano /etc/php/7.4/apache2/php.ini
+    ```
+    Entfernen Sie das `;` vor `;extension=gd2`.
 
-## Git Configuration:
-Add the repository to the list of safe directories:
-```bash
-sudo git config --system --add safe.directory /var/www/home/Kochbuch
-```
-Disable file mode changes:
-```bash
-git config --global core.filemode false
-```
+---
 
-## Permissions:
-Set the correct permissions and ownership for the project directory:
-```bash
-sudo chmod -R 775 /var/www/home/Kochbuch/
-sudo chown -R www-data:www-data /var/www/home/Kochbuch/
-```
+### Apache2-Konfiguration
+- Aktivieren Sie das `rewrite`-Modul:
+    ```bash
+    sudo a2enmod rewrite
+    sudo systemctl restart apache2
+    ```
+
+---
+
+### Git-Konfiguration
+- Fügen Sie das Repository zu sicheren Verzeichnissen hinzu:
+    ```bash
+    sudo git config --system --add safe.directory /var/www/home/Kochbuch
+    git config --global core.filemode false
+    ```
+
+---
+
+### Berechtigungen
+- Setzen Sie die Berechtigungen und Eigentümer:
+    ```bash
+    sudo chmod -R 775 /var/www/home/Kochbuch/
+    sudo chown -R www-data:www-data /var/www/home/Kochbuch/
+    ```
