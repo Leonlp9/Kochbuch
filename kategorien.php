@@ -78,6 +78,17 @@ global $pdo;
             cursor: pointer;
             display: inline-block;
         }
+
+        .drag {
+            cursor: move;
+            display: inline-block;
+            margin-right: 5px;
+            width: 100%;
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -100,17 +111,24 @@ global $pdo;
 
                 data.forEach(function (kategorie) {
                     var kategorieDiv = $('<div class="kategorie" data-id="' + kategorie.ID + '" style="background-color: ' + kategorie.ColorHex + '"></div>');
-                    kategorieDiv.html(kategorie.Name);
+
+                    var drag = $('<div class="drag"><i class="fas fa-arrows-alt"></i></div>');
+                    kategorieDiv.append(drag);
+
+                    var innerDiv = $('<div></div>');
+                    innerDiv.html(kategorie.Name);
+                    kategorieDiv.append(innerDiv);
 
                     var count = $('<span class="count">' + kategorie.usage_count + '</span>');
-                    kategorieDiv.append(count);
+                    innerDiv.append(count);
 
                     var subKategorienDiv = $('<div class="subKategorien"></div>');
-                    kategorieDiv.append(subKategorienDiv);
+                    innerDiv.append(subKategorienDiv);
 
                     new Sortable(subKategorienDiv[0], {
                         group: 'shared',
                         animation: 200,
+                        handle: '.drag',
                         onEnd: function (evt) {
 
                             if (evt.newIndex === evt.oldIndex) {
@@ -130,12 +148,45 @@ global $pdo;
                     });
 
                     kategorienDiv.append(kategorieDiv);
+
+                    kategorieDiv.click(function () {
+                        var formBuilder = new FormBuilder("Unterkategorie hinzufügen", (data) => {
+                            fetch('api.php?task=editKategorie&id=' + kategorie.ID + '&name=' + data.Name + '&color=' + encodeURIComponent(data.Farbe))
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log(data);
+                                    location.reload();
+                                });
+                        }, () => {
+                            console.log('Abbrechen gedrückt');
+                        });
+
+                        formBuilder.addInputField("Name", "Name der Kategorie", kategorie.Name);
+                        formBuilder.addColorField("Farbe", kategorie.ColorHex);
+
+                        // Nur löschen, wenn usage_count 0 ist
+                        if (kategorie.usage_count === 0) {
+                            formBuilder.addButton("Kategorie löschen", () => {
+                                fetch('api.php?task=deleteKategorie&id=' + kategorie.ID)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data);
+                                        location.reload();
+                                    });
+                            });
+                        }else {
+                            formBuilder.addHeader("Kategorie kann nicht gelöscht werden, da sie in " + kategorie.usage_count + " Rezepten verwendet wird.");
+                        }
+
+                        formBuilder.renderForm();
+                    });
                 });
             });
 
             new Sortable($('.kategorien')[0], {
                 group: 'shared',
                 animation: 200,
+                handle: '.drag',
                 sort: false, // Verhindert das Sortieren der Hauptkategorien
                 onEnd: function (evt) {
 
@@ -157,7 +208,12 @@ global $pdo;
 
             $('#addKategorie').click(function () {
                 let kategorieBuilder = new FormBuilder("Neue Kategorie erstellen", (data) => {
-                    console.log('Formular gesendet:', data);
+                    fetch('api.php?task=addKategorie&name=' + data.Name + '&color=' + encodeURIComponent(data.Farbe))
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data);
+                            location.reload();
+                        });
                 }, () => {
                     console.log('Abbrechen gedrückt');
                 });

@@ -901,6 +901,53 @@ switch ($task) {
                 die();
             }
     }
+    case "addKategorie":
+        if (isset($_GET['name']) && isset($_GET['color'])) {
+            $name = $_GET['name'];
+            $color = $_GET['color'];
+
+            $sql = $pdo->prepare('INSERT INTO kategorien (Name, ColorHex) VALUES (:name, :color)');
+            $sql->bindValue(':name', $name);
+            $sql->bindValue(':color', $color);
+            $sql->execute();
+
+            $id = $pdo->lastInsertId(); // Get the ID of the newly inserted category
+
+            echo json_encode(['success' => true, 'ID' => $id]); // Include the ID in the response
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+        }
+        die();
+    case "editKategorie":
+        if (isset($_GET['id']) && isset($_GET['name']) && isset($_GET['color'])) {
+            $id = $_GET['id'];
+            $name = $_GET['name'];
+            $color = $_GET['color'];
+
+            $sql = $pdo->prepare('UPDATE kategorien SET Name = :name, ColorHex = :color WHERE ID = :id');
+            $sql->bindValue(':id', $id);
+            $sql->bindValue(':name', $name);
+            $sql->bindValue(':color', $color);
+            $sql->execute();
+
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+        }
+        die();
+    case "deleteKategorie":
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+            $sql = $pdo->prepare('DELETE FROM kategorien WHERE ID = :id');
+            $sql->bindValue(':id', $id);
+            $sql->execute();
+
+            echo json_encode(['success' => true]);
+            die();
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided']);
+            die();
+        }
 
     default:
         echo json_encode(

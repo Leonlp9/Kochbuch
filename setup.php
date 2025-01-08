@@ -4,24 +4,26 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 $config = [
+    'database' => 'kochbuch',
     'username' => 'root',
     'password' => '',
     'base_url' => 'http://localhost/Kochbuch/',
 ];
 
-if (!file_exists('config.ini')) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $config['username'] = $_POST['username'];
-        $config['password'] = $_POST['password'];
-        $config['base_url'] = $_POST['base_url'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $config['database'] = $_POST['database'];
+    $config['username'] = $_POST['username'];
+    $config['password'] = $_POST['password'];
+    $config['base_url'] = $_POST['base_url'];
 
-        $configString = '';
-        foreach ($config as $key => $value) {
-            $configString .= "$key = \"$value\"\n";
-        }
-
-        file_put_contents('config.ini', $configString);
+    $configString = '';
+    foreach ($config as $key => $value) {
+        $configString .= "$key = \"$value\"\n";
     }
+
+    file_put_contents('config.ini', $configString);
+
+    header('Location: ' . $config['base_url']);
 }
 
 ?>
@@ -87,6 +89,8 @@ if (!file_exists('config.ini')) {
 <body>
 <h1>Setup</h1>
 <form action="setup.php" method="post">
+    <label for="database">Database Name</label>
+    <input type="text" name="database" id="database" required value="<?php echo $config['database']; ?>">
     <label for="username">Database Username</label>
     <input type="text" name="username" id="username" required value="<?php echo $config['username']; ?>">
     <label for="password">Database Password</label>

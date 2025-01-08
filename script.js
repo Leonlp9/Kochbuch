@@ -183,7 +183,9 @@ class FormBuilder {
 
 
             if (field.type === 'button') {
-            }else if (field.type === 'checkbox') {
+            } else if (field.type === 'color') {
+                formData[field.id] = input.value;
+            } else if (field.type === 'checkbox') {
                 formData[field.id] = input.checked;
             } else if (field.type === 'file') {
                 formData[field.id] = input.files[0];
