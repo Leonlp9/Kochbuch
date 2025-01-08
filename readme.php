@@ -251,14 +251,11 @@
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = parsedContent;
 
-                tempDiv.querySelectorAll('h1').forEach(h1 => {
-                    const id = generateIdFromText(h1.textContent);
-                    h1.setAttribute('id', id);
-                });
-
-                tempDiv.querySelectorAll('h2').forEach(h2 => {
-                    const id = generateIdFromText(h2.textContent);
-                    h2.setAttribute('id', id);
+                ['h1', 'h2', 'h3', 'h4'].forEach(tag => {
+                    tempDiv.querySelectorAll(tag).forEach(element => {
+                        const id = generateIdFromText(element.textContent);
+                        element.setAttribute('id', id);
+                    });
                 });
 
                 $('#readme').html(tempDiv.innerHTML);
