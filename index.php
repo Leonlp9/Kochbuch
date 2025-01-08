@@ -327,6 +327,10 @@ global $pdo;
             <h2 class="divider">Heute steht an</h2>
             <div id="today"></div>
 
+            <a href="calendar" class="mobile">
+                <button class="btn blue" style="margin-top: 20px; width: 100%">Kalender</button>
+            </a>
+
             <script>
                 fetch("api?task=getKalender&date=" + new Date().toISOString().split("T")[0])
                     .then(response => response.json())
