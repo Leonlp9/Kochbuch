@@ -347,6 +347,7 @@ switch ($task) {
         $kategorie = (isset($_GET['kategorie'])) ? $_GET['kategorie'] : "*";
         $random = (isset($_GET['random'])) ? $_GET['random'] : false;
         $neueste = (isset($_GET['neueste'])) ? $_GET['neueste'] : false;
+        $last_visit = (isset($_GET['last_visit'])) ? $_GET['last_visit'] : false;
 
         $join = "LEFT JOIN bilder ON rezepte.ID = bilder.Rezept_ID";
         $where = "WHERE rezepte.Name LIKE '%$search%'";
@@ -383,6 +384,10 @@ switch ($task) {
 
         if ($neueste) {
             $order = "ORDER BY rezepte.ID DESC LIMIT 8";
+        }
+
+        if ($last_visit) {
+            $order = "ORDER BY rezepte.last_visit DESC LIMIT 8";
         }
 
         $rezepte = $pdo->query("

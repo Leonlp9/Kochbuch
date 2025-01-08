@@ -119,6 +119,13 @@ global $pdo;
             margin-top: 20px;
         }
 
+        #lastOpened {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
         #today {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -202,6 +209,10 @@ global $pdo;
 
         @media (max-width: 768px) {
             #lastAdded {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #lastOpened {
                 grid-template-columns: 1fr 1fr;
             }
 
@@ -440,6 +451,29 @@ global $pdo;
                     });
             </script>
 
+            <br>
+
+            <h2>Zuletzt aufgerufen</h2>
+            <div id="lastOpened"></div>
+
+            <script>
+                fetch("api?task=search&last_visit=true&search=")
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(recipe => {
+                            let recipeDiv = $(`<div class="recipe" data-id="${recipe.rezepte_ID}"></div>`);
+                            recipeDiv.html(`
+                                <img src="${recipe.Image}" alt="${recipe.Name}">
+                                <h3>${recipe.Name}</h3>
+                            `);
+                            recipeDiv.click(() => {
+                                window.location.href = `rezept?id=${recipe.rezepte_ID}`;
+                            });
+                            $("#lastOpened").append(recipeDiv);
+                        });
+                    });
+
+            </script>
         </div>
     </div>
 </body>
