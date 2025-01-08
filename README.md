@@ -5,14 +5,13 @@
 2. [Technologien](#technologien)
 3. [Installation](#installation)
 4. [API-Endpunkte](#api-endpunkte)
-5. [Stilrichtlinien](#stilrichtlinien)
-6. [Autoren](#autoren)
-7. [Lizenz](#lizenz)
-8. [Konfigurationen](#konfigurationen)
+5. [Konfigurationen](#konfigurationen)
    - [Erforderliche Apache2-Module](#erforderliche-apache2-module)
    - [Apache2-Konfiguration](#apache2-konfiguration)
    - [Git-Konfiguration](#git-konfiguration)
    - [Berechtigungen](#berechtigungen)
+6. [Autoren](#autoren)
+7. [Lizenz](#lizenz)
 
 ---
 
@@ -55,20 +54,14 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     cd kochbuch
     ```
 
-3. **Datenbank konfigurieren**:
-    - `config.ini`-Datei erstellen:
-      ```ini
-      [database]
-      username = root
-      password =
-      base_url = http://localhost/Kochbuch/
-      ```
-
-4. **Erforderliche Konfigurationen**:
+3. **Erforderliche Konfigurationen**:
     - [Erforderliche Apache2-Module](#erforderliche-apache2-module) aktivieren
     - [Apache2-Konfiguration](#apache2-konfiguration) anpassen
     - [Git-Konfiguration](#git-konfiguration) einrichten
     - [Berechtigungen](#berechtigungen) setzen
+    - 
+4. **Datenbank konfigurieren**:
+    - `setup.php` im Browser öffnen und die Datenbank konfigurieren
 
 ---
 
@@ -87,16 +80,6 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 | `GET /api.php?task=getKategorien` | Gibt alle Kategorien zurück       | `includeCount` (optional)                                                                      |
 
 **Weitere Endpunkte** können im vollständigen Dokument eingesehen werden.
-
----
-
-## Autoren
-- **Leonlp9**: Hauptentwickler
-
----
-
-## Lizenz
-Dieses Projekt ist unter der MIT-Lizenz lizenziert.
 
 ---
 
@@ -136,3 +119,13 @@ Dieses Projekt ist unter der MIT-Lizenz lizenziert.
     sudo chmod -R 775 /var/www/home/Kochbuch/
     sudo chown -R www-data:www-data /var/www/home/Kochbuch/
     ```
+
+---
+
+## Autoren
+- **Leonlp9**: Hauptentwickler
+
+---
+
+## Lizenz
+Dieses Projekt ist unter der MIT-Lizenz lizenziert.
