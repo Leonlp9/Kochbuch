@@ -135,6 +135,9 @@ global $pdo;
                         async: false
                     }).responseText);
 
+                    //reverse data
+                    data = data.reverse();
+
                     let lastDate = null;
                     const calendar = document.getElementById('calendar');
                     calendar.innerHTML = '';
