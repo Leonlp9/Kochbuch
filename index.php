@@ -258,6 +258,17 @@ global $pdo;
             background-color: var(--nonSelected);
         }
 
+        #shake {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--blue);
+            color: var(--color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
     </style>
 
 </head>
