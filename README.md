@@ -26,7 +26,14 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 - **JavaScript**: Frontend-Interaktivität
 - **jQuery**: AJAX-Anfragen und DOM-Manipulation
 - **QuillJS**: Rich-Text-Editor für Rezeptbeschreibungen
+- **Sortable**: Drag-and-Drop-Sortierung von Zutaten
+- **Font Awesome**: Symbole und Icons für die Benutzeroberfläche
 - **HTML/CSS**: Struktur und Styling der Anwendung
+- **MySQL**: Speicherung von Rezepten, Zutaten und Bewertungen
+- **Apache2**: Webserver für die Bereitstellung der Anwendung
+- **Git**: Versionskontrolle und Deployment
+- **Markdown**: Dokumentation und Beschreibung von Rezepten
+- **JSON**: Datenaustausch und API-Endpunkte
 
 ---
 
