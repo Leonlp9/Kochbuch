@@ -90,16 +90,6 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
 
 ---
 
-## Stilrichtlinien
-- **CSS**:
-  - Verwenden von flexbox für Layouts
-  - Responsive Design mit Media Queries
-- **JavaScript**:
-  - jQuery für DOM-Manipulation und AJAX-Anfragen
-  - Funktionen klar benennen und dokumentieren
-
----
-
 ## Autoren
 - **Leonlp9**: Hauptentwickler
 
