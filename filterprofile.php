@@ -71,6 +71,8 @@ if (isset($_POST['type'])) {
             background: var(--nonSelected);
             padding: 10px;
             border-radius: 10px;
+            color: var(--color);
+            text-decoration: none;
         }
 
         .filterprofile .filter img {
@@ -92,10 +94,6 @@ if (isset($_POST['type'])) {
             line-break: anywhere;
             color: var(--color);
             text-decoration: none;
-        }
-
-        .filterprofil {
-
         }
 
         .filterprofil img {
