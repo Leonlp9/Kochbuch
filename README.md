@@ -59,7 +59,7 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     - [Apache2-Konfiguration](#apache2-konfiguration) anpassen
     - [Git-Konfiguration](#git-konfiguration) einrichten
     - [Berechtigungen](#berechtigungen) setzen
-    - 
+
 4. **Datenbank konfigurieren**:
     - `setup.php` im Browser öffnen und die Datenbank konfigurieren
 
