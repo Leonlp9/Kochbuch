@@ -135,7 +135,6 @@ global $pdo;
 
 
         #profiles {
-            margin-bottom: 20px;
             overflow: scroll;
             display: flex;
             gap: 10px;
@@ -178,17 +177,14 @@ global $pdo;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
-            margin-top: 20px;
         }
 
         #katetegorien {
-            margin-bottom: 20px;
             overflow: scroll;
             display: flex;
             gap: 10px;
             border-radius: 10px;
             scrollbar-width: none;
-            margin-top: 20px;
         }
 
         #katetegorien div {
@@ -270,6 +266,11 @@ global $pdo;
             margin-top: 20px;
         }
 
+        .divider {
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+
     </style>
 
 </head>
@@ -329,9 +330,7 @@ global $pdo;
                 }, 5000);
             </script>
 
-            <br>
-
-            <h2>Heute steht an</h2>
+            <h2 class="divider">Heute steht an</h2>
             <div id="today"></div>
 
             <script>
@@ -366,9 +365,7 @@ global $pdo;
                     });
             </script>
 
-            <br>
-
-            <h2>Filterprofile</h2>
+            <h2 class="divider">Filterprofile</h2>
             <div id="profiles" class="horizontalScrollBarJS"></div>
             <script>
                 fetch("api?task=getFilterprofile")
@@ -389,9 +386,7 @@ global $pdo;
                     });
             </script>
 
-            <br>
-
-            <h2>Random</h2>
+            <h2 class="divider">Random</h2>
             <div id="random"></div>
             <button id="shake" class="btn green" onclick="shakeRandomRecipes()">Shake</button>
 
@@ -417,11 +412,7 @@ global $pdo;
                 shakeRandomRecipes();
             </script>
 
-            <br>
-            <br>
-            <br>
-
-            <h2>Kategorien</h2>
+            <h2 class="divider">Kategorien</h2>
             <div id="katetegorien" class="horizontalScrollBarJS"></div>
             <script>
                 fetch("api?task=getKategorien")
@@ -441,9 +432,7 @@ global $pdo;
                     });
             </script>
 
-            <br>
-
-            <h2>Zuletzt hinzugefügt</h2>
+            <h2 class="divider">Zuletzt hinzugefügt</h2>
             <div id="lastAdded"></div>
 
             <script>
@@ -464,9 +453,7 @@ global $pdo;
                     });
             </script>
 
-            <br>
-
-            <h2>Zuletzt aufgerufen</h2>
+            <h2 class="divider">Zuletzt aufgerufen</h2>
             <div id="lastOpened"></div>
 
             <script>
