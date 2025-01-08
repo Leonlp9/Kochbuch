@@ -188,6 +188,7 @@ global $pdo;
             gap: 10px;
             border-radius: 10px;
             scrollbar-width: none;
+            margin-top: 20px;
         }
 
         #katetegorien div {
@@ -416,6 +417,7 @@ global $pdo;
                 shakeRandomRecipes();
             </script>
 
+            <br>
             <br>
             <br>
 
