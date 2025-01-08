@@ -269,6 +269,16 @@ switch ($task) {
             $rezepte[0]['Bilder'] = $bilder;
 
 
+            //current timestamp 1736367121
+            $current_timestamp = time();
+
+            //update last_visit timestamp in rezepte
+            $sql = $pdo->prepare('UPDATE rezepte SET last_visit = :current_timestamp WHERE ID = :id');
+            $sql->bindValue(':current_timestamp', $current_timestamp);
+            $sql->bindValue(':id', $id);
+            $sql->execute();
+
+
             echo json_encode($rezepte);
             die();
         } else {

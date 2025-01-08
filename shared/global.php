@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS `rezepte` (
   `Zeit` int(11) NOT NULL,
   `Zutaten_JSON` text NOT NULL,
   `OptionalInfos` text DEFAULT NULL,
+  `last_visit` bigint(25) DEFAULT NULL,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
