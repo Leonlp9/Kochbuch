@@ -338,13 +338,28 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                 </div>
 
                 <div class="infos">
-                    <div title="Erstellt für <?= $rezept['Portionen'] ?> Portionen">
+                    <div title="Ausgelegt für <?= $rezept['Portionen'] ?> Portionen" id="portionenInfo">
                         <i class="fas fa-users"></i>
                         <span id="portionen">
                             <?= $rezept['Portionen'] ?>
                         </span>
                          Portionen
                     </div>
+
+                    <script>
+                        document.getElementById('portionenInfo').addEventListener('click', () => {
+                            let form = new FormBuilder('Portionen', (formData) => {
+                                document.getElementById('portionenInput').value = formData['Portionen'];
+                                renderZutaten();
+                            }, () => {});
+
+                            form.addHeader('Ausgelegt für <?= $rezept['Portionen'] ?> Portionen');
+
+                            form.addCustomNumberField('Portionen', 1, 100, 1, document.getElementById('portionenInput').value);
+
+                            form.renderForm();
+                        });
+                    </script>
 
                     <div>
                         <i class="fas fa-clock"></i>
