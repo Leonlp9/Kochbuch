@@ -963,6 +963,23 @@ switch ($task) {
             echo json_encode(['error' => 'Not all parameters provided']);
             die();
         }
+    case "addFilterprofile":
+        if (isset($_GET['name'])) {
+            $name = $_GET['name'];
+            $filter = '[]';
+
+            $sql = $pdo->prepare('INSERT INTO filterprofile (Name, Filter) VALUES (:name, :filter)');
+            $sql->bindValue(':name', $name);
+            $sql->bindValue(':filter', $filter);
+            $sql->execute();
+
+            $id = $pdo->lastInsertId(); // Get the ID of the newly inserted filter profile
+
+            echo json_encode(['success' => true, 'ID' => $id]); // Include the ID in the response
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+        }
+        die();
 
     default:
         echo json_encode(

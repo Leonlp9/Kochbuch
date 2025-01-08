@@ -3,17 +3,7 @@ require_once 'shared/global.php';
 global $pdo;
 
 if (isset($_POST['type'])) {
-    if ($_POST['type'] === 'create') {
-        $name = $_POST['name'];
-
-        $sql = "INSERT INTO filterprofile (Name, Filter) VALUES (:name, '')";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':name', $name);
-        $stmt->execute();
-
-        echo 'success';
-        die();
-    }else if ($_POST['type'] === 'update') {
+    if ($_POST['type'] === 'update') {
         $id = $_POST['id'];
         $filter = $_POST['filter'];
 
@@ -100,6 +90,8 @@ if (isset($_POST['type'])) {
             text-transform: none;
             user-select: none;
             line-break: anywhere;
+            color: var(--color);
+            text-decoration: none;
         }
 
         .filterprofil {
@@ -183,6 +175,26 @@ if (isset($_POST['type'])) {
 
         .likebuttons button:last-child:hover {
             background: var(--darkerRed);
+        }
+
+        #search {
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        #show {
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+            margin-bottom: 10px;
         }
 
     </style>
@@ -362,7 +374,7 @@ if (isset($_POST['type'])) {
 
             foreach ($filterprofile as $filter) {
                 echo "<a href='filterprofile.php?id=" . $filter['ID'] . "' class='filter'>";
-                echo "<img src='https://api.dicebear.com/9.x/bottts-neutral/svg?seed=" . $filter['Name'] . "' alt='Profilbild'>";
+                echo "<img src='https://api.dicebear.com/9.x/bottts-neutral/svg?seed=" . $filter['Name'] . "' alt='" . $filter['Name'] . "' class='profileImage'>";
                 echo "<h2>" . $filter['Name'] . "</h2>";
                 echo "</a>";
             }
@@ -371,38 +383,83 @@ if (isset($_POST['type'])) {
 
         <br>
 
-        <div style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
-
-            <input type="text" id="filterName" placeholder="Name" style="text-transform: none;">
-            <button class="btn blue" onclick="createFilterprofile()">Erstellen</button>
+            <div style="display: grid; grid-template-columns: 45px 1fr; gap: 5px;">
+                <img src="https://api.dicebear.com/9.x/adventurer/svg?seed=example" alt="Profilbild" style="border-radius: 5px;" id="profileImage">
+                <select name="styles" id="styles"></select>
+            </div>
 
             <script>
-                function createFilterprofile() {
-                    let name = document.getElementById('filterName').value;
-                    if (name === '') {
-                        alert('Bitte geben Sie einen Namen ein');
-                        return;
-                    }
 
-                    $.ajax({
-                        url: 'filterprofile.php',
-                        type: 'POST',
-                        data: {
-                            type: 'create',
-                            name: name
-                        },
-                        success: function (data) {
-                            if (data === 'success') {
-                                location.reload();
-                            } else {
-                                alert(data);
-                            }
-                        }
+                const styles = [
+                    "adventurer",
+                    "adventurer-neutral",
+                    "avataaars",
+                    "avataaars-neutral",
+                    "big-ears",
+                    "big-ears-neutral",
+                    "big-smile",
+                    "bottts",
+                    "bottts-neutral",
+                    "croodles",
+                    "croodles-neutral",
+                    "dylan",
+                    "fun-emoji",
+                    "glass",
+                    "icons",
+                    "identicon",
+                    "initials",
+                    "lorelei",
+                    "lorelei-neutral",
+                    "micah",
+                    "miniavs",
+                    "notionists",
+                    "notionists-neutral",
+                    "open-peeps",
+                    "personas",
+                    "pixel-art",
+                    "pixel-art-neutral",
+                    "rings",
+                    "shapes",
+                    "thumbs"
+                ]
+
+                const select = document.getElementById('styles');
+                styles.forEach(style => {
+                    const option = document.createElement('option');
+                    option.value = style;
+                    option.innerText = style;
+                    select.appendChild(option);
+                });
+
+                select.addEventListener('change', () => {
+                    document.getElementById('profileImage').src = 'https://api.dicebear.com/9.x/' + select.value + '/svg?seed=' + new Date().getTime();
+
+                    //change image of all filterprofiles
+                    document.querySelectorAll('.profileImage').forEach(image => {
+                        image.src = 'https://api.dicebear.com/9.x/' + select.value + '/svg?seed=' + image.alt;
                     });
-                }
+                });
+
+
             </script>
 
-        </div>
+            <button class="btn green" style="width: 100%; margin-top: 20px" id="addFilterprofile">Filterprofil hinzufügen</button>
+
+            <script>
+                document.getElementById('addFilterprofile').addEventListener('click', () => {
+                    var addFilterprofileForm = new FormBuilder('Filterprofil hinzufügen', (formData) => {
+                        fetch('api.php?task=addFilterprofile&name=' + formData['Name'], {
+                            method: 'GET'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }, () => {
+                    });
+
+                    addFilterprofileForm.addInputField('Name', 'Name', '');
+                    addFilterprofileForm.renderForm()
+                });
+            </script>
 
 		<?php
 		}
