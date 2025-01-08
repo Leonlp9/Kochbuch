@@ -1,4 +1,4 @@
-# Kochbuch test
+# Kochbuch
 
 ## Inhaltsverzeichnis
 1. [Über das Projekt](#über-das-projekt)
