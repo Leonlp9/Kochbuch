@@ -39,6 +39,7 @@ Kochbuch ist eine Webanwendung, die es Benutzern ermöglicht, Rezepte zu durchsu
     sudo apt install php -y
     ```
    https://tutorials-raspberrypi.de/webserver-installation-teil-4-phpmyadmin/
+   https://youtu.be/e7bE2XHEhRQ?si=Z7Q8gXNpiFaiiW5x
 
 2. **Repository klonen**:
     ```bash
