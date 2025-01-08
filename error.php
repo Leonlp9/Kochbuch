@@ -67,6 +67,7 @@ if (isset($_GET['code'])) {
 
         <?php if ($error == 1001) { ?>
             <p>Hilfe zur Installation findest du <a href="readme#installation">hier</a></p>
+            <p>Oder wenn du die config.ini bearbeiten möchtest, klicke <a href="setup.php">hier</a></p>
         <?php } ?>
     </div>
 </div>

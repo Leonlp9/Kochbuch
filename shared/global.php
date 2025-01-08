@@ -131,5 +131,8 @@ CREATE TABLE IF NOT EXISTS `zutaten` (
 
 } else {
     echo "Error: config.ini file is missing or not readable";
+
+    echo "<br><a href='setup.php'>Setup</a>";
+
     die();
 }

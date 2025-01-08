@@ -784,6 +784,9 @@ switch ($task) {
                             // Speichern des Bildes im WebP-Format
                             $fileNameNew = uniqid('', true) . ".webp";
                             $fileDestination = 'uploads/' . $fileNameNew;
+                            if (!is_dir('uploads')) {
+                                mkdir('uploads', 0777, true);
+                            }
                             imagewebp($img, $fileDestination, 45);
                             imagedestroy($img);
 
@@ -875,6 +878,9 @@ switch ($task) {
 
                             // Speichern des Bildes im WebP-Format
                             $fileNameNew = uniqid('', true) . ".webp";
+                            if (!is_dir('uploads')) {
+                                mkdir('uploads', 0777, true);
+                            }
                             $fileDestination = 'uploads/' . $fileNameNew;
                             imagewebp($img, $fileDestination, 45);
                             imagedestroy($img);
