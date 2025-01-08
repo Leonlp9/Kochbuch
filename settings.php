@@ -94,6 +94,7 @@ global $pdo;
                     <option value="spring">Frühling</option>
                     <option value="dracula">Dracula</option>
                     <option value="midnight">Mitternacht</option>
+                    <option value="discord">Discord</option>
                 </select>
                 <script>
 

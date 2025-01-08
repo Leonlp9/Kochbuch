@@ -134,6 +134,25 @@ html[theme="midnight"] {
     --border-radius: 5px;
     --font-family: "Varela Round", sans-serif;
 }
+html[theme="discord"] {
+    --background: #36393f;
+    --secondaryBackground: #2f3136;
+    --color: #ffffff;
+    --darkerColor: #b9bbbe;
+    --selected: #7289da;
+    --selected_highlight: #677bc4;
+    --nonSelected: #202225;
+    --red: #f04747;
+    --darkerRed: #faa61a;
+    --green: #7289da;
+    --darkerGreen: #677bc4;
+    --blue: #7289da;
+    --darkerBlue: #677bc4;
+    --white: #ffffff;
+    --darkerWhite: #f0f0f0;
+    --border-radius: 5px;
+    --font-family: "Varela Round", sans-serif;
+}
 
 * {
     box-sizing: border-box;
