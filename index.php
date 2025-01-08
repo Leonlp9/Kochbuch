@@ -36,6 +36,7 @@ global $pdo;
     <link rel="stylesheet" href="style.css">
 
     <style>
+
         #titleImage {
             width: 100%;
             aspect-ratio: 4 / 3;
@@ -281,13 +282,6 @@ global $pdo;
         ?>
         <div class="container">
 
-<!--            Einstellungen oben rechts-->
-            <a style="position: absolute; top: 10px; right: 10px;" href="settings" class="mobile">
-                <button id="settings">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </a>
-
             <h1>Willkommen im Kochbuch <i class="fas fa-utensils"></i></h1>
 
             <div id="titleImage"></div>
@@ -434,6 +428,9 @@ global $pdo;
 
             <h2 class="divider">Zuletzt hinzugefügt</h2>
             <div id="lastAdded"></div>
+            <a href="new" class="mobile">
+                <button class="btn green" style="margin-top: 20px; width: 100%">Neues Rezept hinzufügen</button>
+            </a>
 
             <script>
                 fetch("api?task=search&neueste=true&search=")
@@ -474,6 +471,12 @@ global $pdo;
                     });
 
             </script>
+
+            <a href="settings" class="mobile">
+                <button class="btn green" style="margin-top: 20px; width: 100%">Einstellungen</button>
+            </a>
+
+
         </div>
     </div>
 </body>
