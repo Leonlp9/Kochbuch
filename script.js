@@ -415,6 +415,12 @@ class FormBuilder {
             form.appendChild(buttonContainer);
         }
 
+        // submit form on enter
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitForm();
+        });
+
         this.background.addEventListener('click', (e) => {
             if (e.target === this.background) {
                 this.background.style.pointerEvents = 'none';
