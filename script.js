@@ -174,6 +174,10 @@ class FormBuilder {
         document.getElementById(id).focus();
     }
 
+    select(menge) {
+        document.getElementById(menge).select();
+    }
+
     submitForm() {
         const formData = {};
         this.fields.forEach((field) => {

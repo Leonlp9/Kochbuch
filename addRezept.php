@@ -522,7 +522,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
                         form.renderForm(false);
 
-                        form.fucus("menge");
+                        form.select("menge");
                     }
 
                     function update() {
@@ -751,6 +751,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                 });
 
                                 form.form.querySelector('input[name=name]').focus();
+                                form.form.querySelector('input[name=name]').select();
 
                             });
                         });
