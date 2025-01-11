@@ -382,6 +382,31 @@ switch ($task) {
             $where .= " AND (" . implode(" OR ", $applianceConditions) . ")";
         }
 
+
+        $blacklistIngredients = (isset($_GET['blacklistIngredients'])) ? $_GET['blacklistIngredients'] : [];
+
+        //JSON_CONTAINS
+        if (count($blacklistIngredients) > 0) {
+            $ingredientConditions = [];
+            foreach ($blacklistIngredients as $ingredient) {
+                $ingredientConditions[] = "NOT JSON_CONTAINS(rezepte.Zutaten_JSON, '[{\"ID\":\"$ingredient\"}]')";
+            }
+            $where .= " AND (" . implode(" AND ", $ingredientConditions) . ")";
+        }
+
+
+        $whitelistIngredients = (isset($_GET['whitelistIngredients'])) ? $_GET['whitelistIngredients'] : [];
+
+        //JSON_CONTAINS
+        if (count($whitelistIngredients) > 0) {
+            $ingredientConditions = [];
+            foreach ($whitelistIngredients as $ingredient) {
+                $ingredientConditions[] = "JSON_CONTAINS(rezepte.Zutaten_JSON, '[{\"ID\":\"$ingredient\"}]')";
+            }
+            $where .= " AND (" . implode(" OR ", $ingredientConditions) . ")";
+        }
+
+
         switch ($zeit) {
             case "0":
                 $where .= " AND rezepte.Zeit <= 15";
