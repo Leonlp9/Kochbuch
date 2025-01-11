@@ -287,7 +287,7 @@ global $pdo;
                                 let result = data[i];
                                 html += `
                                 <a class="rezept" href="rezept?id=${result.rezepte_ID}" style="animation-delay: ${i * 0.01}s">
-                                    <div class="image" style="background-image: url('${result.Image}')">
+                                    <div class="image lazy-load" data-src="${result.Image}">
                                         <div class="overlay">
                                             <div>${result.Zeit}</div>`;
                                                 if (result.Rating != null && result.Rating > 0) {
@@ -310,6 +310,22 @@ global $pdo;
                                 `;
                             }
                             $("#results").html(html);
+
+                            // Lazy load images
+                            const lazyLoadImages = document.querySelectorAll('.lazy-load');
+                            const observer = new IntersectionObserver((entries, observer) => {
+                                entries.forEach(entry => {
+                                    if (entry.isIntersecting) {
+                                        const img = entry.target;
+                                        img.style.backgroundImage = `url('${img.dataset.src}')`;
+                                        observer.unobserve(img);
+                                    }
+                                });
+                            });
+
+                            lazyLoadImages.forEach(img => {
+                                observer.observe(img);
+                            });
                         }
                     });
                 }
