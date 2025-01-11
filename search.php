@@ -240,16 +240,19 @@ global $pdo;
                 <label for="KitchenAppliances">Küchengeräte</label>
                 <select name="KitchenAppliances" id="KitchenAppliances" onchange="search()" style="margin-bottom: 15px; margin-top: 10px" multiple>
                     <option value="*" selected>Ohne Einschränkung</option>
-                    <?php
-                    $kitchenAppliances = $pdo->query("SELECT * FROM kitchenAppliances")->fetchAll();
-                    foreach ($kitchenAppliances as $kitchenAppliance) {
-                        ?>
-                        <option value="<?= $kitchenAppliance['ID'] ?>"><?= $kitchenAppliance['Name'] ?></option>
-                        <?php
-                    }
-                    ?>
-
                 </select>
+                <script>
+                    fetch('api?task=getKitchenAppliances')
+                        .then(response => response.json())
+                        .then(kitchenAppliances => {
+                            let options = '';
+                            kitchenAppliances.forEach(kitchenAppliance => {
+                                options += `<option value="${kitchenAppliance.ID}">${kitchenAppliance.Name} (${kitchenAppliance.recipe_count})</option>`;
+                            });
+                            document.getElementById('KitchenAppliances').innerHTML = options;
+                        })
+                        .catch(error => console.error('Error fetching kitchen appliances:', error));
+                </script>
             </div>
 
             <label class="divider">Suchergebnisse</label>

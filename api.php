@@ -1012,9 +1012,21 @@ switch ($task) {
         }
         die();
     case "getKitchenAppliances":
-        $kitchenAppliances = $pdo->query("SELECT * FROM kitchenAppliances ORDER BY Name")->fetchAll(PDO::FETCH_ASSOC);
+        $kitchenAppliances = $pdo->query("
+            SELECT 
+                ka.*, 
+                COUNT(r.ID) AS recipe_count 
+            FROM 
+                kitchenAppliances ka 
+            LEFT JOIN 
+                rezepte r ON JSON_CONTAINS(r.KitchenAppliances, CONCAT('[', ka.ID, ']')) 
+            GROUP BY 
+                ka.ID 
+            ORDER BY 
+                ka.Name
+        ")->fetchAll(PDO::FETCH_ASSOC);
 
-        //allen bildern ein "uploads/" voranstellen
+        // allen bildern ein "uploads/" voranstellen
         foreach ($kitchenAppliances as &$appliance) {
             $appliance['Image'] = 'uploads/' . $appliance['Image'];
         }
