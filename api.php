@@ -377,7 +377,7 @@ switch ($task) {
         if (count($kitchenAppliances) > 0 && $kitchenAppliances[0] != "*") {
             $applianceConditions = [];
             foreach ($kitchenAppliances as $appliance) {
-                $applianceConditions[] = "JSON_CONTAINS(rezepte.KitchenAppliances, '[$appliance]')";
+                $applianceConditions[] = "JSON_CONTAINS(rezepte.kitchenAppliances, '[$appliance]')";
             }
             $where .= " AND (" . implode(" OR ", $applianceConditions) . ")";
         }
