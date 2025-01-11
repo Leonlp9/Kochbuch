@@ -511,7 +511,7 @@ if ($edit){
                                             let result = document.createElement('div');
                                             result.classList.add('kitchenAppliance');
                                             result.innerHTML = `
-                                                <img src='icons/${appliance.Image}' alt='${appliance.Name}'>
+                                                <img src='${appliance.Image}' alt='${appliance.Name}'>
                                                 <p>${appliance.Name}</p>
                                             `;
                                             result.addEventListener('click', () => {
