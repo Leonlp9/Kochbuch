@@ -246,6 +246,7 @@ global $pdo;
                         .then(response => response.json())
                         .then(kitchenAppliances => {
                             let options = '';
+                            options += `<option value="*" selected>Ohne Einschränkung</option>`;
                             kitchenAppliances.forEach(kitchenAppliance => {
                                 options += `<option value="${kitchenAppliance.ID}">${kitchenAppliance.Name} (${kitchenAppliance.recipe_count})</option>`;
                             });
