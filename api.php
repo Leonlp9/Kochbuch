@@ -370,6 +370,18 @@ switch ($task) {
             $where .= " AND rezepte.Kategorie_ID = $kategorie";
         }
 
+
+        $kitchenAppliances = (isset($_GET['kitchenAppliances'])) ? $_GET['kitchenAppliances'] : [];
+
+        //JSON_CONTAINS
+        if (count($kitchenAppliances) > 0 && $kitchenAppliances[0] != "*") {
+            $applianceConditions = [];
+            foreach ($kitchenAppliances as $appliance) {
+                $applianceConditions[] = "JSON_CONTAINS(rezepte.KitchenAppliances, '[$appliance]')";
+            }
+            $where .= " AND (" . implode(" OR ", $applianceConditions) . ")";
+        }
+
         switch ($zeit) {
             case "0":
                 $where .= " AND rezepte.Zeit <= 15";

@@ -236,6 +236,20 @@ global $pdo;
                     }
                     ?>
                 </select>
+
+                <label for="KitchenAppliances">Küchengeräte</label>
+                <select name="KitchenAppliances" id="KitchenAppliances" onchange="search()" style="margin-bottom: 15px; margin-top: 10px" multiple>
+                    <option value="*" selected>Ohne Einschränkung</option>
+                    <?php
+                    $kitchenAppliances = $pdo->query("SELECT * FROM kitchenAppliances")->fetchAll();
+                    foreach ($kitchenAppliances as $kitchenAppliance) {
+                        ?>
+                        <option value="<?= $kitchenAppliance['ID'] ?>"><?= $kitchenAppliance['Name'] ?></option>
+                        <?php
+                    }
+                    ?>
+
+                </select>
             </div>
 
             <label class="divider">Suchergebnisse</label>
@@ -249,6 +263,7 @@ global $pdo;
                     let order = $("input[name=order]:checked").val();
                     let zeit = $("#zeit").val();
                     let kategorie = $("#kategorie").val();
+                    let kitchenAppliances = $("#KitchenAppliances").val();
                     if (defaultKat != null) {
                         kategorie = defaultKat;
                     }
@@ -260,7 +275,8 @@ global $pdo;
                             search: search,
                             order: order,
                             zeit: zeit,
-                            kategorie: kategorie
+                            kategorie: kategorie,
+                            kitchenAppliances: kitchenAppliances
                         },
                         success: function (data) {
 
