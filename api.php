@@ -1037,51 +1037,61 @@ switch ($task) {
 
                 if (in_array($fileActualExt, $allowed)) {
                     if ($image['error'] === 0) {
-                        $img = imagecreatefromstring(file_get_contents($image['tmp_name']));
-                        imagepalettetotruecolor($img);
-                        imagealphablending($img, true);
-                        imagesavealpha($img, true);
+                        if ($fileActualExt === 'svg') {
+                            // Handle SVG files
+                            $fileNameNew = uniqid('', true) . ".svg";
+                            $fileDestination = 'uploads/' . $fileNameNew;
+                            if (!is_dir('uploads')) {
+                                mkdir('uploads', 0777, true);
+                            }
+                            move_uploaded_file($image['tmp_name'], $fileDestination);
+                        } else {
+                            // Handle other image files
+                            $img = imagecreatefromstring(file_get_contents($image['tmp_name']));
+                            imagepalettetotruecolor($img);
+                            imagealphablending($img, true);
+                            imagesavealpha($img, true);
 
-                        // Überprüfe die aktuellen Dimensionen des Bildes
-                        $width = imagesx($img);
-                        $height = imagesy($img);
-                        $maxWidth = 1080;
-                        $maxHeight = 566;
+                            // Check the current dimensions of the image
+                            $width = imagesx($img);
+                            $height = imagesy($img);
+                            $maxWidth = 1080;
+                            $maxHeight = 566;
 
-                        // Berechne das Seitenverhältnis
-                        $aspectRatio = $width / $height;
+                            // Calculate the aspect ratio
+                            $aspectRatio = $width / $height;
 
-                        // Berechne die neuen Dimensionen, falls das Bild zu groß ist
-                        if ($width > $maxWidth || $height > $maxHeight) {
-                            if ($aspectRatio > ($maxWidth / $maxHeight)) {
-                                $newWidth = $maxWidth;
-                                $newHeight = $maxWidth / $aspectRatio;
-                            } else {
-                                $newHeight = $maxHeight;
-                                $newWidth = $maxHeight * $aspectRatio;
+                            // Calculate the new dimensions if the image is too large
+                            if ($width > $maxWidth || $height > $maxHeight) {
+                                if ($aspectRatio > ($maxWidth / $maxHeight)) {
+                                    $newWidth = $maxWidth;
+                                    $newHeight = $maxWidth / $aspectRatio;
+                                } else {
+                                    $newHeight = $maxHeight;
+                                    $newWidth = $maxHeight * $aspectRatio;
+                                }
+
+                                $newWidth = intval($newWidth);
+                                $newHeight = intval($newHeight);
+
+                                // Create a new, scaled image
+                                $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                                imagealphablending($newImg, false);
+                                imagesavealpha($newImg, true);
+                                imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($img);
+                                $img = $newImg;
                             }
 
-                            $newWidth = intval($newWidth);
-                            $newHeight = intval($newHeight);
-
-                            // Erstelle ein neues, skaliertes Bild
-                            $newImg = imagecreatetruecolor($newWidth, $newHeight);
-                            imagealphablending($newImg, false);
-                            imagesavealpha($newImg, true);
-                            imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                            // Save the image in WebP format
+                            $fileNameNew = uniqid('', true) . ".webp";
+                            if (!is_dir('uploads')) {
+                                mkdir('uploads', 0777, true);
+                            }
+                            $fileDestination = 'uploads/' . $fileNameNew;
+                            imagewebp($img, $fileDestination, 45);
                             imagedestroy($img);
-                            $img = $newImg;
                         }
-
-                        // Speichern des Bildes im WebP-Format
-                        $fileNameNew = uniqid('', true) . ".webp";
-                        if (!is_dir('uploads')) {
-                            mkdir('uploads', 0777, true);
-                        }
-
-                        $fileDestination = 'uploads/' . $fileNameNew;
-                        imagewebp($img, $fileDestination, 45);
-                        imagedestroy($img);
 
                         $sql->bindValue(':image', $fileNameNew);
                         $sql->execute();
@@ -1102,9 +1112,6 @@ switch ($task) {
                 $id = $_POST['id'];
 
                 if ($image) {
-                    $sql = $pdo->prepare('UPDATE kitchenAppliances SET Name = :name, Image = :image WHERE ID = :id');
-                    $sql->bindValue(':name', $name);
-
                     $fileExt = explode('.', $image['name']);
                     $fileActualExt = strtolower(end($fileExt));
 
@@ -1112,56 +1119,69 @@ switch ($task) {
 
                     if (in_array($fileActualExt, $allowed)) {
                         if ($image['error'] === 0) {
-                            $img = imagecreatefromstring(file_get_contents($image['tmp_name']));
-                            imagepalettetotruecolor($img);
-                            imagealphablending($img, true);
-                            imagesavealpha($img, true);
+                            if ($fileActualExt === 'svg') {
+                                // Handle SVG files
+                                $fileNameNew = uniqid('', true) . ".svg";
+                                $fileDestination = 'uploads/' . $fileNameNew;
+                                if (!is_dir('uploads')) {
+                                    mkdir('uploads', 0777, true);
+                                }
+                                move_uploaded_file($image['tmp_name'], $fileDestination);
+                            } else {
+                                // Handle other image files
+                                $img = imagecreatefromstring(file_get_contents($image['tmp_name']));
+                                imagepalettetotruecolor($img);
+                                imagealphablending($img, true);
+                                imagesavealpha($img, true);
 
-                            // Überprüfe die aktuellen Dimensionen des Bildes
-                            $width = imagesx($img);
-                            $height = imagesy($img);
-                            $maxWidth = 1080;
-                            $maxHeight = 566;
+                                // Check the current dimensions of the image
+                                $width = imagesx($img);
+                                $height = imagesy($img);
+                                $maxWidth = 1080;
+                                $maxHeight = 566;
 
-                            // Berechne das Seitenverhältnis
-                            $aspectRatio = $width / $height;
+                                // Calculate the aspect ratio
+                                $aspectRatio = $width / $height;
 
-                            // Berechne die neuen Dimensionen, falls das Bild zu groß ist
-                            if ($width > $maxWidth || $height > $maxHeight) {
-                                if ($aspectRatio > ($maxWidth / $maxHeight)) {
-                                    $newWidth = $maxWidth;
-                                    $newHeight = $maxWidth / $aspectRatio;
-                                } else {
-                                    $newHeight = $maxHeight;
-                                    $newWidth = $maxHeight * $aspectRatio;
+                                // Calculate the new dimensions if the image is too large
+                                if ($width > $maxWidth || $height > $maxHeight) {
+                                    if ($aspectRatio > ($maxWidth / $maxHeight)) {
+                                        $newWidth = $maxWidth;
+                                        $newHeight = $maxWidth / $aspectRatio;
+                                    } else {
+                                        $newHeight = $maxHeight;
+                                        $newWidth = $maxHeight * $aspectRatio;
+                                    }
+
+                                    $newWidth = intval($newWidth);
+                                    $newHeight = intval($newHeight);
+
+                                    // Create a new, scaled image
+                                    $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                                    imagealphablending($newImg, false);
+                                    imagesavealpha($newImg, true);
+                                    imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                    imagedestroy($img);
+                                    $img = $newImg;
                                 }
 
-                                $newWidth = intval($newWidth);
-                                $newHeight = intval($newHeight);
+                                // Save the image in WebP format
+                                $fileNameNew = uniqid('', true) . ".webp";
+                                if (!is_dir('uploads')) {
+                                    mkdir('uploads', 0777, true);
+                                }
 
-                                // Erstelle ein neues, skaliertes Bild
-                                $newImg = imagecreatetruecolor($newWidth, $newHeight);
-                                imagealphablending($newImg, false);
-                                imagesavealpha($newImg, true);
-                                imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                $fileDestination = 'uploads/' . $fileNameNew;
+                                imagewebp($img, $fileDestination, 45);
                                 imagedestroy($img);
-                                $img = $newImg;
                             }
 
-                            // Speichern des Bildes im WebP-Format
-                            $fileNameNew = uniqid('', true) . ".webp";
-                            if (!is_dir('uploads')) {
-                                mkdir('uploads', 0777, true);
-                            }
-
-                            $fileDestination = 'uploads/' . $fileNameNew;
-                            imagewebp($img, $fileDestination, 45);
-                            imagedestroy($img);
-
+                            $sql = $pdo->prepare('UPDATE kitchenAppliances SET Name = :name, Image = :image WHERE ID = :id');
+                            $sql->bindValue(':name', $name);
                             $sql->bindValue(':image', $fileNameNew);
                         }
                     }
-                }else {
+                } else {
                     $sql = $pdo->prepare('UPDATE kitchenAppliances SET Name = :name WHERE ID = :id');
                     $sql->bindValue(':name', $name);
                 }
