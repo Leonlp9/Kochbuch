@@ -371,10 +371,14 @@ if ($edit){
             font-size: 1em;
             background: var(--green);
             color: var(--color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #kitchenAppliances {
             display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 10px;
         }
     </style>
