@@ -115,16 +115,25 @@ CREATE TABLE IF NOT EXISTS `rezepte` (
   `Portionen` int(11) NOT NULL,
   `Zeit` int(11) NOT NULL,
   `Zutaten_JSON` text NOT NULL,
+  `KitchenAppliances` TEXT NOT NULL,
   `OptionalInfos` text DEFAULT NULL,
   `last_visit` bigint(25) DEFAULT NULL,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 CREATE TABLE IF NOT EXISTS `zutaten` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
   `Image` varchar(255) NOT NULL,
   `unit` varchar(255) NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `kitchenAppliances` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Image` varchar(255) NOT NULL,
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

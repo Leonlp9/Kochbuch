@@ -21,6 +21,9 @@ $portionen = $edit ? $rezept['Portionen'] : 4;
 $Zutaten_JSON = $edit ? $rezept['Zutaten_JSON'] : null;
 $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
+$rezept['KitchenAppliances'] = $rezept['KitchenAppliances'] == null || $rezept['KitchenAppliances'] == '' ? "[]" : $rezept['KitchenAppliances'];
+$rezept['OptionalInfos'] = $rezept['OptionalInfos'] == null || $rezept['OptionalInfos'] == '' ? "[]" : $rezept['OptionalInfos'];
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -324,6 +327,55 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
         #extraCustomInfos > div:hover {
             background: var(--nonSelected);
         }
+
+        .kitchenApplianceSearchResults {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .kitchenAppliance {
+            display: grid;
+            grid-template-columns: 50px 1fr;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            align-items: center;
+            justify-items: center;
+            background: var(--nonSelected);
+        }
+
+        .kitchenAppliance img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .kitchenAppliance p {
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .kitchenAppliance:hover {
+            background: var(--selected);
+        }
+
+        #addKitchenAppliance {
+            padding: 10px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            background: var(--green);
+            color: var(--color);
+        }
+
+        #kitchenAppliances {
+            display: grid;
+            gap: 10px;
+        }
     </style>
 </head>
 <body>
@@ -375,6 +427,108 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                         <button type="button" class="up"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
+
+                <input type="text" name="kitchenAppliances" id="kitchenAppliancesInput" hidden>
+                <h2>Ein Rezept für</h2>
+                <div id="kitchenAppliances"></div>
+                <script>
+                    let kitchenAppliances = JSON.parse(<?php echo $edit ? json_encode($rezept['KitchenAppliances']) : json_encode('[]') ?>);
+
+                    function updateKitchenAppliances() {
+
+                        document.getElementById('kitchenAppliances').innerHTML = '';
+                        kitchenAppliances.forEach((appliance, index) => {
+                            let div = document.createElement('div');
+                            div.classList.add('kitchenAppliance');
+                            div.innerHTML = `
+                                <img src='icons/${appliance.Image}' alt='${appliance.Name}'>
+                                <p>${appliance.Name}</p>
+                            `;
+                            div.dataset.index = index;
+
+                            document.getElementById('kitchenAppliances').appendChild(div);
+
+                            div.addEventListener('click', function () {
+                                let index = this.dataset.index;
+                                const form = new FormBuilder(
+                                    'Gerät bearbeiten',
+                                    (formData) => {},
+                                    () => {}
+                                );
+
+                                form.addButton('Löschen', () => {
+                                    // aus kitchenAppliances das element mit dem index entfernen
+                                    kitchenAppliances.splice(index, 1);
+                                    console.log(kitchenAppliances);
+                                    updateKitchenAppliances();
+                                    form.closeForm();
+                                });
+
+                                form.renderForm(false);
+                            });
+                        });
+
+
+                        //fetch getKitchenAppliances from api.php and add them to the list
+
+                        let addKitchenApplianceButton = document.createElement('div');
+                        addKitchenApplianceButton.id = 'addKitchenAppliance';
+                        addKitchenApplianceButton.type = 'button';
+                        addKitchenApplianceButton.innerText = 'Gerät hinzufügen';
+                        addKitchenApplianceButton.style.background = 'var(--green)';
+                        document.getElementById('kitchenAppliances').appendChild(addKitchenApplianceButton);
+                        addKitchenApplianceButton.addEventListener('click', () => {
+                            const form = new FormBuilder(
+                                'Gerät hinzufügen',
+                                (formData) => {},
+                                () => {}
+                            );
+
+                            form.addHTML(`
+                                <div class="kitchenApplianceSearchResults"></div>
+                            `);
+
+                            form.renderForm(false);
+
+                            form.form.parentElement.style.maxWidth = 'min(calc(100vw - 40px), 900px)';
+
+                            function search() {
+                                fetch('api.php?task=getKitchenAppliances')
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        form.form.querySelector('.kitchenApplianceSearchResults').innerHTML = '';
+                                        data.forEach(appliance => {
+
+                                            if (kitchenAppliances.find(a => a.ID === appliance.ID)) {
+                                                return;
+                                            }
+
+                                            let result = document.createElement('div');
+                                            result.classList.add('kitchenAppliance');
+                                            result.innerHTML = `
+                                                <img src='icons/${appliance.Image}' alt='${appliance.Name}'>
+                                                <p>${appliance.Name}</p>
+                                            `;
+                                            result.addEventListener('click', () => {
+                                                kitchenAppliances.push(appliance);
+                                                updateKitchenAppliances();
+                                                form.closeForm();
+                                            });
+
+                                            form.form.querySelector('.kitchenApplianceSearchResults').appendChild(result);
+                                        });
+                                    });
+                            }
+
+                            search();
+                        });
+
+                    }
+
+                    updateKitchenAppliances();
+
+
+                </script>
 
                 <input type="text" name="extraCustomInfos" id="extraCustomInfosInput" hidden>
 
@@ -441,7 +595,7 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
                                 () => {}
                             );
 
-                            form.addInputField('title', 'Titel');
+                            form.addInputField('title', 'Titel (z.B. Kalorien)');
                             form.addInputField('content', 'Inhalt');
                             form.renderForm();
                         });
@@ -906,6 +1060,10 @@ $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
                         let extraCustomInfosElement = document.querySelector('#extraCustomInfosInput');
                         extraCustomInfosElement.value = JSON.stringify(extraCustomInfos);
+
+                        let kitchenAppliancesElement = document.querySelector('#kitchenAppliancesInput');
+                        //so speichern, dass es nur die IDs sind in einem Array [1, 2, 3]
+                        kitchenAppliancesElement.value = JSON.stringify(kitchenAppliances.map(appliance => appliance.ID));
 
                         // remove confirmation when leaving the page
                         window.onbeforeunload = function(e) {

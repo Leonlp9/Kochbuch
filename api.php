@@ -278,6 +278,22 @@ switch ($task) {
             $sql->bindValue(':id', $id);
             $sql->execute();
 
+            //change KitchenAppliances [1,2,3] to [{ID: 1, Name: "Ofen", Image: "Ofen.svg"}, ...]
+            $kitchenAppliances = json_decode($rezepte[0]['KitchenAppliances'], true);
+            $kitchenAppliances_array = [];
+            foreach ($kitchenAppliances as $appliance) {
+                $sql = $pdo->prepare('SELECT Name, Image FROM kitchenappliances WHERE ID = :id');
+                $sql->bindValue(':id', $appliance);
+                $sql->execute();
+                $appliance_name = $sql->fetch(PDO::FETCH_ASSOC);
+                $kitchenAppliances_array[] = [
+                    'ID' => $appliance,
+                    'Name' => $appliance_name['Name'],
+                    'Image' => $appliance_name['Image']
+                ];
+            }
+            $rezepte[0]['KitchenAppliances'] = json_encode($kitchenAppliances_array);
+
 
             echo json_encode($rezepte);
             die();
@@ -719,7 +735,7 @@ switch ($task) {
     case "addRezept":
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-            if (!isset($_POST['name']) || !isset($_POST['kategorie']) || !isset($_POST['dauer']) || !isset($_POST['portionen']) || !isset($_POST['anleitung']) || !isset($_POST['zutaten']) || !isset($_POST['extraCustomInfos']) || !isset($_FILES['bilder'])) {
+            if (!isset($_POST['name']) || !isset($_POST['kategorie']) || !isset($_POST['dauer']) || !isset($_POST['portionen']) || !isset($_POST['anleitung']) || !isset($_POST['zutaten']) || !isset($_POST['extraCustomInfos']) || !isset($_POST['kitchenAppliances']) || !isset($_FILES['bilder'])) {
                 echo json_encode(['error' => 'Not all parameters provided', 'success' => false, 'post' => $_POST, 'files' => $_FILES]);
                 die();
             }
@@ -734,8 +750,9 @@ switch ($task) {
                 $files = $_FILES['bilder'];
                 $optionalInfos = json_decode($_POST['extraCustomInfos']);
                 $rezeptID = $_GET['rezept'];
+                $kitchenAppliances = json_decode($_POST['kitchenAppliances']);
 
-                $sql = "UPDATE rezepte SET Name = :name, Kategorie_ID = :kategorie, Zeit = :dauer, Portionen = :portionen, Zubereitung = :anleitung, Zutaten_JSON = :zutaten, OptionalInfos = :optionalInfos WHERE ID = :id";
+                $sql = "UPDATE rezepte SET Name = :name, Kategorie_ID = :kategorie, Zeit = :dauer, Portionen = :portionen, Zubereitung = :anleitung, Zutaten_JSON = :zutaten, OptionalInfos = :optionalInfos, KitchenAppliances = :kitchenAppliances WHERE ID = :id";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     'name' => $name,
@@ -745,6 +762,7 @@ switch ($task) {
                     'anleitung' => $anleitung,
                     'zutaten' => json_encode($zutaten),
                     'optionalInfos' => json_encode($optionalInfos),
+                    'kitchenAppliances' => json_encode($kitchenAppliances),
                     'id' => $rezeptID
                 ]);
 
@@ -827,8 +845,9 @@ switch ($task) {
                 $zutaten = json_decode($_POST['zutaten']);
                 $files = $_FILES['bilder'];
                 $optionalInfos = json_decode($_POST['extraCustomInfos']);
+                $kitchenAppliances = json_decode($_POST['kitchenAppliances']);
 
-                $sql = "INSERT INTO rezepte (Name, Kategorie_ID, Zeit, Portionen, Zubereitung, Zutaten_JSON, OptionalInfos) VALUES (:name, :kategorie, :dauer, :portionen, :anleitung, :zutaten, :optionalInfos)";
+                $sql = "INSERT INTO rezepte (Name, Kategorie_ID, Zeit, Portionen, Zubereitung, Zutaten_JSON, OptionalInfos, KitchenAppliances) VALUES (:name, :kategorie, :dauer, :portionen, :anleitung, :zutaten, :optionalInfos, :kitchenAppliances)";
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([
                     'name' => $name,
@@ -837,7 +856,8 @@ switch ($task) {
                     'portionen' => $portionen,
                     'anleitung' => $anleitung,
                     'zutaten' => json_encode($zutaten),
-                    'optionalInfos' => json_encode($optionalInfos)
+                    'optionalInfos' => json_encode($optionalInfos),
+                    'kitchenAppliances' => json_encode($kitchenAppliances)
                 ]);
 
                 $rezeptID = $pdo->lastInsertId();
@@ -979,6 +999,10 @@ switch ($task) {
         } else {
             echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
         }
+        die();
+    case "getKitchenAppliances":
+        $kitchenAppliances = $pdo->query("SELECT * FROM kitchenAppliances")->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($kitchenAppliances);
         die();
 
     default:
