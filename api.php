@@ -1033,7 +1033,7 @@ switch ($task) {
                 $fileExt = explode('.', $image['name']);
                 $fileActualExt = strtolower(end($fileExt));
 
-                $allowed = ['jpg', 'jpeg', 'png'];
+                $allowed = ['jpg', 'jpeg', 'png', 'svg'];
 
                 if (in_array($fileActualExt, $allowed)) {
                     if ($image['error'] === 0) {
@@ -1108,7 +1108,7 @@ switch ($task) {
                     $fileExt = explode('.', $image['name']);
                     $fileActualExt = strtolower(end($fileExt));
 
-                    $allowed = ['jpg', 'jpeg', 'png'];
+                    $allowed = ['jpg', 'jpeg', 'png', 'svg'];
 
                     if (in_array($fileActualExt, $allowed)) {
                         if ($image['error'] === 0) {
