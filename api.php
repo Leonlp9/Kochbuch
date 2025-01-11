@@ -377,7 +377,7 @@ switch ($task) {
         if (count($kitchenAppliances) > 0 && $kitchenAppliances[0] != "*") {
             $applianceConditions = [];
             foreach ($kitchenAppliances as $appliance) {
-                $applianceConditions[] = "JSON_CONTAINS(rezepte.kitchenAppliances, '[$appliance]')";
+                $applianceConditions[] = "JSON_CONTAINS(rezepte.KitchenAppliances, '[$appliance]')";
             }
             $where .= " AND (" . implode(" OR ", $applianceConditions) . ")";
         }
@@ -773,7 +773,7 @@ switch ($task) {
                     'anleitung' => $anleitung,
                     'zutaten' => json_encode($zutaten),
                     'optionalInfos' => json_encode($optionalInfos),
-                    'kitchenAppliances' => json_encode($kitchenAppliances),
+                    'kitchenAppliances' => json_encode(array_map('intval', $kitchenAppliances)),
                     'id' => $rezeptID
                 ]);
 
@@ -868,7 +868,7 @@ switch ($task) {
                     'anleitung' => $anleitung,
                     'zutaten' => json_encode($zutaten),
                     'optionalInfos' => json_encode($optionalInfos),
-                    'kitchenAppliances' => json_encode($kitchenAppliances)
+                    'kitchenAppliances' => json_encode(array_map('intval', $kitchenAppliances)),
                 ]);
 
                 $rezeptID = $pdo->lastInsertId();
