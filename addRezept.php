@@ -21,9 +21,10 @@ $portionen = $edit ? $rezept['Portionen'] : 4;
 $Zutaten_JSON = $edit ? $rezept['Zutaten_JSON'] : null;
 $ZutatenTables = $edit ? $rezept['ZutatenTables'] : null;
 
-$rezept['KitchenAppliances'] = $rezept['KitchenAppliances'] == null || $rezept['KitchenAppliances'] == '' ? "[]" : $rezept['KitchenAppliances'];
-$rezept['OptionalInfos'] = $rezept['OptionalInfos'] == null || $rezept['OptionalInfos'] == '' ? "[]" : $rezept['OptionalInfos'];
-
+if ($edit){
+    $rezept['KitchenAppliances'] = $rezept['KitchenAppliances'] == null || $rezept['KitchenAppliances'] == '' ? "[]" : $rezept['KitchenAppliances'];
+    $rezept['OptionalInfos'] = $rezept['OptionalInfos'] == null || $rezept['OptionalInfos'] == '' ? "[]" : $rezept['OptionalInfos'];
+}
 ?>
 <!doctype html>
 <html lang="en">

@@ -278,8 +278,7 @@ switch ($task) {
             $sql->bindValue(':id', $id);
             $sql->execute();
 
-            //change KitchenAppliances [1,2,3] to [{ID: 1, Name: "Ofen", Image: "Ofen.svg"}, ...]
-            $kitchenAppliances = json_decode($rezepte[0]['KitchenAppliances'], true);
+            $kitchenAppliances = json_decode($rezepte[0]['KitchenAppliances'] != null && $rezepte[0]['KitchenAppliances'] != "" ? $rezepte[0]['KitchenAppliances'] : "[]");
             $kitchenAppliances_array = [];
             foreach ($kitchenAppliances as $appliance) {
                 $sql = $pdo->prepare('SELECT Name, Image FROM kitchenappliances WHERE ID = :id');
