@@ -237,7 +237,7 @@ global $pdo;
                     ?>
                 </select>
 
-                <label for="KitchenAppliances">Küchengeräte</label>
+                <label for="KitchenAppliances" class="divider" style="margin-top: 15px" style="margin-top: 15px">Küchengeräte</label>
                 <select name="KitchenAppliances" id="KitchenAppliances" onchange="search()" style="margin-bottom: 15px; margin-top: 10px" multiple>
                     <option value="*" selected>Ohne Einschränkung</option>
                 </select>

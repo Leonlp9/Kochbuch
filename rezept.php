@@ -387,7 +387,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                     <?php
                     if ($rezept['KitchenAppliances'] != null && $rezept['KitchenAppliances'] != "[]") {
                         $rezept['KitchenAppliances'] = json_decode($rezept['KitchenAppliances'], true);
-                        echo "<div>";
+                        echo "<div id='kuechengeraete'>";
                         echo "<i class='fas fa-blender'></i> ";
                         //join names
                         $appliances = array_map(function ($appliance) {
@@ -395,6 +395,25 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                         }, $rezept['KitchenAppliances']);
                         echo implode(", ", $appliances);
                         echo "</div>";
+                        ?>
+                        <script>
+                            document.getElementById('kuechengeraete').addEventListener('click', () => {
+                                let form = new FormBuilder('Küchengeräte', () => {}, () => {});
+
+                                form.addHTML(`
+                                    <ul>
+                                        <?php
+                                        foreach ($rezept['KitchenAppliances'] as $appliance) {
+                                            echo "<img src='{$appliance['Image']}' alt='{$appliance['Name']}' width='100px' height='100px'>";
+                                        }
+                                        ?>
+                                    </ul>
+                                `);
+
+                                form.renderForm(false);
+                            });
+                        </script>
+                    <?php
                     }
                     ?>
 
