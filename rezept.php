@@ -385,6 +385,20 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                     </div>
 
                     <?php
+                    if ($rezept['KitchenAppliances'] != null && $rezept['KitchenAppliances'] != "[]") {
+                        $rezept['KitchenAppliances'] = json_decode($rezept['KitchenAppliances'], true);
+                        echo "<div>";
+                        echo "<i class='fas fa-blender'></i> ";
+                        //join names
+                        $appliances = array_map(function ($appliance) {
+                            return $appliance['Name'];
+                        }, $rezept['KitchenAppliances']);
+                        echo implode(", ", $appliances);
+                        echo "</div>";
+                    }
+                    ?>
+
+                    <?php
                         //bewertung, wenn vorhanden durchschnitt ausgeben
                         if (count($rezept['Bewertungen']) > 0) {
                             $sum = 0;

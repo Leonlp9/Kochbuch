@@ -288,7 +288,7 @@ switch ($task) {
                 $kitchenAppliances_array[] = [
                     'ID' => $appliance,
                     'Name' => $appliance_name['Name'],
-                    'Image' => $appliance_name['Image']
+                    'Image' => "uploads/". $appliance_name['Image']
                 ];
             }
             $rezepte[0]['KitchenAppliances'] = json_encode($kitchenAppliances_array);
