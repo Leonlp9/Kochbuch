@@ -140,6 +140,13 @@ global $pdo;
             </div>
 
             <div>
+                <h2>Küchengeräte</h2>
+                <a href="kitchenAppliances.php">
+                    <button class="btn blue">Küchengeräte bearbeiten</button>
+                </a>
+            </div>
+
+            <div>
                 <h2>Sicherheitskopie erstellen</h2>
                 <div onclick="downloadBackUp()">
                     <button class="btn blue">Sicherheitskopie erstellen</button>

@@ -1012,9 +1012,190 @@ switch ($task) {
         }
         die();
     case "getKitchenAppliances":
-        $kitchenAppliances = $pdo->query("SELECT * FROM kitchenAppliances")->fetchAll(PDO::FETCH_ASSOC);
+        $kitchenAppliances = $pdo->query("SELECT * FROM kitchenAppliances ORDER BY Name")->fetchAll(PDO::FETCH_ASSOC);
+
+        //allen bildern ein "uploads/" voranstellen
+        foreach ($kitchenAppliances as &$appliance) {
+            $appliance['Image'] = 'uploads/' . $appliance['Image'];
+        }
+
         echo json_encode($kitchenAppliances);
         die();
+    case "addKitchenAppliance":
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST['Name']) && isset($_FILES['Image'])) {
+                $name = $_POST['Name'];
+                $image = $_FILES['Image'];
+
+                $sql = $pdo->prepare('INSERT INTO kitchenAppliances (Name, Image) VALUES (:name, :image)');
+                $sql->bindValue(':name', $name);
+
+                $fileExt = explode('.', $image['name']);
+                $fileActualExt = strtolower(end($fileExt));
+
+                $allowed = ['jpg', 'jpeg', 'png'];
+
+                if (in_array($fileActualExt, $allowed)) {
+                    if ($image['error'] === 0) {
+                        $img = imagecreatefromstring(file_get_contents($image['tmp_name']));
+                        imagepalettetotruecolor($img);
+                        imagealphablending($img, true);
+                        imagesavealpha($img, true);
+
+                        // Überprüfe die aktuellen Dimensionen des Bildes
+                        $width = imagesx($img);
+                        $height = imagesy($img);
+                        $maxWidth = 1080;
+                        $maxHeight = 566;
+
+                        // Berechne das Seitenverhältnis
+                        $aspectRatio = $width / $height;
+
+                        // Berechne die neuen Dimensionen, falls das Bild zu groß ist
+                        if ($width > $maxWidth || $height > $maxHeight) {
+                            if ($aspectRatio > ($maxWidth / $maxHeight)) {
+                                $newWidth = $maxWidth;
+                                $newHeight = $maxWidth / $aspectRatio;
+                            } else {
+                                $newHeight = $maxHeight;
+                                $newWidth = $maxHeight * $aspectRatio;
+                            }
+
+                            $newWidth = intval($newWidth);
+                            $newHeight = intval($newHeight);
+
+                            // Erstelle ein neues, skaliertes Bild
+                            $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                            imagealphablending($newImg, false);
+                            imagesavealpha($newImg, true);
+                            imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                            imagedestroy($img);
+                            $img = $newImg;
+                        }
+
+                        // Speichern des Bildes im WebP-Format
+                        $fileNameNew = uniqid('', true) . ".webp";
+                        if (!is_dir('uploads')) {
+                            mkdir('uploads', 0777, true);
+                        }
+
+                        $fileDestination = 'uploads/' . $fileNameNew;
+                        imagewebp($img, $fileDestination, 45);
+                        imagedestroy($img);
+
+                        $sql->bindValue(':image', $fileNameNew);
+                        $sql->execute();
+                    }
+                }
+
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+            }
+        }
+        break;
+    case "updateKitchenAppliance":
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST['Name']) && isset($_POST['id'])) {
+                $name = $_POST['Name'];
+                $image = isset($_FILES['Image']) ? $_FILES['Image'] : null;
+                $id = $_POST['id'];
+
+                if ($image) {
+                    $sql = $pdo->prepare('UPDATE kitchenAppliances SET Name = :name, Image = :image WHERE ID = :id');
+                    $sql->bindValue(':name', $name);
+
+                    $fileExt = explode('.', $image['name']);
+                    $fileActualExt = strtolower(end($fileExt));
+
+                    $allowed = ['jpg', 'jpeg', 'png'];
+
+                    if (in_array($fileActualExt, $allowed)) {
+                        if ($image['error'] === 0) {
+                            $img = imagecreatefromstring(file_get_contents($image['tmp_name']));
+                            imagepalettetotruecolor($img);
+                            imagealphablending($img, true);
+                            imagesavealpha($img, true);
+
+                            // Überprüfe die aktuellen Dimensionen des Bildes
+                            $width = imagesx($img);
+                            $height = imagesy($img);
+                            $maxWidth = 1080;
+                            $maxHeight = 566;
+
+                            // Berechne das Seitenverhältnis
+                            $aspectRatio = $width / $height;
+
+                            // Berechne die neuen Dimensionen, falls das Bild zu groß ist
+                            if ($width > $maxWidth || $height > $maxHeight) {
+                                if ($aspectRatio > ($maxWidth / $maxHeight)) {
+                                    $newWidth = $maxWidth;
+                                    $newHeight = $maxWidth / $aspectRatio;
+                                } else {
+                                    $newHeight = $maxHeight;
+                                    $newWidth = $maxHeight * $aspectRatio;
+                                }
+
+                                $newWidth = intval($newWidth);
+                                $newHeight = intval($newHeight);
+
+                                // Erstelle ein neues, skaliertes Bild
+                                $newImg = imagecreatetruecolor($newWidth, $newHeight);
+                                imagealphablending($newImg, false);
+                                imagesavealpha($newImg, true);
+                                imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                imagedestroy($img);
+                                $img = $newImg;
+                            }
+
+                            // Speichern des Bildes im WebP-Format
+                            $fileNameNew = uniqid('', true) . ".webp";
+                            if (!is_dir('uploads')) {
+                                mkdir('uploads', 0777, true);
+                            }
+
+                            $fileDestination = 'uploads/' . $fileNameNew;
+                            imagewebp($img, $fileDestination, 45);
+                            imagedestroy($img);
+
+                            $sql->bindValue(':image', $fileNameNew);
+                        }
+                    }
+                }else {
+                    $sql = $pdo->prepare('UPDATE kitchenAppliances SET Name = :name WHERE ID = :id');
+                    $sql->bindValue(':name', $name);
+                }
+
+                $sql->bindValue(':id', $id);
+                $sql->execute();
+
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+            }
+        }
+        break;
+
+    case "deleteKitchenAppliance":
+        if (isset($_GET['id'])) {
+            $id = $_GET['id'];
+
+            // Lösche das Bild aus dem Dateisystem
+            $image = $pdo->query("SELECT Image FROM kitchenAppliances WHERE ID = $id")->fetch()['Image'];
+            if (file_exists('uploads/' . $image)) {
+                unlink('uploads/' . $image);
+            }
+
+            $sql = $pdo->prepare('DELETE FROM kitchenAppliances WHERE ID = :id');
+            $sql->bindValue(':id', $id);
+            $sql->execute();
+
+            echo json_encode(['success' => true]);
+            die();
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided']);
+            die();
+        }
 
     default:
         echo json_encode(
