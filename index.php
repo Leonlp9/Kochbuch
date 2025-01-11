@@ -336,6 +336,12 @@ global $pdo;
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(entry => {
+
+                            //wenns nicht heute ist, dann nicht anzeigen
+                            if (entry.Datum !== new Date().toISOString().split("T")[0]){
+                                return;
+                            }
+
                             let entryDiv = $(`<div class="recipe" data-id="${entry.rezepte_ID}"></div>`);
 
                             if (entry.Image === null) {
@@ -370,7 +376,6 @@ global $pdo;
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(profile => {
-                            console.log(profile);
                             let profileDiv = $(`<div data-id="${profile.ID}"></div>`);
                             profileDiv.html(`
                                 <img src="${profile.Image}" alt="${profile.Name}">
