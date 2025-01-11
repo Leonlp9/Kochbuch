@@ -281,7 +281,7 @@ switch ($task) {
             $kitchenAppliances = json_decode($rezepte[0]['KitchenAppliances'] != null && $rezepte[0]['KitchenAppliances'] != "" ? $rezepte[0]['KitchenAppliances'] : "[]");
             $kitchenAppliances_array = [];
             foreach ($kitchenAppliances as $appliance) {
-                $sql = $pdo->prepare('SELECT Name, Image FROM kitchenappliances WHERE ID = :id');
+                $sql = $pdo->prepare('SELECT Name, Image FROM kitchenAppliances WHERE ID = :id');
                 $sql->bindValue(':id', $appliance);
                 $sql->execute();
                 $appliance_name = $sql->fetch(PDO::FETCH_ASSOC);
