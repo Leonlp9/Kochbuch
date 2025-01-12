@@ -383,8 +383,8 @@ switch ($task) {
         }
 
 
-        $blacklistIngredients = (isset($_GET['blacklistIngredients'])) ? $_GET['blacklistIngredients'] : [];
-        $whitelistIngredients = (isset($_GET['whitelistIngredients'])) ? $_GET['whitelistIngredients'] : [];
+        $blacklistIngredients = (isset($_GET['blacklistIngredients']) && $_GET['blacklistIngredients'] != "") ? json_decode($_GET['blacklistIngredients'], true) : [];
+        $whitelistIngredients = (isset($_GET['whitelistIngredients']) && $_GET['whitelistIngredients'] != "") ? json_decode($_GET['whitelistIngredients'], true) : [];
         $profileID = (isset($_GET['profileID'])) ? $_GET['profileID'] : null;
 
         if ($profileID != null) {

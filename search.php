@@ -170,6 +170,70 @@ global $pdo;
         .overlay div i {
             color: #27292c;
         }
+
+        .zutaten {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .zutat {
+            display: grid;
+            grid-template-columns: 18px 1fr;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            align-items: center;
+            justify-items: center;
+            background: var(--nonSelected);
+        }
+
+        .zutatInfo {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .zutatInfo img {
+            width: 25px;
+            height: 25px;
+        }
+
+        .zutatInfo p {
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .zutatSuche {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #000;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        .searchResults {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .searchResults div {
+            cursor: pointer;
+        }
+
+        #zutatenResults, #zutatenResults2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -256,6 +320,190 @@ global $pdo;
                 </script>
 
                 <input type="text" id="profileID" placeholder="Profilname" name="profileID" hidden value="<?= isset($_GET['profile']) ? $_GET['profile'] : '' ?>">
+
+
+
+
+                <!--            Zutaten ausschließen-->
+                <input type="text" id="blacklistIngredients" name="blacklistIngredients" hidden>
+                <div id="zutaten">
+                    <label class="divider" for="zutaten">Zutaten ausschließen</label>
+                    <div id="zutatenResults"></div>
+                </div>
+
+                <script>
+                    let blacklistZutaten = [];
+
+                    function addBlacklistZutat() {
+                        const form = new FormBuilder(
+                            'Zutat hinzufügen',
+                            (formData) => {},
+                            () => {}
+                        );
+
+                        form.addHTML(`
+                                    <input type='text' name='name' placeholder='Zutat suchen' required class="zutatSuche" autocomplete="off">
+                                    <div class="divider">Zutaten Ergebnisse (Ersten 20)</div>
+                                    <div class="searchResults"></div>
+                                `);
+
+                        form.renderForm(false);
+
+                        form.form.parentElement.style.maxWidth = 'min(calc(100vw - 40px), 900px)';
+
+                        function searchZutaten(name) {
+                            fetch('api.php?task=getZutaten&name=' + name)
+                                .then(response => response.json())
+                                .then(data => {
+                                    form.form.querySelector('.searchResults').innerHTML = '';
+                                    data.forEach(zutat => {
+                                        let result = document.createElement('div');
+                                        result.classList.add('zutat');
+                                        result.classList.add('zutatInfo');
+                                        result.innerHTML = `
+                                                    <img src='${zutat.Image}' alt='${zutat.Name}'>
+                                                    <p>${zutat.Name}</p>
+                                                    <p>${zutat.unit}</p>
+                                                `;
+                                        result.addEventListener('click', () => {
+                                            // Zutat in Liste einfügen
+                                            const newZutat = {
+                                                ID: zutat.ID,
+                                                unit: zutat.unit,
+                                                Name: zutat.Name,
+                                            };
+
+                                            blacklistZutaten.push(newZutat);
+                                            updateBlacklistZutaten();
+
+                                            form.closeForm();
+
+                                        });
+                                        form.form.querySelector('.searchResults').appendChild(result);
+                                    });
+                                });
+                        }
+                        searchZutaten("");
+
+                        form.form.querySelector('input[name=name]').addEventListener('input', function () {
+                            searchZutaten(this.value);
+                        });
+
+                        form.form.querySelector('input[name=name]').focus();
+                        form.form.querySelector('input[name=name]').select();
+                    }
+
+                    function updateBlacklistZutaten() {
+                        let html = `
+                            <button class="btn blue" id="addZutat" onclick="addBlacklistZutat()">
+                                <i class="fas fa-plus"></i>
+                            </button>`;
+
+                        blacklistZutaten.forEach((zutat, index) => {
+                            html += `<button class="btn red" onclick="blacklistZutaten.splice(${index}, 1); updateBlacklistZutaten()">
+                                ${zutat.Name}
+                            </button>`;
+                        });
+                        document.getElementById('zutatenResults').innerHTML = html;
+
+                        //blacklistIngredients nur die IDs der Zutaten
+                        document.getElementById('blacklistIngredients').value = JSON.stringify(blacklistZutaten.map(zutat => zutat.ID));
+
+                        search();
+                    }
+
+                </script>
+
+
+                <!--            Whitelist Zutaten-->
+                <input type="text" id="whitelistIngredients" name="whitelistIngredients" hidden>
+                <div id="zutaten">
+                    <label class="divider" for="zutaten">Zutaten einschließen</label>
+                    <div id="zutatenResults2"></div>
+                </div>
+
+                <script>
+                    let whitelistZutaten = [];
+
+                    function addWhitelistZutat() {
+                        const form = new FormBuilder(
+                            'Zutat hinzufügen',
+                            (formData) => {},
+                            () => {}
+                        );
+
+                        form.addHTML(`
+                                    <input type='text' name='name' placeholder='Zutat suchen' required class="zutatSuche" autocomplete="off">
+                                    <div class="divider">Zutaten Ergebnisse (Ersten 20)</div>
+                                    <div class="searchResults"></div>
+                                `);
+
+                        form.renderForm(false);
+
+                        form.form.parentElement.style.maxWidth = 'min(calc(100vw - 40px), 900px)';
+
+                        function searchZutaten2(name) {
+                            fetch('api.php?task=getZutaten&name=' + name)
+                                .then(response => response.json())
+                                .then(data => {
+                                    form.form.querySelector('.searchResults').innerHTML = '';
+                                    data.forEach(zutat => {
+                                        let result = document.createElement('div');
+                                        result.classList.add('zutat');
+                                        result.classList.add('zutatInfo');
+                                        result.innerHTML = `
+                                                    <img src='${zutat.Image}' alt='${zutat.Name}'>
+                                                    <p>${zutat.Name}</p>
+                                                    <p>${zutat.unit}</p>
+                                                `;
+                                        result.addEventListener('click', () => {
+                                            // Zutat in Liste einfügen
+                                            const newZutat = {
+                                                ID: zutat.ID,
+                                                unit: zutat.unit,
+                                                Name: zutat.Name,
+                                            };
+
+                                            whitelistZutaten.push(newZutat);
+                                            updateWhitelistZutaten();
+
+                                            form.closeForm();
+
+                                        });
+                                        form.form.querySelector('.searchResults').appendChild(result);
+                                    });
+                                });
+                        }
+                        searchZutaten2("");
+
+                        form.form.querySelector('input[name=name]').addEventListener('input', function () {
+                            searchZutaten2(this.value);
+                        });
+
+                        form.form.querySelector('input[name=name]').focus();
+                        form.form.querySelector('input[name=name]').select();
+                    }
+
+                    function updateWhitelistZutaten() {
+                        let html = `
+                            <button class="btn blue" id="addZutat" onclick="addWhitelistZutat()">
+                                <i class="fas fa-plus"></i>
+                            </button>`;
+
+                        whitelistZutaten.forEach((zutat, index) => {
+                            html += `<button class="btn green" onclick="whitelistZutaten.splice(${index}, 1); updateWhitelistZutaten()">
+                                ${zutat.Name}
+                            </button>`;
+                        });
+                        document.getElementById('zutatenResults2').innerHTML = html;
+
+                        //whitelistIngredients nur die IDs der Zutaten
+                        document.getElementById('whitelistIngredients').value = JSON.stringify(whitelistZutaten.map(zutat => zutat.ID));
+
+                        search();
+                    }
+                </script>
+
             </div>
 
             <label class="divider">Suchergebnisse</label>
@@ -271,6 +519,8 @@ global $pdo;
                     let kategorie = $("#kategorie").val();
                     let kitchenAppliances = $("#KitchenAppliances").val();
                     let profileID = $("#profileID").val();
+                    let blacklistIngredients = $("#blacklistIngredients").val();
+                    let whitelistIngredients = $("#whitelistIngredients").val();
                     if (defaultKat != null) {
                         kategorie = defaultKat;
                     }
@@ -284,7 +534,9 @@ global $pdo;
                             zeit: zeit,
                             kategorie: kategorie,
                             kitchenAppliances: kitchenAppliances,
-                            profileID: profileID
+                            profileID: profileID,
+                            blacklistIngredients: blacklistIngredients,
+                            whitelistIngredients: whitelistIngredients
                         },
                         success: function (data) {
 
@@ -345,6 +597,11 @@ global $pdo;
                 <?php } else { ?>
                     search();
                 <?php } ?>
+
+
+                updateBlacklistZutaten();
+
+                updateWhitelistZutaten();
 
             </script>
         </div>
