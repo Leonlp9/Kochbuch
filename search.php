@@ -417,7 +417,7 @@ global $pdo;
 
                 <!--            Whitelist Zutaten-->
                 <input type="text" id="whitelistIngredients" name="whitelistIngredients" hidden>
-                <div id="zutaten">
+                <div id="zutaten" style="margin: 20px 0">
                     <label class="divider" for="zutaten">Zutaten einschließen</label>
                     <div id="zutatenResults2"></div>
                 </div>
