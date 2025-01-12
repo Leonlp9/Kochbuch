@@ -401,7 +401,7 @@ global $pdo;
 
                         blacklistZutaten.forEach((zutat, index) => {
                             html += `<button class="btn red" onclick="blacklistZutaten.splice(${index}, 1); updateBlacklistZutaten()">
-                                ${zutat.Name}
+                                ${zutat.Name} (${zutat.unit})
                             </button>`;
                         });
                         document.getElementById('zutatenResults').innerHTML = html;
@@ -492,7 +492,7 @@ global $pdo;
 
                         whitelistZutaten.forEach((zutat, index) => {
                             html += `<button class="btn green" onclick="whitelistZutaten.splice(${index}, 1); updateWhitelistZutaten()">
-                                ${zutat.Name}
+                                ${zutat.Name} (${zutat.unit})
                             </button>`;
                         });
                         document.getElementById('zutatenResults2').innerHTML = html;
