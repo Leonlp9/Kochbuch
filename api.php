@@ -384,6 +384,22 @@ switch ($task) {
 
 
         $blacklistIngredients = (isset($_GET['blacklistIngredients'])) ? $_GET['blacklistIngredients'] : [];
+        $whitelistIngredients = (isset($_GET['whitelistIngredients'])) ? $_GET['whitelistIngredients'] : [];
+        $profileID = (isset($_GET['profileID'])) ? $_GET['profileID'] : null;
+
+        if ($profileID != null) {
+            $sql = $pdo->prepare('SELECT Filter FROM filterprofile WHERE ID = :id');
+            $sql->bindValue(':id', $profileID);
+            $sql->execute();
+            $filter = $sql->fetch(PDO::FETCH_ASSOC);
+
+            //{"likes":[60,15,52,211,106,206],"dislikes":[11,176,343,342,130,131,14,277,24]}
+            $filter = json_decode(isset($filter['Filter']) && $filter['Filter'] != "" ? $filter['Filter'] : '{"likes":[],"dislikes":[]}', true);
+            $userBlacklistIngredients = $filter['dislikes'];
+
+            //merge $blacklistIngredients
+            $blacklistIngredients = array_merge($blacklistIngredients, $userBlacklistIngredients);
+        }
 
         //JSON_CONTAINS
         if (count($blacklistIngredients) > 0) {
@@ -393,9 +409,6 @@ switch ($task) {
             }
             $where .= " AND (" . implode(" AND ", $ingredientConditions) . ")";
         }
-
-
-        $whitelistIngredients = (isset($_GET['whitelistIngredients'])) ? $_GET['whitelistIngredients'] : [];
 
         //JSON_CONTAINS
         if (count($whitelistIngredients) > 0) {

@@ -382,7 +382,7 @@ global $pdo;
                                 <h3>${profile.Name}</h3>
                             `);
                             profileDiv.click(() => {
-                                window.location.href = `filterprofile?id=${profile.ID}`;
+                                window.location.href = `search?profile=${profile.ID}`;
                             });
                             $("#profiles").append(profileDiv);
                         });

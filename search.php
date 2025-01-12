@@ -254,6 +254,8 @@ global $pdo;
                         })
                         .catch(error => console.error('Error fetching kitchen appliances:', error));
                 </script>
+
+                <input type="text" id="profileID" placeholder="Profilname" name="profileID" hidden value="<?= isset($_GET['profile']) ? $_GET['profile'] : '' ?>">
             </div>
 
             <label class="divider">Suchergebnisse</label>
@@ -268,6 +270,7 @@ global $pdo;
                     let zeit = $("#zeit").val();
                     let kategorie = $("#kategorie").val();
                     let kitchenAppliances = $("#KitchenAppliances").val();
+                    let profileID = $("#profileID").val();
                     if (defaultKat != null) {
                         kategorie = defaultKat;
                     }
@@ -280,7 +283,8 @@ global $pdo;
                             order: order,
                             zeit: zeit,
                             kategorie: kategorie,
-                            kitchenAppliances: kitchenAppliances
+                            kitchenAppliances: kitchenAppliances,
+                            profileID: profileID
                         },
                         success: function (data) {
 
