@@ -320,8 +320,17 @@ global $pdo;
                 </script>
 
                 <input type="text" id="profileID" placeholder="Profilname" name="profileID" hidden value="<?= isset($_GET['profile']) ? $_GET['profile'] : '' ?>">
-
-
+                <?php
+                if (isset($_GET['profile'])) {
+                    $profile = $pdo->prepare("SELECT ID, Name FROM filterprofile WHERE ID = ?");
+                    $profile->execute([$_GET['profile']]);
+                    $profile = $profile->fetch();
+                    ?>
+                    <label id="profileRemoveText" class="divider">Filterprofil</label>
+                    <button id="profileRemoveButton" class="btn red" onclick="document.getElementById('profileID').value = ''; history.pushState(null, '', 'search.php'); search(); document.getElementById('profileRemoveText').remove(); document.getElementById('profileRemoveButton').remove();"><?= $profile['Name'] ?></button>
+                    <?php
+                }
+                ?>
 
 
                 <!--            Zutaten ausschließen-->
