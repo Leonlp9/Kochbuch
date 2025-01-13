@@ -286,16 +286,16 @@ global $pdo;
 
                 <label class="divider" for="kategorie">Kategorie</label>
                 <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 15px; margin-top: 10px">
+                    <option value="*" selected>Alle Kategorien</option>
                     <script>
                         fetch('api?task=getKategorien&includeCount=true')
                             .then(response => response.json())
                             .then(kategorien => {
                                 let options = '';
-                                options += `<option value="*">Alle Kategorien</option>`;
                                 kategorien.forEach(kategorie => {
                                     options += `<option value="${kategorie.ID}" ${kategorie.ID == new URLSearchParams(window.location.search).get('kategorie') ? 'selected' : ''}>${kategorie.Name} (${kategorie.usage_count})</option>`;
                                 });
-                                document.getElementById('kategorie').innerHTML = options;
+                                document.getElementById('kategorie').innerHTML += options;
                             })
                             .catch(error => console.error('Error fetching categories:', error));
                     </script>
@@ -531,10 +531,6 @@ global $pdo;
                     let blacklistIngredients = $("#blacklistIngredients").val();
                     let whitelistIngredients = $("#whitelistIngredients").val();
 
-                    if (kategorie === null) {
-                        kategorie = "*";
-                    }
-
                     if (defaultKat != null) {
                         kategorie = defaultKat;
                     }
@@ -606,11 +602,15 @@ global $pdo;
 
                 $('#erweitert').toggle()
 
-                <?php if (isset($_GET['kategorie'])) { ?>
+                document.addEventListener('DOMContentLoaded', function () {
+                    <?php if (isset($_GET['kategorie'])) { ?>
                     search(<?= $_GET['kategorie'] ?>);
-                <?php } else { ?>
+                    console.log('search(<?= $_GET['kategorie'] ?>)');
+                    <?php } else { ?>
                     search();
-                <?php } ?>
+                    <?php } ?>
+                });
+
 
 
                 updateBlacklistZutaten();

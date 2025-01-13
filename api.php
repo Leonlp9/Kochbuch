@@ -359,7 +359,7 @@ switch ($task) {
         $search = $_GET['search'];
         $order = (isset($_GET['order'])) ? $_GET['order'] : "Name";
         $zeit = (isset($_GET['zeit'])) ? $_GET['zeit'] : "4";
-        $kategorie = (isset($_GET['kategorie'])) ? $_GET['kategorie'] : "*";
+        $kategorie = (isset($_GET['kategorie']) && $_GET['kategorie'] != "") ? $_GET['kategorie'] : "*";
         $random = (isset($_GET['random'])) ? $_GET['random'] : false;
         $neueste = (isset($_GET['neueste'])) ? $_GET['neueste'] : false;
         $last_visit = (isset($_GET['last_visit'])) ? $_GET['last_visit'] : false;
