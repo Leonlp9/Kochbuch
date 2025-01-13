@@ -286,19 +286,19 @@ global $pdo;
 
                 <label class="divider" for="kategorie">Kategorie</label>
                 <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 15px; margin-top: 10px">
-                    <option value="*">Alle Kategorien</option>
-                    <?php
-                    $kategorien = $pdo->query("    SELECT k.Name, COUNT(r.ID) as Anzahl, k.ID
-                        FROM kategorien k
-                        LEFT JOIN rezepte r ON k.ID = r.Kategorie_ID
-                        GROUP BY k.ID, k.Name
-                        ORDER BY k.Name")->fetchAll();
-                    foreach ($kategorien as $kategorie) {
-                        ?>
-                        <option value="<?= $kategorie['ID'] ?>"><?= $kategorie['Name'] ?> (<?= $kategorie['Anzahl'] ?>)</option>
-                        <?php
-                    }
-                    ?>
+                    <script>
+                        fetch('api?task=getKategorien&includeCount=true')
+                            .then(response => response.json())
+                            .then(kategorien => {
+                                let options = '';
+                                options += `<option value="*">Alle Kategorien</option>`;
+                                kategorien.forEach(kategorie => {
+                                    options += `<option value="${kategorie.ID}" ${kategorie.ID == new URLSearchParams(window.location.search).get('kategorie') ? 'selected' : ''}>${kategorie.Name} (${kategorie.usage_count})</option>`;
+                                });
+                                document.getElementById('kategorie').innerHTML = options;
+                            })
+                            .catch(error => console.error('Error fetching categories:', error));
+                    </script>
                 </select>
 
                 <label for="KitchenAppliances" class="divider" style="margin-top: 15px" style="margin-top: 15px">Küchengeräte</label>
@@ -321,13 +321,13 @@ global $pdo;
 
                 <input type="text" id="profileID" placeholder="Profilname" name="profileID" hidden value="<?= isset($_GET['profile']) ? $_GET['profile'] : '' ?>">
                 <?php
-                if (isset($_GET['profile'])) {
+                if (isset($_GET['profile']) && $_GET['profile'] != '') {
                     $profile = $pdo->prepare("SELECT ID, Name FROM filterprofile WHERE ID = ?");
                     $profile->execute([$_GET['profile']]);
                     $profile = $profile->fetch();
                     ?>
                     <label id="profileRemoveText" class="divider">Filterprofil</label>
-                    <button id="profileRemoveButton" class="btn red" onclick="document.getElementById('profileID').value = ''; history.pushState(null, '', 'search.php'); search(); document.getElementById('profileRemoveText').remove(); document.getElementById('profileRemoveButton').remove();"><?= $profile['Name'] ?></button>
+                    <button id="profileRemoveButton" class="btn red" onclick="document.getElementById('profileID').value = ''; history.replaceState(null, '', 'search.php'); search(); document.getElementById('profileRemoveText').remove(); document.getElementById('profileRemoveButton').remove();"><?= $profile['Name'] ?></button>
                     <?php
                 }
                 ?>
@@ -532,6 +532,10 @@ global $pdo;
                     let whitelistIngredients = $("#whitelistIngredients").val();
                     if (defaultKat != null) {
                         kategorie = defaultKat;
+                    }
+
+                    if (kategorie === null) {
+                        kategorie = "*";
                     }
 
                     $.ajax({
