@@ -287,18 +287,13 @@ global $pdo;
                 <label class="divider" for="kategorie">Kategorie</label>
                 <select name="kategorie" id="kategorie" onchange="search()" style="margin-bottom: 15px; margin-top: 10px">
                     <option value="*" selected>Alle Kategorien</option>
-                    <script>
-                        fetch('api?task=getKategorien&includeCount=true')
-                            .then(response => response.json())
-                            .then(kategorien => {
-                                let options = '';
-                                kategorien.forEach(kategorie => {
-                                    options += `<option value="${kategorie.ID}" ${kategorie.ID == new URLSearchParams(window.location.search).get('kategorie') ? 'selected' : ''}>${kategorie.Name} (${kategorie.usage_count})</option>`;
-                                });
-                                document.getElementById('kategorie').innerHTML += options;
-                            })
-                            .catch(error => console.error('Error fetching categories:', error));
-                    </script>
+                    <?php
+                    $stmt = $pdo->query("SELECT k.ID, k.Name, k.ColorHex, COUNT(rk.Kategorie_ID) AS usage_count FROM kategorien k LEFT JOIN rezepte rk ON k.ID = rk.Kategorie_ID GROUP BY k.ID ORDER BY k.Name");
+                    while ($row = $stmt->fetch()) {
+                        $selected = ($row['ID'] == $_GET['kategorie']) ? 'selected' : '';
+                        echo "<option value=\"{$row['ID']}\" $selected>{$row['Name']} ({$row['usage_count']})</option>";
+                    }
+                    ?>
                 </select>
 
                 <label for="KitchenAppliances" class="divider" style="margin-top: 15px" style="margin-top: 15px">Küchengeräte</label>
@@ -602,16 +597,12 @@ global $pdo;
 
                 $('#erweitert').toggle()
 
-                document.addEventListener('DOMContentLoaded', function () {
-                    <?php if (isset($_GET['kategorie'])) { ?>
-                    search(<?= $_GET['kategorie'] ?>);
-                    console.log('search(<?= $_GET['kategorie'] ?>)');
-                    <?php } else { ?>
-                    search();
-                    <?php } ?>
-                });
-
-
+                <?php if (isset($_GET['kategorie'])) { ?>
+                search(<?= $_GET['kategorie'] ?>);
+                console.log('search(<?= $_GET['kategorie'] ?>)');
+                <?php } else { ?>
+                search();
+                <?php } ?>
 
                 updateBlacklistZutaten();
 
