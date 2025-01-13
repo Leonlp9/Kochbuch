@@ -530,12 +530,13 @@ global $pdo;
                     let profileID = $("#profileID").val();
                     let blacklistIngredients = $("#blacklistIngredients").val();
                     let whitelistIngredients = $("#whitelistIngredients").val();
-                    if (defaultKat != null) {
-                        kategorie = defaultKat;
-                    }
 
                     if (kategorie === null) {
                         kategorie = "*";
+                    }
+
+                    if (defaultKat != null) {
+                        kategorie = defaultKat;
                     }
 
                     $.ajax({
