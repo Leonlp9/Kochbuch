@@ -737,7 +737,7 @@ class KiChat {
 
     async generateResponse(prompt) {
         try {
-            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBPOErHLPc9r0G2b1_D8PtkjrA9jEkWvI0";
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
 
             //bei prompt ganz oben die kontextParts hinzufügen
             prompt = this.kontextParts.concat(prompt);

@@ -35,16 +35,17 @@ if ($edit){
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Rezept <?php echo $edit ? 'bearbeiten' : 'hinzufügen' ?></title>
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/Kochbuch/icons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/Kochbuch/icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/Kochbuch/icons/favicon-16x16.png">
-    <link rel="manifest" href="/Kochbuch/icons/site.webmanifest">
-    <link rel="mask-icon" href="/Kochbuch/icons/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="/Kochbuch/icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo BASE_URL ?>/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo BASE_URL ?>/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<?php echo BASE_URL ?>/icons/favicon-16x16.png">
+    <link rel="manifest" href="<?php echo BASE_URL ?>/icons/site.webmanifest">
+    <link rel="mask-icon" href="<?php echo BASE_URL ?>/icons/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="<?php echo BASE_URL ?>/icons/favicon.ico">
     <meta name="apple-mobile-web-app-title" content="Kochbuch">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Kochbuch">
     <meta name="msapplication-TileColor" content="#f6f6f6">
-    <meta name="msapplication-config" content="/Kochbuch/icons/browserconfig.xml">
+    <meta name="msapplication-config" content="<?php echo BASE_URL ?>/icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
