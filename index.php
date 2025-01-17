@@ -19,7 +19,7 @@ global $pdo;
     <link rel="mask-icon" href="/Kochbuch/icons/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/Kochbuch/icons/favicon.ico">
     <meta name="apple-mobile-web-app-title" content="Kochbuch">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Kochbuch">
     <meta name="msapplication-TileColor" content="#f6f6f6">
     <meta name="msapplication-config" content="/Kochbuch/icons/browserconfig.xml">
