@@ -1317,8 +1317,6 @@ switch ($task) {
                 throw new Exception("HTTP error! Status: " . $http_response_header[0]);
             }
 
-            echo json_encode(['success' => true, 'response' => $response]);
-
             //return candidates.content.parts[0].text
             $response = json_decode($response, true);
             $response = $response['candidates'][0]['content']['parts'][0]['text'];
