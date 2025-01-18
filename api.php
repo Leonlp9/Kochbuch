@@ -1272,7 +1272,7 @@ switch ($task) {
             die();
         }
 
-        $prompt = $_GET['prompt'];
+        $prompt = json_decode($_GET['prompt']);
 
         try {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . GEMINI_TOKEN;
@@ -1304,16 +1304,26 @@ switch ($task) {
                 ]
             ];
 
-            $context = stream_context_create($options);
-            $response = file_get_contents($url, false, $context);
+            //curl
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonInput);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            curl_close($ch);
 
             if ($response === FALSE) {
                 throw new Exception("HTTP error! Status: " . $http_response_header[0]);
             }
 
-            $jsonResponse = json_decode($response, true);
+            //return candidates.content.parts[0].text
+            $response = json_decode($response, true);
+            $response = $response['candidates'][0]['content']['parts'][0]['text'];
 
-            return $jsonResponse['candidates'][0]['content']['parts'][0]['text'];
+            echo json_encode(['success' => true, 'response' => $response]);
+
+            die();
         } catch (Exception $e) {
             error_log($e->getMessage());
             return "Error: " . $e->getMessage();
