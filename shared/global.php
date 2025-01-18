@@ -31,10 +31,8 @@ if (file_exists("config.ini") && is_readable("config.ini")) {
     }
 
     if (isset($config['base_url'])) {
-        define('BASE_URL', $config['base_url']);
-
         //replace localhost with the actual domain
-        define('BASE_URL', str_replace('localhost', $_SERVER['HTTP_HOST'], BASE_URL));
+        define('BASE_URL', str_replace('localhost', $_SERVER['HTTP_HOST'], $config['base_url']));
     } else {
         define('BASE_URL', 'http://localhost/Kochbuch/');
     }
