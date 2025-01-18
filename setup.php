@@ -8,6 +8,7 @@ $config = [
     'username' => 'root',
     'password' => '',
     'base_url' => 'http://localhost/Kochbuch/',
+    'gemini_token' => '',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,6 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $config['username'] = $_POST['username'];
     $config['password'] = $_POST['password'];
     $config['base_url'] = $_POST['base_url'];
+    $config['gemini_token'] = $_POST['gemini_token'];
 
     $configString = '';
     foreach ($config as $key => $value) {
@@ -23,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     file_put_contents('config.ini', $configString);
 
-    header('Location: ' . $config['base_url']);
+    header('Location: ' . str_replace('localhost', $_SERVER['HTTP_HOST'], $config['base_url']));
 }
 
 ?>
@@ -97,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <input type="password" name="password" id="password" value="<?php echo $config['password']; ?>">
     <label for="base_url">Base URL</label>
     <input type="text" name="base_url" id="base_url" required value="<?php echo $config['base_url']; ?>">
+    <label for="gemini_token">Gemini Token</label>
+    <input type="text" name="gemini_token" id="gemini_token" value="<?php echo $config['gemini_token']; ?>">
     <button type="submit">Save</button>
 </form>
 </body>
