@@ -1245,7 +1245,6 @@ switch ($task) {
             }
         }
         break;
-
     case "deleteKitchenAppliance":
         if (isset($_GET['id'])) {
             $id = $_GET['id'];
@@ -1265,6 +1264,59 @@ switch ($task) {
         } else {
             echo json_encode(['error' => 'Not all parameters provided']);
             die();
+        }
+    case "askGemini":
+
+        if (!isset($_GET['prompt'])) {
+            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+            die();
+        }
+
+        $prompt = $_GET['prompt'];
+
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . GEMINI_TOKEN;
+
+            $jsonInput = json_encode([
+                "contents" => $prompt,
+                "systemInstruction" => [
+                    "role" => "user",
+                    "parts" => [
+                        [
+                            "text" => "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
+                        ]
+                    ]
+                ],
+                "generationConfig" => [
+                    "temperature" => 1,
+                    "topK" => 40,
+                    "topP" => 0.95,
+                    "maxOutputTokens" => 8192,
+                    "responseMimeType" => "text/plain"
+                ]
+            ]);
+
+            $options = [
+                "http" => [
+                    "header" => "Content-Type: application/json\r\n",
+                    "method" => "POST",
+                    "content" => $jsonInput
+                ]
+            ];
+
+            $context = stream_context_create($options);
+            $response = file_get_contents($url, false, $context);
+
+            if ($response === FALSE) {
+                throw new Exception("HTTP error! Status: " . $http_response_header[0]);
+            }
+
+            $jsonResponse = json_decode($response, true);
+
+            return $jsonResponse['candidates'][0]['content']['parts'][0]['text'];
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return "Error: " . $e->getMessage();
         }
 
     default:

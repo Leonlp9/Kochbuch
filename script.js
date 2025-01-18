@@ -736,52 +736,54 @@ class KiChat {
     }
 
     async generateResponse(prompt) {
-        try {
-            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+        //bei prompt ganz oben die kontextParts hinzufügen
+        prompt = this.kontextParts.concat(prompt);
 
-            //bei prompt ganz oben die kontextParts hinzufügen
-            prompt = this.kontextParts.concat(prompt);
+        fetch("api.php?prompt=" + JSON.stringify(prompt) + "&task=askGemini").then(response => response.json()).then(data => {
+            return data;
+        });
 
-            const jsonInput = JSON.stringify({
-                contents: prompt,
-                systemInstruction: {
-                    role: "user",
-                    parts: [
-                        {
-                            text: "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
-                        }
-                    ]
-                },
-                generationConfig: {
-                    temperature: 1,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 8192,
-                    responseMimeType: "text/plain"
-                }
-            });
-
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: jsonInput
-            });
-
-            console.log(JSON.parse(jsonInput));
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            const jsonResponse = await response.json();
-
-            return jsonResponse.candidates[0].content.parts[0].text;
-        } catch (error) {
-            console.error(error);
-            return `Error: ${error.message}`;
-        }
+        // try {
+        //     const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+        //
+        //     const jsonInput = JSON.stringify({
+        //         contents: prompt,
+        //         systemInstruction: {
+        //             role: "user",
+        //             parts: [
+        //                 {
+        //                     text: "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
+        //                 }
+        //             ]
+        //         },
+        //         generationConfig: {
+        //             temperature: 1,
+        //             topK: 40,
+        //             topP: 0.95,
+        //             maxOutputTokens: 8192,
+        //             responseMimeType: "text/plain"
+        //         }
+        //     });
+        //
+        //     const response = await fetch(url, {
+        //         method: "POST",
+        //         headers: {
+        //             "Content-Type": "application/json"
+        //         },
+        //         body: jsonInput
+        //     });
+        //
+        //     if (!response.ok) {
+        //         throw new Error(`HTTP error! Status: ${response.status}`);
+        //     }
+        //
+        //     const jsonResponse = await response.json();
+        //
+        //     return jsonResponse.candidates[0].content.parts[0].text;
+        // } catch (error) {
+        //     console.error(error);
+        //     return `Error: ${error.message}`;
+        // }
     }
 
     showTypingIndicator() {

@@ -37,6 +37,12 @@ if (file_exists("config.ini") && is_readable("config.ini")) {
         define('BASE_URL', 'http://localhost/Kochbuch/');
     }
 
+    if (isset($config['gemini_token'])) {
+        define('GEMINI_TOKEN', $config['gemini_token']);
+    } else {
+        define('GEMINI_TOKEN', '');
+    }
+
     //erstelle tabellen, wenn sie noch nicht existieren
     $pdo->exec("
 CREATE TABLE IF NOT EXISTS `anmerkungen` (
