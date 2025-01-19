@@ -33,6 +33,9 @@ RewriteRule ^github/?$ github.php [L]
 # Umschreiben von "localhost/readme/" auf "localhost/readme.php"
 RewriteRule ^readme/?$ readme.php [L]
 
+# Umschreiben von "localhost/rating/" auf "localhost/rating.php"
+RewriteRule ^rating/?$ rating.php [L]
+
 
 <FilesMatch "\.(htaccess|htpasswd|ini|phps|fla|psd|log|sh)$">
     Order Allow,Deny
