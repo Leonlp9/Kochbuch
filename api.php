@@ -1314,7 +1314,7 @@ switch ($task) {
             curl_close($ch);
 
             if ($response === FALSE) {
-                throw new Exception("HTTP error! Status: " . $http_response_header[0]);
+                throw new Exception("HTTP error! Status: " . $http_response_header[0]. "\nMöglicherweise ist kein API-Token hinterlegt, oder die Anfrage ist zu groß.");
             }
 
             //return candidates.content.parts[0].text

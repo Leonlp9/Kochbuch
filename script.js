@@ -675,8 +675,6 @@ class KiChat {
 
         const response = await this.generateResponse(this.messages);
 
-        console.log(response);
-
         this.messages.push({
             role: 'model',
             parts: [
@@ -708,7 +706,6 @@ class KiChat {
         messageElement.className = `ki-chat-message ki-chat-message-${role}`;
 
         messages.forEach((message) => {
-            console.log(message);
 
             const partElement = document.createElement('p');
             partElement.innerHTML = marked.parse(message.text);
@@ -729,6 +726,8 @@ class KiChat {
 
             response += "Die Zubereitung ist: " + kontext.value.Zubereitung;
 
+            response += "\n\nWenn du noch etwas wissen möchtest, frag mich einfach!";
+
             this.kontextParts.push({
                 role: 'model',
                 parts: [
@@ -743,11 +742,11 @@ class KiChat {
         //bei prompt ganz oben die kontextParts hinzufügen
         prompt = this.kontextParts.concat(prompt);
 
-        const response = await fetch("api.php?prompt=" + JSON.stringify(prompt) + "&task=askGemini")
+        console.log(prompt);
+
+        return await fetch("api.php?prompt=" + JSON.stringify(prompt) + "&task=askGemini")
             .then(response => response.json())
             .then(data => data.response);
-
-        return response;
     }
 
     showTypingIndicator() {
