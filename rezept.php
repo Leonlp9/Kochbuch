@@ -320,14 +320,13 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
 
         #addEinkaufsliste {
             display: flex;
-            gap: 10px;
             border-radius: 10px;
             background: var(--selected_highlight);
             cursor: pointer;
             transition: background 0.2s ease;
             align-items: center;
             justify-content: center;
-            width: 275px;
+            width: fit-content;
             border: 1px solid var(--nonSelected);
             box-sizing: border-box;
             flex-grow: 2;
@@ -337,7 +336,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
             letter-spacing: normal;
             line-height: 14px;
             margin: 0 25px 0 0;
-            padding: 2px 4px;
+            padding: 5px 10px 5px 5px;
             -webkit-font-smoothing: antialiased;
             color: var(--background);
             white-space: nowrap;
