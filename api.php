@@ -1328,6 +1328,80 @@ switch ($task) {
             error_log($e->getMessage());
             return "Error: " . $e->getMessage();
         }
+    case "bringApiAddMyRecipeIngredients":
+        if (isset($_GET['recipe_id'])) {
+            $recipe_id = $_GET['recipe_id'];
+
+            $startTime = microtime(true);
+
+            $stmt = $pdo->prepare("SELECT Zutaten_JSON FROM rezepte WHERE ID = ?");
+            $stmt->execute([$recipe_id]);
+            $recipe = $stmt->fetch();
+            $ingredients = json_decode($recipe['Zutaten_JSON'], true);
+
+            $zutaten_array = [];
+            foreach ($ingredients as $ingredient) {
+                $stmt = $pdo->prepare("SELECT * FROM zutaten WHERE ID = ?");
+                $stmt->execute([$ingredient['ID']]);
+                $zutat = $stmt->fetch();
+
+                $zutaten_array[] = [
+                    'ID' => $zutat['ID'],
+                    'Name' => trim($zutat['Name']),
+                    'additionalInfo' => $ingredient['additionalInfo'],
+                    'Menge' => $ingredient['Menge'],
+                    'Einheit' => $zutat['unit']
+                ];
+            }
+            $ingredients = $zutaten_array;
+
+            include_once 'shared/BringApi.php';
+
+            $data = parse_ini_file('config.ini');
+
+            if (!isset($data['bring_email']) || !isset($data['bring_password'])) {
+                echo json_encode(['error' => 'Email oder Passwort nicht in config vorhanden', 'success' => false]);
+                die();
+            }
+
+            $email = $data['bring_email'];
+            $password = $data['bring_password'];
+
+            //wenn email und passwort nicht in config.ini vorhanden oder leer
+            if (empty($email) || empty($password)) {
+                echo json_encode(['error' => 'Email oder Passwort nicht in config vorhanden', 'success' => false]);
+                die();
+            }
+
+            // Login und Initialisierung der API
+            try {
+                $bringApi = new BringApi($email, $password, true);
+            }catch (Exception $e) {
+                echo json_encode(['error' => $e->getMessage(), 'success' => false]);
+                die();
+            }
+
+            $items = $bringApi->getItems()['purchase'];
+
+            foreach ($ingredients as $ingredient) {
+                //wenn in items vorhanden mit Name
+                if (in_array($ingredient['Name'], array_column($items, 'name'))) {
+                    $item = $items[array_search($ingredient['Name'], array_column($items, 'name'))];
+                    $bringApi->purchaseItem($ingredient['Name'], $item['specification'] . ' %2B ' . $ingredient['Menge'] . ' ' . $ingredient['Einheit'] . ' ' . $ingredient['additionalInfo']);
+                }else {
+                    $bringApi->purchaseItem($ingredient['Name'], $ingredient['Menge'] . ' ' . $ingredient['Einheit'] . ' ' . $ingredient['additionalInfo']);
+                }
+
+            }
+
+            echo json_encode(['success' => true, 'message' => count($ingredients) . ' Zutaten erfolgreich hinzugefügt! (' . round(microtime(true) - $startTime, 2) . 's)']);
+            die();
+
+        } else {
+            echo json_encode(['error' => 'Not all parameters provided', 'success' => false]);
+            die();
+        }
+        break;
 
     default:
         echo json_encode(

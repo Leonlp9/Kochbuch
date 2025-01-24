@@ -317,6 +317,46 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
         #anmerkungen li:hover {
             background: var(--nonSelected);
         }
+
+        #addEinkaufsliste {
+            display: flex;
+            gap: 10px;
+            border-radius: 10px;
+            background: var(--selected_highlight);
+            cursor: pointer;
+            transition: background 0.2s ease;
+            align-items: center;
+            justify-content: center;
+            width: 275px;
+            border: 1px solid var(--nonSelected);
+            box-sizing: border-box;
+            flex-grow: 2;
+            font-family: Museo Sans Rounded, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: normal;
+            line-height: 14px;
+            margin: 0 25px 0 0;
+            padding: 2px 4px;
+            -webkit-font-smoothing: antialiased;
+            color: var(--background);
+            white-space: nowrap;
+        }
+
+        #addEinkaufsliste:hover {
+            background: var(--selected);
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+        }
+
+        #addEinkaufsliste:disabled {
+            background: var(--nonSelected);
+            cursor: not-allowed;
+        }
+
+        #addEinkaufsliste img {
+            height: 40px;
+            padding: 5px;
+        }
     </style>
 
 </head>
@@ -576,6 +616,30 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
 
                     document.addEventListener('DOMContentLoaded', () => {
                         renderZutaten();
+                    });
+                </script>
+
+                <button id="addEinkaufsliste" class="no-print">
+                    <img src="https://img.chefkoch-cdn.de/amp/assets/images/recipe-bring-button.41b4e7df.png" alt=""> Auf die Einkaufsliste setzen
+                </button>
+                <script>
+                    document.getElementById('addEinkaufsliste').addEventListener('click', () => {
+                        document.getElementById('addEinkaufsliste').disabled = true;
+                        new SystemMessage('Wird hinzugefügt...').show();
+                        fetch('api.php?task=bringApiAddMyRecipeIngredients&recipe_id=<?= $rezept['ID'] ?>', {
+                            method: 'GET'
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            //            echo json_encode(['success' => true, 'message' => 'Erfolgreich hinzugefügt!']);
+                            if (!data.success) {
+                                new SystemMessage('Fehler beim Hinzufügen: ' + data.error).show();
+                                document.getElementById('addEinkaufsliste').disabled = false;
+                            }else {
+                                new SystemMessage(data.message).show();
+                                document.getElementById('addEinkaufsliste').disabled = false;
+                            }
+                        });
                     });
                 </script>
 
