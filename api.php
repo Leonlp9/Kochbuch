@@ -1275,7 +1275,7 @@ switch ($task) {
         $prompt = json_decode($_GET['prompt']);
 
         try {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=" . GEMINI_TOKEN;
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . GEMINI_TOKEN;
 
             $jsonInput = json_encode([
                 "contents" => $prompt,
@@ -1312,6 +1312,8 @@ switch ($task) {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $response = curl_exec($ch);
             curl_close($ch);
+
+            echo json_encode(['success' => true, 'response' => $response]);
 
             if ($response === FALSE) {
                 throw new Exception("HTTP error! Status: " . $http_response_header[0]. "\nMöglicherweise ist kein API-Token hinterlegt, oder die Anfrage ist zu groß.");
