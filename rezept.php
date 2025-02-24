@@ -647,6 +647,97 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
                     <p><?= $rezept['Zubereitung'] ?></p>
                 </div>
 
+                <style>
+
+                    #umrechner {
+                        background: var(--secondaryBackground);
+                        padding: 10px;
+                        border-radius: 10px;
+                    }
+
+                    #umrechner input {
+                        padding: 5px;
+                        border-radius: 5px;
+                        border: none;
+                        outline: none;
+                        width: 100px;
+                        background: var(--nonSelected);
+                        color: var(--color);
+                    }
+
+                    #umrechner button {
+                        padding: 5px;
+                        border-radius: 5px;
+                        border: none;
+                        background: var(--green);
+                        color: var(--background);
+                        cursor: pointer;
+                    }
+
+                    #umrechner button:hover {
+                        background: var(--darkerGreen);
+                    }
+
+                    #result {
+                        margin-top: 10px;
+                        display: grid;
+                        grid-template-columns: 1fr;
+                    }
+
+                    #result div {
+                        margin-bottom: 5px;
+                        background: var(--background);
+                        padding: 10px;
+                        border-radius: 10px;
+                    }
+
+                    #umrechner-form {
+                        display: grid;
+                        gap: 10px;
+                        grid-template-columns: 1fr;
+                        margin-top: 10px;
+                    }
+
+                    #umrechner-form input {
+                        width: 100%;
+                    }
+
+                    #result h3 {
+                        margin-top: 10px;
+                        margin-bottom: 5px;
+                    }
+                </style>
+                <details id="umrechner">
+                    <summary>Backofen zu Heißluftfritteuse Umrechner</summary>
+                    <!---- Backofen hat immer 20°C Mehr als Heißluftfritteuse und die Heißluftfritteuse hat immer 20% weniger Zeit als der Backofen. ---->
+                    <div id="umrechner-form">
+                        <input type="number" id="backofen" placeholder="Temperatur in °C">
+                        <input type="number" id="heissluftfritteuse" placeholder="Zeit in Minuten">
+                        <button onclick="convert()">Umrechnen</button>
+                    </div>
+                    <p id="result"></p>
+
+                    <script>
+                        function convert() {
+                            const backofen = document.getElementById('backofen').value;
+                            const heissluftfritteuse = document.getElementById('heissluftfritteuse').value;
+
+                            if (backofen === '' || heissluftfritteuse === '') {
+                                return;
+                            }
+
+                            const result = document.getElementById('result');
+                            result.innerHTML = '<h3>Umrechnung von Backofen zu Heißluftfritteuse</h3>';
+                            result.innerHTML += `<div>Backofen: ${backofen}°C entspricht Heißluftfritteuse: ${parseInt(backofen) - 20}°C</div>`;
+                            result.innerHTML += `<div>Backofen: ${backofen} Minuten entspricht Heißluftfritteuse: ${Math.round(parseInt(backofen) * 0.8)} Minuten</div>`;
+
+                            result.innerHTML += '<h3>Umrechnung von Heißluftfritteuse zu Backofen</h3>';
+                            result.innerHTML += `<div>Heißluftfritteuse: ${heissluftfritteuse}°C entspricht Backofen: ${parseInt(heissluftfritteuse) + 20}°C</div>`;
+                            result.innerHTML += `<div>Heißluftfritteuse: ${heissluftfritteuse} Minuten entspricht Backofen: ${Math.round(parseInt(heissluftfritteuse) / 0.8)} Minuten</div>`;
+                        }
+                    </script>
+                </details>
+
                 <h2>Anmerkungen</h2>
                 <ul id="anmerkungen">
                     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
