@@ -481,7 +481,7 @@ class SystemMessage {
 
 }
 class KiChat {
-    constructor() {
+    constructor(apiKey) {
         this.messages = [];
         this.kontextParts = [];
         this.timestamp = new Date().getTime();
@@ -495,6 +495,8 @@ class KiChat {
 
         this.headerChatsSelect = document.createElement('select');
         this.headerChatsSelect.className = 'ki-chat-header-chats-select';
+
+        this.apiKey = apiKey;
 
         this.updateChatsSelect();
 
@@ -706,7 +708,6 @@ class KiChat {
         messageElement.className = `ki-chat-message ki-chat-message-${role}`;
 
         messages.forEach((message) => {
-
             const partElement = document.createElement('p');
             partElement.innerHTML = marked.parse(message.text);
             messageElement.appendChild(partElement);
@@ -726,8 +727,6 @@ class KiChat {
 
             response += "Die Zubereitung ist: " + kontext.value.Zubereitung;
 
-            response += "\n\nWenn du noch etwas wissen möchtest, frag mich einfach!";
-
             this.kontextParts.push({
                 role: 'model',
                 parts: [
@@ -739,14 +738,52 @@ class KiChat {
     }
 
     async generateResponse(prompt) {
-        //bei prompt ganz oben die kontextParts hinzufügen
-        prompt = this.kontextParts.concat(prompt);
+        try {
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=" + this.apiKey;
 
-        console.log(prompt);
+            //bei prompt ganz oben die kontextParts hinzufügen
+            prompt = this.kontextParts.concat(prompt);
 
-        return await fetch("api.php?prompt=" + JSON.stringify(prompt) + "&task=askGemini")
-            .then(response => response.json())
-            .then(data => data.response);
+            const jsonInput = JSON.stringify({
+                contents: prompt,
+                systemInstruction: {
+                    role: "user",
+                    parts: [
+                        {
+                            text: "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
+                        }
+                    ]
+                },
+                generationConfig: {
+                    temperature: 1,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                    responseMimeType: "text/plain"
+                }
+            });
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: jsonInput
+            });
+
+            console.log(JSON.parse(jsonInput));
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const jsonResponse = await response.json();
+
+            return jsonResponse.candidates[0].content.parts[0].text;
+        } catch (error) {
+            console.error(error);
+            return `Error: ${error.message}`;
+        }
     }
 
     showTypingIndicator() {

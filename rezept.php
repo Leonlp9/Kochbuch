@@ -870,7 +870,7 @@ $rezept = json_decode(file_get_contents(BASE_URL. "api?task=getRezept&id=$id&zut
     </div>
 </body>
 <script>
-    let kiChat = new KiChat();
+    let kiChat = new KiChat("<?php echo GEMINI_TOKEN ?>");
 
     kiChat.addKontext({
         name: "Rezept",
