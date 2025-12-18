@@ -143,157 +143,159 @@ global $pdo;
                     //reverse data
                     data = data.reverse();
 
-                    let lastDate = null;
                     const calendar = document.getElementById('calendar');
                     calendar.innerHTML = '';
 
-                    for (let i = 0; i < data.length; i++) {
-                        let recipe = data[i];
+                    // Gruppiere Einträge nach Datum, damit jeder Tag sein eigenes Scope für Event-Handler hat
+                    const groups = {};
+                    data.forEach(item => {
+                        const d = item['Datum'];
+                        if (!groups[d]) groups[d] = [];
+                        groups[d].push(item);
+                    });
 
-                        if (recipe['Datum'] !== lastDate) {
-                            if (lastDate !== null) {
-                                calendar.appendChild(dayDiv);
-                            }
-                            lastDate = recipe['Datum'];
-                            var dayDiv = document.createElement('div');
-                            dayDiv.classList.add('day');
-                            // speichere das Datum im dayDiv für den Drop-Handler
-                            dayDiv.dataset.date = recipe['Datum'];
+                    // Sortiere die Datums-Schlüssel (aufsteigend)
+                    const dates = Object.keys(groups).sort();
 
-                            let h2 = document.createElement('h2');
-                            h2.classList.add('divider');
-                            h2.textContent = new Date(recipe['Datum']).toLocaleDateString('de-DE');
-                            dayDiv.appendChild(h2);
+                    dates.forEach(date => {
+                        const dayDiv = document.createElement('div');
+                        dayDiv.classList.add('day');
+                        dayDiv.dataset.date = date;
 
-                            // Drop-Handler: Einträge hierhin verschieben
-                            dayDiv.addEventListener('dragover', (e) => {
-                                e.preventDefault();
-                            });
+                        const h2 = document.createElement('h2');
+                        h2.classList.add('divider');
+                        h2.textContent = new Date(date).toLocaleDateString('de-DE');
+                        dayDiv.appendChild(h2);
 
-                            dayDiv.addEventListener('dragenter', (e) => {
-                                e.preventDefault();
-                                dayDiv.classList.add('drag-over');
-                            });
+                        // Drop-Handler: Einträge hierhin verschieben
+                        dayDiv.addEventListener('dragover', (e) => {
+                            e.preventDefault();
+                        });
 
-                            dayDiv.addEventListener('dragleave', (e) => {
-                                dayDiv.classList.remove('drag-over');
-                            });
+                        dayDiv.addEventListener('dragenter', (e) => {
+                            e.preventDefault();
+                            dayDiv.classList.add('drag-over');
+                        });
 
-                            dayDiv.addEventListener('drop', (e) => {
-                                e.preventDefault();
-                                dayDiv.classList.remove('drag-over');
-                                const id = e.dataTransfer.getData('text/plain');
-                                const newDate = dayDiv.dataset.date;
-                                if (!id || !newDate) return;
+                        dayDiv.addEventListener('dragleave', (e) => {
+                            dayDiv.classList.remove('drag-over');
+                        });
 
-                                // rufe API auf um das Datum zu aktualisieren
-                                fetch(`api.php?task=updateKalender&id=${id}&date=${newDate}`, { method: 'GET' })
-                                    .then(res => res.json())
-                                    .then(resp => {
-                                        if (resp.success) {
-                                            // Aktualisiere die Ansicht
-                                            update();
-                                        } else {
-                                            new SystemMessage('Verschieben fehlgeschlagen').show();
-                                        }
-                                    }).catch(() => {
+                        dayDiv.addEventListener('drop', (e) => {
+                            e.preventDefault();
+                            dayDiv.classList.remove('drag-over');
+                            const id = e.dataTransfer.getData('text/plain');
+                            const newDate = dayDiv.dataset.date;
+                            if (!id || !newDate) return;
+
+                            // rufe API auf um das Datum zu aktualisieren
+                            fetch(`api.php?task=updateKalender&id=${id}&date=${newDate}`, { method: 'GET' })
+                                .then(res => res.json())
+                                .then(resp => {
+                                    if (resp.success) {
+                                        // Aktualisiere die Ansicht
+                                        update();
+                                    } else {
                                         new SystemMessage('Verschieben fehlgeschlagen').show();
+                                    }
+                                }).catch(() => {
+                                    new SystemMessage('Verschieben fehlgeschlagen').show();
+                                });
+                        });
+
+                        // Füge alle Einträge dieses Datums hinzu
+                        groups[date].forEach(recipe => {
+                            let entry = document.createElement('div');
+                            entry.classList.add('entry');
+
+                            // Drag & Drop: mache den Eintrag draggable und speichere die ID
+                            entry.setAttribute('draggable', 'true');
+                            if (recipe['Kalender_ID'] !== undefined) {
+                                entry.dataset.kalenderId = recipe['Kalender_ID'];
+                            }
+
+                            entry.addEventListener('dragstart', (ev) => {
+                                // Übergebe die Kalender-ID
+                                const id = entry.dataset.kalenderId;
+                                if (id) {
+                                    ev.dataTransfer.setData('text/plain', id);
+                                    // kleiner visueller Hinweis
+                                    ev.dataTransfer.effectAllowed = 'move';
+                                    entry.classList.add('dragging');
+                                }
+                            });
+
+                            entry.addEventListener('dragend', () => {
+                                entry.classList.remove('dragging');
+                            });
+
+                            entry.addEventListener('click', () => {
+                                let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
+                                    fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
+                                        method: 'GET'
+                                    }).then(() => {
+                                        window.location.reload();
                                     });
-                            });
-                        }
-
-                        let entry = document.createElement('div');
-                        entry.classList.add('entry');
-
-                        // Drag & Drop: mache den Eintrag draggable und speichere die ID
-                        entry.setAttribute('draggable', 'true');
-                        if (recipe['Kalender_ID'] !== undefined) {
-                            entry.dataset.kalenderId = recipe['Kalender_ID'];
-                        }
-
-                        entry.addEventListener('dragstart', (ev) => {
-                            // Übergebe die Kalender-ID
-                            const id = entry.dataset.kalenderId;
-                            if (id) {
-                                ev.dataTransfer.setData('text/plain', id);
-                                // kleiner visueller Hinweis
-                                ev.dataTransfer.effectAllowed = 'move';
-                                entry.classList.add('dragging');
-                            }
-                        });
-
-                        entry.addEventListener('dragend', () => {
-                            entry.classList.remove('dragging');
-                        });
-
-                        entry.addEventListener('click', () => {
-                            let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
-                                fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
-                                    method: 'GET'
-                                }).then(() => {
-                                    window.location.reload();
+                                }, () => {
                                 });
-                            }, () => {
+
+                                if (recipe['Rezept_ID'] !== null) {
+                                    form.addButton("Rezept öffnen", () => {
+                                        window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
+                                    });
+                                }
+
+                                form.addInputField('Text', 'Text', recipe['Text']);
+
+                                form.addButton("Löschen", () => {
+                                    fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
+                                        method: 'GET'
+                                    }).then(() => {
+                                        window.location.reload();
+                                    });
+                                });
+
+                                form.renderForm();
                             });
 
-                            if (recipe['Rezept_ID'] !== null) {
-                                form.addButton("Rezept öffnen", () => {
-                                    window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
-                                });
+                            let recipeDiv = document.createElement('div');
+                            recipeDiv.classList.add('recipe');
+
+                            if (recipe['Image'] !== null) {
+                                let img = document.createElement('img');
+                                img.src = recipe['Image'];
+                                img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                                img.style.width = '100px';
+                                img.style.height = '100px';
+                                img.style.objectFit = 'cover';
+                                img.style.borderRadius = '10px';
+                                recipeDiv.appendChild(img);
+                            } else {
+                                recipeDiv.style.gridTemplateColumns = '1fr';
                             }
 
-                            form.addInputField('Text', 'Text', recipe['Text']);
 
-                            form.addButton("Löschen", () => {
-                                fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
-                                    method: 'GET'
-                                }).then(() => {
-                                    window.location.reload();
-                                });
-                            });
+                            let infos = document.createElement('div');
 
-                            form.renderForm();
+                            let h3 = document.createElement('h3');
+                            h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                            infos.appendChild(h3);
+
+                            if (recipe['Text'] !== null && recipe['Image'] !== null) {
+                                let p = document.createElement('p');
+                                p.textContent = recipe['Text'];
+                                infos.appendChild(p);
+                            }
+
+                            recipeDiv.appendChild(infos);
+
+
+                            entry.appendChild(recipeDiv);
+                            dayDiv.appendChild(entry);
                         });
 
-                        let recipeDiv = document.createElement('div');
-                        recipeDiv.classList.add('recipe');
-
-                        if (recipe['Image'] !== null) {
-                            let img = document.createElement('img');
-                            img.src = recipe['Image'];
-                            img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                            img.style.width = '100px';
-                            img.style.height = '100px';
-                            img.style.objectFit = 'cover';
-                            img.style.borderRadius = '10px';
-                            recipeDiv.appendChild(img);
-                        } else {
-                            recipeDiv.style.gridTemplateColumns = '1fr';
-                        }
-
-
-                        let infos = document.createElement('div');
-
-                        let h3 = document.createElement('h3');
-                        h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                        infos.appendChild(h3);
-
-                        if (recipe['Text'] !== null && recipe['Image'] !== null) {
-                            let p = document.createElement('p');
-                            p.textContent = recipe['Text'];
-                            infos.appendChild(p);
-                        }
-
-                        recipeDiv.appendChild(infos);
-
-
-                        entry.appendChild(recipeDiv);
-                        dayDiv.appendChild(entry);
-                    }
-
-                    if (lastDate !== null) {
                         calendar.appendChild(dayDiv);
-                    }
+                    });
                 }
                 update();
 
