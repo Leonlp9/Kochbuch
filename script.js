@@ -739,7 +739,7 @@ class KiChat {
 
     async generateResponse(prompt) {
         try {
-            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=" + this.apiKey;
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro-exp-02-05:generateContent?key=" + this.apiKey;
 
             //bei prompt ganz oben die kontextParts hinzufügen
             prompt = this.kontextParts.concat(prompt);
@@ -751,6 +751,9 @@ class KiChat {
                     parts: [
                         {
                             text: "Dein Name ist CookMate, du bist ein Unterstützer für eine Rezepte-Kochwebseite. Antworte nur auf die Fragen, die etwas mit Zutaten, Rezepten oder Kochen zu tun haben. Wenn die Frage nicht zu deinem Fachgebiet passt, antworte mit 'Das liegt nicht in meinem Fachgebiet, oder gebe mir mehr Informationen'. Aber auf Höflichkeitsfragen darfst du antworten. Der Entwickler der Seite ist Leon Rabe, wenn der benutzer Hilfe bezüglich der Webseite benötigt, soll er sich an ihn wenden. Schreib das aber nur, wenn du dir sicher bist, dass es eine Frage zu der Webseite ist, also das ausdrücklich erwähnt wird."
+                        },
+                        {
+                            text: "Finde auf die Antwort der Frage weitere 3 kurze Fragen, die sich auf die Antwort beziehen."
                         }
                     ]
                 },
@@ -759,7 +762,19 @@ class KiChat {
                     topK: 40,
                     topP: 0.95,
                     maxOutputTokens: 8192,
-                    responseMimeType: "text/plain"
+                    response_mime_type: "application/json",
+                    response_schema: {
+                        type: "OBJECT",
+                        properties: {
+                            content: {type:"STRING"},
+                            relatedQuestions: {
+                                type:"ARRAY", items: {
+                                    type:"STRING"
+                                }
+                            },
+                        },
+                        required: ["content"],
+                    }
                 }
             });
 
@@ -779,7 +794,11 @@ class KiChat {
 
             const jsonResponse = await response.json();
 
-            return jsonResponse.candidates[0].content.parts[0].text;
+            let text = jsonResponse.candidates[0].content.parts[0].text;
+
+            text = JSON.parse(text).content;
+
+            return text;
         } catch (error) {
             console.error(error);
             return `Error: ${error.message}`;

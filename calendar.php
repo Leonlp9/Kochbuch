@@ -101,6 +101,10 @@ global $pdo;
         #addEntry i {
             font-size: 24px;
         }
+
+        /* Visuelle Styles für Drag & Drop */
+        .day.drag-over { outline: 2px dashed var(--selected); border-radius: 10px; }
+        .entry.dragging { opacity: 0.5; transform: scale(0.98); }
     </style>
 
 </head>
@@ -153,15 +157,74 @@ global $pdo;
                             lastDate = recipe['Datum'];
                             var dayDiv = document.createElement('div');
                             dayDiv.classList.add('day');
+                            // speichere das Datum im dayDiv für den Drop-Handler
+                            dayDiv.dataset.date = recipe['Datum'];
 
                             let h2 = document.createElement('h2');
                             h2.classList.add('divider');
                             h2.textContent = new Date(recipe['Datum']).toLocaleDateString('de-DE');
                             dayDiv.appendChild(h2);
+
+                            // Drop-Handler: Einträge hierhin verschieben
+                            dayDiv.addEventListener('dragover', (e) => {
+                                e.preventDefault();
+                            });
+
+                            dayDiv.addEventListener('dragenter', (e) => {
+                                e.preventDefault();
+                                dayDiv.classList.add('drag-over');
+                            });
+
+                            dayDiv.addEventListener('dragleave', (e) => {
+                                dayDiv.classList.remove('drag-over');
+                            });
+
+                            dayDiv.addEventListener('drop', (e) => {
+                                e.preventDefault();
+                                dayDiv.classList.remove('drag-over');
+                                const id = e.dataTransfer.getData('text/plain');
+                                const newDate = dayDiv.dataset.date;
+                                if (!id || !newDate) return;
+
+                                // rufe API auf um das Datum zu aktualisieren
+                                fetch(`api.php?task=updateKalender&id=${id}&date=${newDate}`, { method: 'GET' })
+                                    .then(res => res.json())
+                                    .then(resp => {
+                                        if (resp.success) {
+                                            // Aktualisiere die Ansicht
+                                            update();
+                                        } else {
+                                            new SystemMessage('Verschieben fehlgeschlagen').show();
+                                        }
+                                    }).catch(() => {
+                                        new SystemMessage('Verschieben fehlgeschlagen').show();
+                                    });
+                            });
                         }
 
                         let entry = document.createElement('div');
                         entry.classList.add('entry');
+
+                        // Drag & Drop: mache den Eintrag draggable und speichere die ID
+                        entry.setAttribute('draggable', 'true');
+                        if (recipe['Kalender_ID'] !== undefined) {
+                            entry.dataset.kalenderId = recipe['Kalender_ID'];
+                        }
+
+                        entry.addEventListener('dragstart', (ev) => {
+                            // Übergebe die Kalender-ID
+                            const id = entry.dataset.kalenderId;
+                            if (id) {
+                                ev.dataTransfer.setData('text/plain', id);
+                                // kleiner visueller Hinweis
+                                ev.dataTransfer.effectAllowed = 'move';
+                                entry.classList.add('dragging');
+                            }
+                        });
+
+                        entry.addEventListener('dragend', () => {
+                            entry.classList.remove('dragging');
+                        });
 
                         entry.addEventListener('click', () => {
                             let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {

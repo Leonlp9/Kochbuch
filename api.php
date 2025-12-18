@@ -655,12 +655,30 @@ switch ($task) {
             die();
         }
     case "updateKalender":
-        if (isset($_GET['id']) && isset($_GET['text'])) {
+        // akzeptiert id und mindestens text oder date
+        if (isset($_GET['id']) && (isset($_GET['text']) || isset($_GET['date']))) {
             $id = $_GET['id'];
-            $text = $_GET['text'];
 
-            $stmt = $pdo->prepare("UPDATE kalender SET Text = ? WHERE ID = ?");
-            $stmt->execute([$text, $id]);
+            // Baue dynamisches Update-Statement je nachdem welche Parameter gesetzt sind
+            $fields = [];
+            $params = [];
+
+            if (isset($_GET['text'])) {
+                $fields[] = 'Text = ?';
+                $params[] = $_GET['text'];
+            }
+
+            if (isset($_GET['date'])) {
+                $fields[] = 'Datum = ?';
+                $params[] = $_GET['date'];
+            }
+
+            // Füge id als letztes Param
+            $params[] = $id;
+
+            $sql = "UPDATE kalender SET " . implode(', ', $fields) . " WHERE ID = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
 
             echo json_encode(['success' => true]);
             die();
