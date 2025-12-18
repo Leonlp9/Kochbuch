@@ -101,10 +101,6 @@ global $pdo;
         #addEntry i {
             font-size: 24px;
         }
-
-        /* Visuelle Styles für Drag & Drop */
-        .day.drag-over { outline: 2px dashed var(--selected); border-radius: 10px; }
-        .entry.dragging { opacity: 0.5; transform: scale(0.98); }
     </style>
 
 </head>
@@ -140,127 +136,134 @@ global $pdo;
                         async: false
                     }).responseText);
 
-                    // Wichtig: nicht mehr das Array umdrehen. Wir sortieren die Datumsschlüssel absteigend.
+                    //reverse data
+                    data = data.reverse();
 
+                    let lastDate = null;
                     const calendar = document.getElementById('calendar');
                     calendar.innerHTML = '';
 
-                    // Gruppiere Einträge nach Datum, damit jeder Tag sein eigenes Scope für Event-Handler hat
-                    const groups = {};
-                    data.forEach(item => {
-                        const d = item['Datum'];
-                        if (!groups[d]) groups[d] = [];
-                        groups[d].push(item);
-                    });
+                    for (let i = 0; i < data.length; i++) {
+                        let recipe = data[i];
 
-                    // Sortiere die Datums-Schlüssel absteigend (neuere bzw. zukünftige Daten zuerst)
-                    const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+                        if (recipe['Datum'] !== lastDate) {
+                            if (lastDate !== null) {
+                                calendar.appendChild(dayDiv);
+                            }
+                            lastDate = recipe['Datum'];
+                            var dayDiv = document.createElement('div');
+                            dayDiv.classList.add('day');
 
-                    dates.forEach(date => {
-                        // Sortiere die Einträge innerhalb eines Tages: neuere Einträge (höhere Kalender_ID) oben
-                        groups[date].sort((a, b) => (b.Kalender_ID || 0) - (a.Kalender_ID || 0));
+                            let h2 = document.createElement('h2');
+                            h2.classList.add('divider');
+                            h2.textContent = new Date(recipe['Datum']).toLocaleDateString('de-DE');
+                            dayDiv.appendChild(h2);
+                        }
 
-                        const dayDiv = document.createElement('div');
-                        dayDiv.classList.add('day');
-                        dayDiv.dataset.date = date;
+                        let entry = document.createElement('div');
+                        entry.classList.add('entry');
 
-                        const h2 = document.createElement('h2');
-                        h2.classList.add('divider');
-                        h2.textContent = new Date(date).toLocaleDateString('de-DE');
-                        dayDiv.appendChild(h2);
-
-                        // Drop-Handler: Einträge hierhin verschieben
-                        dayDiv.addEventListener('dragover', (e) => {
-                            e.preventDefault();
-                        });
-
-                        dayDiv.addEventListener('dragenter', (e) => {
-                            e.preventDefault();
-                            dayDiv.classList.add('drag-over');
-                        });
-
-                        dayDiv.addEventListener('dragleave', (e) => {
-                            dayDiv.classList.remove('drag-over');
-                        });
-
-                        dayDiv.addEventListener('drop', (e) => {
-                            e.preventDefault();
-                            dayDiv.classList.remove('drag-over');
-                            const id = e.dataTransfer.getData('text/plain');
-                            const newDate = dayDiv.dataset.date;
-                            if (!id || !newDate) return;
-
-                            // rufe API auf um das Datum zu aktualisieren
-                            fetch(`api.php?task=updateKalender&id=${id}&date=${newDate}`, { method: 'GET' })
-                                .then(res => res.json())
-                                .then(resp => {
-                                    if (resp.success) {
-                                        // Aktualisiere die Ansicht
-                                        update();
-                                    } else {
-                                        new SystemMessage('Verschieben fehlgeschlagen').show();
-                                    }
-                                }).catch(() => {
-                                    new SystemMessage('Verschieben fehlgeschlagen').show();
+                        entry.addEventListener('click', () => {
+                            let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
+                                fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
+                                    method: 'GET'
+                                }).then(() => {
+                                    window.location.reload();
                                 });
-                        });
+                            }, () => {
+                            });
 
-                        // Füge alle Einträge dieses Datums hinzu
-                        groups[date].forEach(recipe => {
-                            let entry = document.createElement('div');
-                            entry.classList.add('entry');
-
-                            // Drag & Drop: mache den Eintrag draggable und speichere die ID
-                            entry.setAttribute('draggable', 'true');
-                            if (recipe['Kalender_ID'] !== undefined) {
-                                entry.dataset.kalenderId = recipe['Kalender_ID'];
+                            if (recipe['Rezept_ID'] !== null) {
+                                form.addButton("Rezept öffnen", () => {
+                                    window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
+                                });
                             }
 
-                            entry.addEventListener('dragstart', (ev) => {
-                                // Übergebe die Kalender-ID
-                                const id = entry.dataset.kalenderId;
-                                if (id) {
-                                    ev.dataTransfer.setData('text/plain', id);
-                                    // kleiner visueller Hinweis
-                                    ev.dataTransfer.effectAllowed = 'move';
-                                    entry.classList.add('dragging');
-                                }
-                            });
+                            form.addInputField('Text', 'Text', recipe['Text']);
 
-                            entry.addEventListener('dragend', () => {
-                                entry.classList.remove('dragging');
-                            });
-
-                            entry.addEventListener('click', () => {
-                                let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
-                                    // sende sowohl Text als auch Datum (falls geändert)
-                                    const textParam = encodeURIComponent(formData["Text"] ?? '');
-                                    const dateParam = formData["Datum"] ? formData["Datum"] : recipe['Datum'];
-
-                                    fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${textParam}&date=${dateParam}`, {
-                                        method: 'GET'
-                                    }).then(() => {
-                                        // nur Teilansicht aktualisieren
-                                        update();
-                                    });
-                                }, () => {
+                            form.addButton("Löschen", () => {
+                                fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
+                                    method: 'GET'
+                                }).then(() => {
+                                    window.location.reload();
                                 });
+                            });
 
-                                if (recipe['Rezept_ID'] !== null) {
-                                    form.addButton("Rezept öffnen", () => {
-                                        window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
-                                    });
-                                }
+                            form.renderForm();
+                        });
 
-                                // Textfeld
-                                form.addInputField('Text', 'Text', recipe['Text']);
+                        let recipeDiv = document.createElement('div');
+                        recipeDiv.classList.add('recipe');
 
-                                // Datumsfeld zum manuellen Verschieben
-                                form.addDateInput('Datum', recipe['Datum']);
+                        if (recipe['Image'] !== null) {
+                            let img = document.createElement('img');
+                            img.src = recipe['Image'];
+                            img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                            img.style.width = '100px';
+                            img.style.height = '100px';
+                            img.style.objectFit = 'cover';
+                            img.style.borderRadius = '10px';
+                            recipeDiv.appendChild(img);
+                        } else {
+                            recipeDiv.style.gridTemplateColumns = '1fr';
+                        }
 
-                                form.addButton("Löschen", () => {
-                                    fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
-                                        method: 'GET'
-                                    }).then(() => {
-                                        update();
 
+                        let infos = document.createElement('div');
+
+                        let h3 = document.createElement('h3');
+                        h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
+                        infos.appendChild(h3);
+
+                        if (recipe['Text'] !== null && recipe['Image'] !== null) {
+                            let p = document.createElement('p');
+                            p.textContent = recipe['Text'];
+                            infos.appendChild(p);
+                        }
+
+                        recipeDiv.appendChild(infos);
+
+
+                        entry.appendChild(recipeDiv);
+                        dayDiv.appendChild(entry);
+                    }
+
+                    if (lastDate !== null) {
+                        calendar.appendChild(dayDiv);
+                    }
+                }
+                update();
+
+            </script>
+
+            <div id="addEntry">
+                <i class="fas fa-plus"></i>
+            </div>
+
+            <script>
+                document.getElementById('addEntry').addEventListener('click', () => {
+                    let form = new FormBuilder("Kalendereintrag hinzufügen", (formData) => {
+
+                        if (formData["Text"] === '') {
+                            new SystemMessage('Bitte fülle alle Felder aus.').show();
+                            return;
+                        }
+
+                        fetch(`api.php?task=addKalender&date=${formData["Datum"]}&info=${formData["Text"]}`, {
+                            method: 'GET'
+                        }).then(() => {
+                            update();
+                        });
+                    }, () => {});
+
+                    form.addDateInput('Datum', new Date().toISOString().split('T')[0]);
+                    form.addInputField('Text', 'Text');
+
+                    form.renderForm();
+                });
+            </script>
+
+        </div>
+    </div>
+</body>
+</html>
