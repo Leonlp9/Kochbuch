@@ -164,8 +164,21 @@ global $pdo;
                         entry.classList.add('entry');
 
                         entry.addEventListener('click', () => {
+                            // Startwert für Datum im Format YYYY-MM-DD
+                            const initialDate = recipe['Datum'] ? recipe['Datum'] : new Date().toISOString().split('T')[0];
+
                             let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
-                                fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
+                                // Baue die Query-Parameter dynamisch und URL-encode die Werte
+                                const params = [];
+                                params.push(`id=${encodeURIComponent(recipe['Kalender_ID'])}`);
+                                if (typeof formData["Text"] !== 'undefined') {
+                                    params.push(`text=${encodeURIComponent(formData["Text"])}`);
+                                }
+                                if (typeof formData["Datum"] !== 'undefined') {
+                                    params.push(`date=${encodeURIComponent(formData["Datum"])}`);
+                                }
+
+                                fetch(`api.php?task=updateKalender&${params.join('&')}`, {
                                     method: 'GET'
                                 }).then(() => {
                                     window.location.reload();
@@ -178,6 +191,9 @@ global $pdo;
                                     window.location.href = `rezept.php?id=${recipe['Rezept_ID']}`;
                                 });
                             }
+
+                            // Datumfeld hinzufügen (FormBuilder unterstützt addDateInput)
+                            form.addDateInput('Datum', initialDate);
 
                             form.addInputField('Text', 'Text', recipe['Text']);
 
