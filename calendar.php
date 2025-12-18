@@ -140,8 +140,7 @@ global $pdo;
                         async: false
                     }).responseText);
 
-                    //reverse data
-                    data = data.reverse();
+                    // Wichtig: nicht mehr das Array umdrehen. Wir sortieren die Datumsschlüssel absteigend.
 
                     const calendar = document.getElementById('calendar');
                     calendar.innerHTML = '';
@@ -154,10 +153,13 @@ global $pdo;
                         groups[d].push(item);
                     });
 
-                    // Sortiere die Datums-Schlüssel (aufsteigend)
-                    const dates = Object.keys(groups).sort();
+                    // Sortiere die Datums-Schlüssel absteigend (neuere bzw. zukünftige Daten zuerst)
+                    const dates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
 
                     dates.forEach(date => {
+                        // Sortiere die Einträge innerhalb eines Tages: neuere Einträge (höhere Kalender_ID) oben
+                        groups[date].sort((a, b) => (b.Kalender_ID || 0) - (a.Kalender_ID || 0));
+
                         const dayDiv = document.createElement('div');
                         dayDiv.classList.add('day');
                         dayDiv.dataset.date = date;
@@ -231,10 +233,15 @@ global $pdo;
 
                             entry.addEventListener('click', () => {
                                 let form = new FormBuilder("Kalendereintrag bearbeiten", (formData) => {
-                                    fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${formData["Text"]}`, {
+                                    // sende sowohl Text als auch Datum (falls geändert)
+                                    const textParam = encodeURIComponent(formData["Text"] ?? '');
+                                    const dateParam = formData["Datum"] ? formData["Datum"] : recipe['Datum'];
+
+                                    fetch(`api.php?task=updateKalender&id=${recipe['Kalender_ID']}&text=${textParam}&date=${dateParam}`, {
                                         method: 'GET'
                                     }).then(() => {
-                                        window.location.reload();
+                                        // nur Teilansicht aktualisieren
+                                        update();
                                     });
                                 }, () => {
                                 });
@@ -245,90 +252,15 @@ global $pdo;
                                     });
                                 }
 
+                                // Textfeld
                                 form.addInputField('Text', 'Text', recipe['Text']);
+
+                                // Datumsfeld zum manuellen Verschieben
+                                form.addDateInput('Datum', recipe['Datum']);
 
                                 form.addButton("Löschen", () => {
                                     fetch(`api.php?task=deleteKalender&id=${recipe['Kalender_ID']}`, {
                                         method: 'GET'
                                     }).then(() => {
-                                        window.location.reload();
-                                    });
-                                });
+                                        update();
 
-                                form.renderForm();
-                            });
-
-                            let recipeDiv = document.createElement('div');
-                            recipeDiv.classList.add('recipe');
-
-                            if (recipe['Image'] !== null) {
-                                let img = document.createElement('img');
-                                img.src = recipe['Image'];
-                                img.alt = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                                img.style.width = '100px';
-                                img.style.height = '100px';
-                                img.style.objectFit = 'cover';
-                                img.style.borderRadius = '10px';
-                                recipeDiv.appendChild(img);
-                            } else {
-                                recipeDiv.style.gridTemplateColumns = '1fr';
-                            }
-
-
-                            let infos = document.createElement('div');
-
-                            let h3 = document.createElement('h3');
-                            h3.textContent = recipe['Name'] === null ? recipe['Text'] : recipe['Name'];
-                            infos.appendChild(h3);
-
-                            if (recipe['Text'] !== null && recipe['Image'] !== null) {
-                                let p = document.createElement('p');
-                                p.textContent = recipe['Text'];
-                                infos.appendChild(p);
-                            }
-
-                            recipeDiv.appendChild(infos);
-
-
-                            entry.appendChild(recipeDiv);
-                            dayDiv.appendChild(entry);
-                        });
-
-                        calendar.appendChild(dayDiv);
-                    });
-                }
-                update();
-
-            </script>
-
-            <div id="addEntry">
-                <i class="fas fa-plus"></i>
-            </div>
-
-            <script>
-                document.getElementById('addEntry').addEventListener('click', () => {
-                    let form = new FormBuilder("Kalendereintrag hinzufügen", (formData) => {
-
-                        if (formData["Text"] === '') {
-                            new SystemMessage('Bitte fülle alle Felder aus.').show();
-                            return;
-                        }
-
-                        fetch(`api.php?task=addKalender&date=${formData["Datum"]}&info=${formData["Text"]}`, {
-                            method: 'GET'
-                        }).then(() => {
-                            update();
-                        });
-                    }, () => {});
-
-                    form.addDateInput('Datum', new Date().toISOString().split('T')[0]);
-                    form.addInputField('Text', 'Text');
-
-                    form.renderForm();
-                });
-            </script>
-
-        </div>
-    </div>
-</body>
-</html>

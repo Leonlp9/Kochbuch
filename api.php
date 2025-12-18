@@ -610,7 +610,8 @@ switch ($task) {
                 rezepte.ID, 
                 rezepte.Name
             ORDER BY 
-                Datum ASC
+                Datum DESC, kalender.ID DESC
+        
         ")->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($kalender as &$kal) {
