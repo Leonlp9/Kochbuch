@@ -814,3 +814,63 @@ input[type="radio"]:checked::before {
     border-radius: 50%;
     background-color: var(--selected);
 }
+
+/* KI-Chat link buttons */
+.ki-chat-links-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ki-chat-links-container:before {
+    content: 'Nützliche Links:';
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 2px;
+    margin-top: 8px;
+}
+
+.ki-chat-link-button {
+    background: var(--selected);
+    color: var(--white);
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.ki-chat-link-button:hover {
+    background: var(--selected_highlight);
+}
+
+.ki-chat-related-questions:before {
+    content: 'Verwandte Fragen:';
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 2px;
+    margin-top: 16px;
+}
+
+.ki-chat-related-questions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.ki-chat-related-question-button {
+    background: var(--background);
+    border: 1px solid var(--nonSelected);
+    color: var(--color);
+    padding: 8px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.3s ease;
+}
+
+.ki-chat-related-question-button:hover {
+    background: var(--secondaryBackground);
+}

@@ -624,16 +624,18 @@ class KiChat {
         this.headerChatsSelect.appendChild(newChatOption);
 
         const chats = JSON.parse(localStorage.getItem('chats')) || {};
-        Object.keys(chats).forEach((timestamp) => {
+        // Sort timestamps so that newest chats appear first
+        const timestamps = Object.keys(chats).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+        timestamps.forEach((timestamp) => {
             const chat = chats[timestamp];
             const option = document.createElement('option');
             option.value = timestamp;
             option.textContent = new Date(parseInt(timestamp)).toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'numeric', year: 'numeric' }).split(', ').reverse().join(', ');
 
             //füge dem textContent die ersten 100 zeichen des ersten parts hinzu
-            if (chat.messages[0].parts[0].text.length > 30) {
+            if (chat.messages && chat.messages[0] && chat.messages[0].parts && chat.messages[0].parts[0] && chat.messages[0].parts[0].text.length > 30) {
                 option.textContent += ': ' + chat.messages[0].parts[0].text.substring(0, 30) + '...';
-            } else {
+            } else if (chat.messages && chat.messages[0] && chat.messages[0].parts && chat.messages[0].parts[0]) {
                 option.textContent += ': ' + chat.messages[0].parts[0].text;
             }
 
@@ -657,7 +659,7 @@ class KiChat {
 
     async sendMessage(prompt) {
 
-        if (prompt === '') return;
+        if (!prompt || (typeof prompt === 'string' && prompt.trim() === '')) return;
 
         this.input.value = '';
         //close keyboard on mobile
@@ -676,12 +678,17 @@ class KiChat {
 
         const response = await this.generateResponse(this.messages);
 
-        this.messages.push({
+        // response is an object: { content, relatedQuestions, links }
+        const modelMessage = {
             role: 'model',
             parts: [
-                { text: response }
+                { text: (response && response.content) ? response.content : (typeof response === 'string' ? response : '') }
             ]
-        });
+        };
+        if (response && response.links && response.links.length) modelMessage.links = response.links;
+        if (response && response.relatedQuestions && response.relatedQuestions.length) modelMessage.relatedQuestions = response.relatedQuestions;
+
+        this.messages.push(modelMessage);
 
         this.renderMessages();
 
@@ -694,23 +701,73 @@ class KiChat {
         this.chat.innerHTML = '';
 
         //add start message "Hallo, ich bin CookMate, dein persönlicher Rezept-Assistent. Wie kann ich dir helfen?"
-        this.addRenderedMessage([{ text: "Hallo, ich bin CookMate, dein persönlicher Rezept-Assistent. Wie kann ich dir helfen?" }], 'model');
+        this.addRenderedMessage({ parts: [{ text: "Hallo, ich bin CookMate, dein persönlicher Rezept-Assistent. Wie kann ich dir helfen?" }] }, 'model', false);
 
-        this.messages.forEach((message) => {
-            this.addRenderedMessage(message.parts, message.role);
+        this.messages.forEach((message, idx) => {
+            const isLast = idx === (this.messages.length - 1);
+            this.addRenderedMessage(message, message.role, isLast);
         });
 
     }
 
-    addRenderedMessage(messages, role) {
+    addRenderedMessage(message, role, isLast = false) {
+        // message is an object with .parts (array of {text}) and optional .links (array of {title, uri})
         const messageElement = document.createElement('div');
         messageElement.className = `ki-chat-message ki-chat-message-${role}`;
 
-        messages.forEach((message) => {
+        const parts = message.parts || [];
+        parts.forEach((part) => {
             const partElement = document.createElement('p');
-            partElement.innerHTML = marked.parse(message.text);
+            partElement.innerHTML = marked.parse(part.text);
             messageElement.appendChild(partElement);
         });
+
+        // if there are links, render them as buttons under the message
+        if (message.links && Array.isArray(message.links) && message.links.length) {
+            const linksContainer = document.createElement('div');
+            linksContainer.className = 'ki-chat-links-container';
+
+            message.links.forEach((link) => {
+                const btn = document.createElement('button');
+                btn.className = 'ki-chat-link-button';
+                // show a short label: title or hostname
+                let label = link.title || link.uri || link;
+                try {
+                    // if label is long, shorten
+                    if (label.length > 60) label = label.substring(0, 57) + '...';
+                } catch (e) {}
+                btn.textContent = label;
+                btn.addEventListener('click', (e) => {
+                    // open in new tab/window
+                    const url = link.uri || link;
+                    if (!url) return;
+                    window.open(url, '_blank');
+                });
+                linksContainer.appendChild(btn);
+            });
+
+            messageElement.appendChild(linksContainer);
+        }
+
+        // if there are related questions, render them as small buttons as well
+        // Show related questions ONLY if this is the last (bottom-most) message
+        if (isLast && message.relatedQuestions && Array.isArray(message.relatedQuestions) && message.relatedQuestions.length) {
+            const rqContainer = document.createElement('div');
+            rqContainer.className = 'ki-chat-related-questions';
+            message.relatedQuestions.forEach((q) => {
+                const qbtn = document.createElement('button');
+                qbtn.className = 'ki-chat-related-question-button';
+                qbtn.textContent = q;
+                // When clicking a related question, send it immediately in the same chat
+                qbtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Use the chat instance's sendMessage to submit the question directly
+                    this.sendMessage(q);
+                });
+                rqContainer.appendChild(qbtn);
+            });
+            messageElement.appendChild(rqContainer);
+        }
 
         this.chat.appendChild(messageElement);
         this.chat.scrollTop = this.chat.scrollHeight;
@@ -743,8 +800,18 @@ class KiChat {
             //bei prompt ganz oben die kontextParts hinzufügen
             prompt = this.kontextParts.concat(prompt);
 
+            // Sanitize contents: the API rejects unknown fields like `links` or `relatedQuestions` inside contents.
+            // Build a cleaned array that only contains allowed properties (role, parts, maybe name) to avoid INVALID_ARGUMENT errors.
+            const sanitizedContents = (prompt || []).map((item) => {
+                const clean = {};
+                if (item.role) clean.role = item.role;
+                if (item.parts) clean.parts = item.parts;
+                if (item.name) clean.name = item.name;
+                return clean;
+            });
+
             const jsonInput = JSON.stringify({
-                contents: prompt,
+                contents: sanitizedContents,
                 systemInstruction: {
                     role: "user",
                     parts: [
@@ -801,14 +868,64 @@ class KiChat {
 
             const jsonResponse = await response.json();
 
-            let text = jsonResponse.candidates[0].content.parts[0].text;
+            const candidate = jsonResponse.candidates && jsonResponse.candidates[0];
+            if (!candidate) return { content: 'Keine Antwort erhalten', relatedQuestions: [], links: [] };
 
-            text = JSON.parse(text).content;
+            // Parse the generated content which is stored as a JSON string in candidate.content.parts[0].text
+            let content = '';
+            let relatedQuestions = [];
+            try {
+                const text = candidate.content.parts[0].text;
+                const parsed = JSON.parse(text);
+                content = parsed.content || '';
+                relatedQuestions = parsed.relatedQuestions || [];
+            } catch (e) {
+                // fallback: use raw text
+                try {
+                    content = candidate.content.parts[0].text || '';
+                } catch (e2) {
+                    content = '';
+                }
+            }
 
-            return text;
+            // Extract grounding links if present
+            let links = [];
+            try {
+                const gm = candidate.groundingMetadata;
+                if (gm) {
+                    // prefer groundingChunks with web entries
+                    if (Array.isArray(gm.groundingChunks) && gm.groundingChunks.length) {
+                        gm.groundingChunks.forEach((chunk) => {
+                            if (chunk.web && chunk.web.uri) {
+                                links.push({ title: chunk.web.title || chunk.web.uri, uri: chunk.web.uri });
+                            }
+                        });
+                    }
+
+                    // fallback: parse searchEntryPoint.renderedContent for anchor tags (runs in browser)
+                    if (!links.length && gm.searchEntryPoint && gm.searchEntryPoint.renderedContent) {
+                        try {
+                            const tmp = document.createElement('div');
+                            tmp.innerHTML = gm.searchEntryPoint.renderedContent;
+                            const anchors = tmp.querySelectorAll('a');
+                            anchors.forEach((a) => {
+                                const href = a.getAttribute('href');
+                                const title = a.textContent || href;
+                                if (href) links.push({ title: title.trim(), uri: href });
+                            });
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+
+            return { content, relatedQuestions, links };
         } catch (error) {
             console.error(error);
-            return `Error: ${error.message}`;
+            return { content: `Error: ${error.message}`, relatedQuestions: [], links: [] };
         }
     }
 
