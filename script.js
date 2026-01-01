@@ -1,4 +1,3 @@
-
 window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.number-input').forEach((element) => {
         element.querySelector('.down').addEventListener('click', function () {
@@ -739,7 +738,7 @@ class KiChat {
 
     async generateResponse(prompt) {
         try {
-            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro-exp-02-05:generateContent?key=" + this.apiKey;
+            const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=" + this.apiKey;
 
             //bei prompt ganz oben die kontextParts hinzufügen
             prompt = this.kontextParts.concat(prompt);
@@ -774,8 +773,16 @@ class KiChat {
                             },
                         },
                         required: ["content"],
+                    },
+                    thinkingConfig: {
+                        thinkingLevel: "LOW"
                     }
-                }
+                },
+                tools: [
+                    {
+                        googleSearch: {}
+                    }
+                ]
             });
 
             const response = await fetch(url, {
